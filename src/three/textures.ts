@@ -12,7 +12,7 @@ export const makeRailAOTexture = () => {
   const g = c.getContext('2d')!;
   g.fillStyle = '#000';
   g.fillRect(0, 0, W, H);
-  g.filter = 'blur(7px)';
+  g.filter = 'blur(4px)';
   g.strokeStyle = '#fff';
   g.lineCap = 'round';
   g.lineJoin = 'round';
@@ -33,7 +33,7 @@ export const makeRailAOTexture = () => {
     const midU = railCentre(def, 0.5).u;
     // px per unit around the circumference at this station
     const pxPerUnit = W / (2 * Math.PI * sleeveRadius(midU));
-    g.lineWidth = def.width * pxPerUnit * 1.9;
+    g.lineWidth = def.width * pxPerUnit * 1.25;
     g.globalAlpha = 0.85;
     for (const off of [-W, 0, W]) {
       g.beginPath();

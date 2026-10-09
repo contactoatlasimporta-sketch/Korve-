@@ -1,7 +1,7 @@
 import React from 'react';
 import {Vec3, surfaceFrame, surfacePoint} from '../model/sleeve';
 import {makeCamera, sleeveMatrix, SleeveSpec, StageState} from '../three/stage';
-import {swingPhase, swingSleeve} from '../director/director';
+import {railPoint, swingPhase, swingSleeve, SPIN_A, SPIN_B, stretchAmount} from '../director/director';
 import {clamp01, E, hash, lerp, prog} from '../director/math';
 import {ArmPro, C, Callout, Mask, mono, SectionTitle, Wordmark} from './ui';
 import {FONT_SANS} from '../fonts';
@@ -57,7 +57,7 @@ export const facing = (state: StageState, spec: SleeveSpec, u: number, bias = 0,
 // Backdrop + HUD
 // ---------------------------------------------------------------------------
 export const Backdrop: React.FC<{f: number; state: StageState}> = ({f, state}) => {
-  const gridOn = prog(f, 96, 140) * (1 - 0.55 * prog(f, 330, 360)) * (1 - 0.6 * prog(f, 812, 870));
+  const gridOn = prog(f, 96, 140) * (1 - 0.55 * prog(f, 330, 360)) * (1 - 0.6 * prog(f, 826, 880));
   const px = -state.camera.target[0] * 18;
   const py = state.camera.target[1] * 18;
   return (
@@ -99,14 +99,14 @@ const SCENE_LABEL: [number, number, string][] = [
   [96, 214, '01 · PRODUCT'],
   [214, 336, '02 · COMPRESSION ARCHITECTURE'],
   [336, 458, '03 · ELBOW'],
-  [458, 606, '04 · SUPPORT RAILS'],
-  [606, 694, '05 · LEFT / RIGHT'],
-  [694, 802, '06 · CONSTRUCTION'],
-  [802, 900, '07 · CONCEPT'],
+  [458, 616, '04 · SUPPORT RAILS'],
+  [616, 702, '05 · LEFT / RIGHT'],
+  [702, 820, '06 · CONSTRUCTION'],
+  [820, 900, '07 · CONCEPT'],
 ];
 
 export const Hud: React.FC<{f: number}> = ({f}) => {
-  const on = prog(f, 98, 126, E.inOut) * (1 - prog(f, 846, 872));
+  const on = prog(f, 98, 126, E.inOut) * (1 - prog(f, 856, 880));
   if (on <= 0) return null;
   const lab = SCENE_LABEL.find(([a, b]) => f >= a && f < b);
   const sec = Math.floor(f / 30);
@@ -379,14 +379,14 @@ const racketAt = (ph: number) => {
 };
 
 const RailsOverlay: React.FC<{f: number; state: StageState}> = ({f, state}) => {
-  if (f < 466 || f > 612) return null;
+  if (f < 466 || f > 626) return null;
   const R = state.sleeves.find((s) => s.key === 'R');
   if (!R) return null;
   const P = projector(state);
   const nodes: React.ReactNode[] = [];
   // swing ghost
-  if (f >= 506 && f <= 566) {
-    const vis = prog(f, 508, 516) * (1 - prog(f, 552, 564));
+  if (f >= 504 && f <= 560) {
+    const vis = prog(f, 506, 514) * (1 - prog(f, 546, 558));
     const ph = swingPhase(f);
     const path: string[] = [];
     for (let k = 0; k <= 40; k++) {
@@ -437,10 +437,58 @@ const RailsOverlay: React.FC<{f: number; state: StageState}> = ({f, state}) => {
   nodes.push(
     <Callout key="c1" f={f} inAt={486} outAt={504} ax={elbowSide.x} ay={elbowSide.y} dx={-120} dy={-190} label="ROUTED ALONG THE ELBOW SIDES" sub="clear of the flexion crease and olecranon" />,
   );
-  // macro
-  if (f > 566) {
-    const a = P(facing(state, R, 0.68, -0.1, 0.03));
-    nodes.push(<Callout key="c2" f={f} inAt={574} outAt={594} ax={a.x} ay={a.y} dx={-260} dy={-220} label="SILICONE STRETCHES WITH THE KNIT" sub="soft deposited profile · no rigid insert" accent />);
+  // macro co-deformation: gauge marks on the rail + state chips
+  if (f > 556) {
+    const vis = prog(f, 562, 572) * (1 - prog(f, 608, 618));
+    const g0 = railPoint(R.pose, R.position, R.quat, 0, 0.36, 0.014);
+    const g1 = railPoint(R.pose, R.position, R.quat, 0, 0.64, 0.014);
+    const a0 = P(g0.p);
+    const a1 = P(g1.p);
+    // dimension line offset perpendicular to the gauge on screen
+    const dx = a1.x - a0.x;
+    const dy = a1.y - a0.y;
+    const L = Math.hypot(dx, dy) || 1;
+    const nx = (dy / L) * 70;
+    const ny = (-dx / L) * 70;
+    const st = stretchAmount(f);
+    const phase = f < 572 ? 0 : f < 588 ? 1 : f < 602 ? 1 : 2;
+    const labels = ['REST', 'STRETCHED', 'RECOVERED'];
+    nodes.push(
+      <svg key="gauge" width={W} height={H} style={{position: 'absolute', inset: 0, opacity: vis}}>
+        {[a0, a1].map((q, i) => (
+          <g key={i}>
+            <line x1={q.x} y1={q.y} x2={q.x + nx * 1.15} y2={q.y + ny * 1.15} stroke={C.ink} strokeOpacity={0.55} />
+            <circle cx={q.x} cy={q.y} r={3.5} fill={C.lime} />
+          </g>
+        ))}
+        <line x1={a0.x + nx} y1={a0.y + ny} x2={a1.x + nx} y2={a1.y + ny} stroke={st > 0.02 ? C.lime : C.ink} strokeWidth={1.4} />
+        <text x={(a0.x + a1.x) / 2 + nx * 1.45} y={(a0.y + a1.y) / 2 + ny * 1.45} fill={C.dim} textAnchor="middle" style={{fontFamily: 'JetBrains Mono', fontSize: 12, letterSpacing: '0.22em'}}>
+          {st > 0.02 ? 'GAUGE  L0 + ΔL' : 'GAUGE  L0'}
+        </text>
+      </svg>,
+    );
+    nodes.push(
+      <div key="chips" style={{position: 'absolute', right: 128, top: 150, display: 'flex', gap: 10, opacity: vis}}>
+        {labels.map((l, i) => (
+          <div
+            key={l}
+            style={{
+              ...mono(11, i === phase ? C.bg : C.dim, 0.2),
+              padding: '7px 12px',
+              border: `1px solid ${i === phase ? C.lime : 'rgba(237,239,241,0.25)'}`,
+              background: i === phase ? C.lime : 'transparent',
+            }}
+          >
+            {l}
+          </div>
+        ))}
+      </div>,
+    );
+    nodes.push(
+      <div key="cap" style={{position: 'absolute', right: 128, top: 196, textAlign: 'right', opacity: vis, ...mono(11, C.faint, 0.2)}}>
+        ILLUSTRATIVE DEFORMATION · NOT A MEASURED VALUE
+      </div>,
+    );
   }
   return <>{nodes}</>;
 };
@@ -449,16 +497,16 @@ const RailsOverlay: React.FC<{f: number; state: StageState}> = ({f, state}) => {
 // LEFT / RIGHT
 // ---------------------------------------------------------------------------
 const LROverlay: React.FC<{f: number; state: StageState}> = ({f, state}) => {
-  if (f < 612 || f > 700) return null;
+  if (f < 626 || f > 712) return null;
   const P = projector(state);
-  const out = prog(f, 684, 696);
+  const out = prog(f, 692, 704);
   const nodes: React.ReactNode[] = [];
   for (const k of ['L', 'R'] as const) {
     const s = state.sleeves.find((x) => x.key === k);
     if (!s) continue;
     const b = P(centre(s, 1.04));
     const t = P(centre(s, -0.04));
-    const vis = prog(f, k === 'L' ? 640 : 630, k === 'L' ? 656 : 646) * (1 - out);
+    const vis = prog(f, k === 'L' ? 652 : 642, k === 'L' ? 666 : 656) * (1 - out);
     nodes.push(
       <div key={k} style={{position: 'absolute', left: b.x - 120, top: b.y + 22, width: 240, textAlign: 'center', opacity: vis}}>
         <div style={{fontFamily: FONT_SANS, fontWeight: 600, fontSize: 34, color: C.ink, letterSpacing: '0.1em'}}>{k}</div>
@@ -472,7 +520,7 @@ const LROverlay: React.FC<{f: number; state: StageState}> = ({f, state}) => {
       </svg>,
     );
   }
-  const mirror = prog(f, 606, 630, E.inOut) * (1 - prog(f, 676, 692));
+  const mirror = prog(f, 620, 642, E.inOut) * (1 - prog(f, 686, 700));
   nodes.push(
     <svg key="mirror" width={W} height={H} style={{position: 'absolute', inset: 0}}>
       <line x1={960} y1={lerp(540, 150, mirror)} x2={960} y2={lerp(540, 930, mirror)} stroke={C.lime} strokeOpacity={0.6 * mirror} strokeDasharray="2 8" />
@@ -488,21 +536,39 @@ const LROverlay: React.FC<{f: number; state: StageState}> = ({f, state}) => {
 // CONSTRUCTION
 // ---------------------------------------------------------------------------
 const BuildOverlay: React.FC<{f: number; state: StageState}> = ({f, state}) => {
-  if (f < 692 || f > 812) return null;
+  if (f < 698 || f > 830) return null;
+  const R = state.sleeves.find((s) => s.key === 'R');
+  const P = projector(state);
   const items = [
-    {a: 700, b: 736, t: 'SEAMLESS TUBULAR BODY', s: 'CONTINUOUS CIRCULAR KNIT · NO LONGITUDINAL SEAM'},
-    {a: 744, b: 764, t: 'SECURE UPPER CUFF', s: 'INTERNAL ANTI-SLIP GRIP · NO BULKY ELASTIC BAND'},
-    {a: 772, b: 796, t: 'LOW-PROFILE WRIST', s: 'THIN SOFT HEM · NO SILICONE RING'},
+    {a: 706, b: 746, t: 'SEAMLESS TUBULAR BODY', s: 'NO LONGITUDINAL SEWN SEAM — PREFERRED CONSTRUCTION'},
+    {a: 760, b: 782, t: 'SECURE UPPER CUFF', s: 'TWO SILICONE FUNCTIONS · TWO APPLICATIONS'},
+    {a: 792, b: 814, t: 'LOW-PROFILE WRIST', s: 'THIN SOFT HEM · NO SILICONE RING'},
   ];
+  const spin = prog(f, SPIN_A, SPIN_B, E.inOut);
+  const nodes: React.ReactNode[] = [];
+  if (R && f >= 756 && f <= 790) {
+    // A: internal grip — inner face of the cuff, seen through the cutaway
+    const gi = surfaceFrame(0.045, 0.9 + Math.PI * 0.82, R.pose);
+    const gw = world(R, [gi.P[0] - gi.n[0] * 0.01, gi.P[1] - gi.n[1] * 0.01, gi.P[2] - gi.n[2] * 0.01]);
+    const ga = P(gw);
+    // B: external support rail — upper-arm rail element on the outer face
+    const ra = P(railPoint(R.pose, R.position, R.quat, 4, 0.5, 0.012).p);
+    nodes.push(<Callout key="ig" f={f} inAt={766} outAt={782} ax={ga.x} ay={ga.y} dx={-150} dy={-210} label="A · INTERNAL GRIP" sub="anti-slip silicone, inner cuff face" accent />);
+    nodes.push(<Callout key="er" f={f} inAt={770} outAt={782} ax={ra.x} ay={ra.y} dx={-240} dy={200} label="B · EXTERNAL SUPPORT RAIL" sub="functional rail, outer face" />);
+  }
   return (
     <>
       {items.map((it, i) => (
         <SectionTitle key={i} f={f} inAt={it.a} outAt={it.b} index={`06 · ${String.fromCharCode(65 + i)}`} title={it.t} sub={it.s} subAt={it.a + 6} />
       ))}
-      <div style={{position: 'absolute', right: 128, top: 160, opacity: prog(f, 704, 716) * (1 - prog(f, 730, 740)), textAlign: 'right'}}>
-        <div style={mono(11, C.dim, 0.22)}>PREFERRED CONSTRUCTION</div>
-        <div style={{...mono(11, C.faint, 0.22), marginTop: 6}}>SUBJECT TO MANUFACTURER FEASIBILITY</div>
+      <div style={{position: 'absolute', right: 128, top: 150, opacity: prog(f, 708, 718) * (1 - prog(f, 742, 750)), textAlign: 'right'}}>
+        <div style={{fontFamily: FONT_SANS, fontWeight: 500, fontSize: 30, color: C.ink, fontVariantNumeric: 'tabular-nums'}}>
+          {String(Math.round(spin * 360)).padStart(3, '0')}°
+        </div>
+        <div style={{...mono(11, C.dim, 0.22), marginTop: 8}}>CONTINUOUS KNIT COURSE · 360°</div>
+        <div style={{...mono(11, C.faint, 0.22), marginTop: 6}}>MANUFACTURING TARGET · NOT A CONFIRMED CAPABILITY</div>
       </div>
+      {nodes}
     </>
   );
 };
@@ -510,7 +576,7 @@ const BuildOverlay: React.FC<{f: number; state: StageState}> = ({f, state}) => {
 // ---------------------------------------------------------------------------
 // HERO
 // ---------------------------------------------------------------------------
-export const HeroTitle: React.FC<{f: number; at?: number}> = ({f, at = 818}) => {
+export const HeroTitle: React.FC<{f: number; at?: number}> = ({f, at = 830}) => {
   if (f < at - 4) return null;
   return (
     <div style={{position: 'absolute', left: 140, top: 388}}>
@@ -540,9 +606,10 @@ export const Overlays: React.FC<{f: number; state: StageState}> = ({f, state}) =
     <ZonesOverlay f={f} state={state} />
     <SectionTitle f={f} inAt={350} outAt={446} index="03" title="Elbow flex zone" sub="BREATHABLE · HIGH-STRETCH KNIT" subAt={372} />
     <ElbowOverlay f={f} state={state} />
-    <SectionTitle f={f} inAt={470} outAt={600} index="04" title="Flexible silicone support rails" sub="FUNCTIONAL — NOT DECORATIVE" subAt={484} size={48} />
+    <SectionTitle f={f} inAt={470} outAt={546} index="04" title="Flexible silicone support rails" sub="FUNCTIONAL — NOT DECORATIVE" subAt={484} size={48} />
+    <SectionTitle f={f} inAt={562} outAt={612} index="04 · B" title="Silicone + knit — co-deformation" sub="FLEXIBLE BONDED STRUCTURE" subAt={570} size={44} />
     <RailsOverlay f={f} state={state} />
-    <SectionTitle f={f} inAt={622} outAt={688} index="05" title={"Left / Right\nanatomical design"} sub="MIRRORED ZONES AND RAIL GEOMETRY" size={46} y={760} />
+    <SectionTitle f={f} inAt={636} outAt={696} index="05" title={"Left / Right\nanatomical design"} sub="MIRRORED ZONES AND RAIL GEOMETRY" size={46} y={760} />
     <LROverlay f={f} state={state} />
     <BuildOverlay f={f} state={state} />
     <HeroTitle f={f} />

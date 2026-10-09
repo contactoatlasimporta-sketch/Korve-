@@ -259,7 +259,7 @@ void main(){
     Np = normalize(mix(N, Np, mix(0.55, 1.0, microVis)));
 
     // rail contact occlusion + logo
-    float ao = 1.0 - 0.55*texture2D(uRailAO, vec2(v, u)).r;
+    float ao = 1.0 - 0.22*texture2D(uRailAO, vec2(v, u)).r;
     vec2 lc = vec2((u-0.085)/0.25, angDelta(th, 0.62)/0.34 + 0.5);
     lc.x = 1.0 - lc.x;
     if (uMirror > 0.5) lc.y = 1.0 - lc.y;
@@ -278,13 +278,15 @@ void main(){
     // interior: brushed inner face + anti-slip grip pattern inside the upper cuff
     vec3 alb = vec3(0.005);
     float gz = 1.0 - smoothstep(0.075, 0.095, u);
-    vec2 gp = vec2(th/TAU*46.0, u*6.0/0.11);
-    float wave = abs(fract(gp.y + 0.18*sin(gp.x*TAU/2.0*0.5) ) - 0.5);
-    float dash = smoothstep(0.17, 0.11, wave) * smoothstep(0.0, 0.25, 0.5-abs(fract(gp.x*0.5)-0.5));
-    float grip = dash*gz;
+    // printed anti-slip dots on a wave track — matte, discrete, inner face only
+    vec2 gp = vec2(th/TAU*72.0, u*6.0/0.075);
+    float wy = gp.y + 0.28*sin(gp.x*0.55);
+    vec2 cell = vec2(fract(gp.x)-0.5, fract(wy)-0.5);
+    float dotm = 1.0 - smoothstep(0.2, 0.3, length(cell*vec2(1.0,1.25)));
+    float grip = dotm*gz;
     alb = mix(alb, vec3(0.02), grip);
-    col = studio(N, V, alb, mix(0.9,0.35,grip), 0.5*grip, 0.2, 0.85);
-    col += uLime*grip*uGrip*0.32;
+    col = studio(N, V, alb, mix(0.9,0.6,grip), 0.25*grip, 0.2, 0.85);
+    col += uLime*grip*uGrip*0.05;
   }
 
   // --- cut edge (technical section line)
@@ -337,7 +339,7 @@ void main(){
   // --- deformation grid (fabric-attached)
   if (uGrid > 0.001) {
     float gs = u*6.0/0.12;
-    float gc = th*0.55/0.12;
+    float gc = th/TAU*29.0;
     float g = max(gridAA(gs, 0.007), gridAA(gc, 0.007));
     col += uLime*g*uGrid*0.1*(front?1.0:0.0);
   }
@@ -352,7 +354,7 @@ void main(){
 
   if (uWristMark > 0.001) {
     float w = smoothstep(0.955, 0.975, u);
-    col += uLime*w*uWristMark*0.03*(front?1.0:0.0);
+    col += uLime*w*uWristMark*0.01*(front?1.0:0.0);
     col += uLime*lineAA(u-0.958,0.0012)*uWristMark*0.7*(front?1.0:0.0);
   }
 
@@ -382,6 +384,7 @@ void main(){
 
 export const RAIL_FRAG = /* glsl */ `
 ${COMMON}
+${KNIT}
 varying vec2 vUv;
 varying vec4 vRail;
 varying vec3 vN;
@@ -413,23 +416,38 @@ void main(){
   vec3 N = normalize(vN);
   vec3 V = normalize(-vViewPos);
   // rail normals are built outward on the CPU; never flip them by winding
-  // satin silicone: slightly lifted black, tighter highlight, soft translucency at the crown
-  vec3 alb = vec3(0.011,0.0115,0.012);
-  vec3 col = studio(N, V, alb*1.9, 0.4, 0.42, 0.35, 1.0);
-  float crown = 1.0 - abs(k);
-  col += vec3(0.002)*crown*uLight;
+  // The silicone is a thin deposit: the knit underneath telegraphs through it,
+  // strongest at the feathered edge where the coat is thinnest.
+  float ak = abs(k);
+  float edgeF = smoothstep(0.55, 1.0, ak);
+  vec2 q = vec2(th/TAU*WALES, u*COURSES);
+  vec2 fwq = fwidth(q);
+  float mv = 1.0 - smoothstep(0.12, 0.38, max(fwq.x, fwq.y));
+  float hgt = jersey(q) * mv * mix(0.0005, 0.003, edgeF);
+  vec3 dpdx = dFdx(vViewPos), dpdy = dFdy(vViewPos);
+  float dhx = dFdx(hgt), dhy = dFdy(hgt);
+  vec3 r1 = cross(dpdy, N), r2 = cross(N, dpdx);
+  float det = dot(dpdx, r1);
+  vec3 grad = sign(det)*(dhx*r1 + dhy*r2);
+  N = normalize(abs(det)*N - grad);
+  // satin silicone, only slightly lifted from the black knit; edge blends into the fabric tone
+  vec3 alb = mix(vec3(0.034,0.035,0.037), vec3(0.012,0.0124,0.013), edgeF);
+  alb *= mix(1.0, 0.85, jersey(q)*mv*edgeF);
+  float rough = mix(0.36, 0.65, edgeF);
+  float sp = mix(0.55, 0.22, edgeF);
+  vec3 col = studio(N, V, alb, rough, sp, mix(0.3, 0.8, edgeF), 1.0);
 
   // draw-on head
   float headD = exp(-pow((tt - d)*28.0, 2.0)) * step(d, 0.999);
   // restrained trace travelling along the rail during the swing
   float tr = exp(-pow((tt - uTrace)*9.0, 2.0)) * uTraceAmt;
-  float spine = lineAA(k, 0.12);
+  float spine = lineAA(k, 0.1);
   col += uLime*(headD*1.6 + tr*(0.35 + 1.1*spine));
   col += uLime*spine*uGlow*0.45;
 
   if (uGrid > 0.001) {
     float gs = u*6.0/0.12;
-    float gc = th*0.55/0.12;
+    float gc = th/TAU*29.0;
     float g = max(gridAA(gs, 0.007), gridAA(gc, 0.007));
     col += uLime*g*uGrid*0.12;
   }

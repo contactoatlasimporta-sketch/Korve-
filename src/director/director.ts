@@ -4,9 +4,9 @@
  * are blended (camera, poses, orientations, effects) so the film flows as a
  * single camera move instead of hard cuts.
  */
-import {Pose, restPose, Vec3, surfacePoint, RAILS, railCentre} from '../model/sleeve';
+import {Pose, restPose, Vec3, surfacePoint, surfaceFrame, RAILS, railCentre} from '../model/sleeve';
 import {CameraState, defaultFx, RailFx, SleeveSpec, StageState, TextileFx, toWorld} from '../three/stage';
-import {clamp01, deg, E, hash, lerp, lerp3, orient, prog, Quat, slerp} from './math';
+import {clamp01, deg, E, hash, lerp, lerp3, orient, prog, Quat, rotateVec, slerp} from './math';
 
 export const FPS = 30;
 export const DURATION = 900;
@@ -170,7 +170,7 @@ function shotElbow(f: number): Shot {
 const SHOULDER: Vec3 = [-0.6, 3.0, 0];
 export const swingPhase = (f: number) => {
   // wind-up hold → fast acceleration → follow-through settle
-  return prog(f, 516, 546, E.swing);
+  return prog(f, 510, 538, E.swing);
 };
 export const swingPose = (ph: number) => {
   const phi = lerp(deg(-96), deg(78), ph);
@@ -192,9 +192,9 @@ export const swingSleeve = (ph: number): {pos: Vec3; quat: Quat; pose: Pose} => 
 
 function shotRails(f: number): Shot {
   // A: rails draw on (lateral/dorsal face to camera)
-  const drawn = prog(f, 470, 512, E.inOut);
+  const drawn = prog(f, 466, 500, E.inOut);
   const a: Shot = {
-    camera: cam(lerp3([0.6, 0.6, 7.4], [0.9, 0.45, 6.6], prog(f, 450, 512)), [0.75, -0.05, 0], 30),
+    camera: cam(lerp3([0.6, 0.6, 7.4], [0.9, 0.45, 6.6], prog(f, 450, 505)), [0.75, -0.05, 0], 30),
     light: 1,
     exposure: 1,
     focusZ: 7.0,
@@ -204,7 +204,7 @@ function shotRails(f: number): Shot {
         key: 'R',
         pose: {...restPose(false), flex: deg(lerp(62, 12, prog(f, 446, 478, E.inOut)))},
         pos: [-0.1, 0, 0],
-        quat: faceH(lerp(-20, -36, prog(f, 450, 512)), 0.16),
+        quat: faceH(lerp(-20, -36, prog(f, 450, 505)), 0.16),
         fx: {},
         rails: {draw: drawn, trace: -1, traceAmt: 0, glow: 0},
       },
@@ -214,7 +214,7 @@ function shotRails(f: number): Shot {
   // B: swing
   const ph = swingPhase(f);
   const sw = swingSleeve(ph);
-  const tr = prog(f, 518, 552, E.inOut);
+  const tr = prog(f, 512, 546, E.inOut);
   const b: Shot = {
     camera: cam([0.7, -0.4, 18.5], [0.7, -0.7, 0], 30),
     light: 1,
@@ -228,43 +228,63 @@ function shotRails(f: number): Shot {
         pos: sw.pos,
         quat: sw.quat,
         fx: {},
-        rails: {draw: 1, trace: lerp(-0.2, 1.25, tr), traceAmt: prog(f, 514, 522) * (1 - prog(f, 556, 566)), glow: 0},
+        rails: {draw: 1, trace: lerp(-0.2, 1.25, tr), traceAmt: prog(f, 508, 516) * (1 - prog(f, 548, 558)), glow: 0},
       },
       HIDDEN_L(),
     ],
   };
-  // C: macro stretch — grid printed on knit + rails, local stretch field
-  const st = prog(f, 572, 590, E.inOut) * (1 - prog(f, 594, 612, E.inOut) * 0.35);
+  // C: macro co-deformation — rest → stretch → rail deforms with knit → recovery
+  const st = stretchAmount(f);
+  const cq = faceH(-24, 0.08);
+  const cpos: Vec3 = [-0.1, 0, 0];
+  const anc = railPoint(restPose(false), cpos, cq, 0, 0.5, 0);
+  const drift = prog(f, 548, 618);
+  const camPos: Vec3 = [
+    anc.p[0] + anc.n[0] * lerp(2.5, 2.3, drift) - 0.55,
+    anc.p[1] + anc.n[1] * lerp(2.5, 2.3, drift) + 0.25,
+    anc.p[2] + anc.n[2] * lerp(2.5, 2.3, drift),
+  ];
   const c: Shot = {
-    camera: cam(lerp3([1.25, 0.25, 2.25], [1.15, 0.2, 2.0], prog(f, 556, 600)), [1.0, 0.02, 0], 28),
+    camera: cam(camPos, [anc.p[0] + 0.08, anc.p[1], anc.p[2]], 30),
     light: 1,
     exposure: 1,
-    focusZ: 2.1,
-    focusRange: 0.9,
+    focusZ: 2.4,
+    focusRange: 1.0,
     sleeves: [
       {
         key: 'R',
-        pose: {...restPose(false), circ: 0.16 * st, long: 0.22 * st, stretchU: 0.68, stretchW: 0.1},
-        pos: [-0.1, 0, 0],
-        quat: faceH(-28, 0.06),
-        fx: {grid: prog(f, 562, 574)},
-        rails: {...RAILS_ON, glow: 0.12 * prog(f, 566, 580)},
+        pose: {...restPose(false), circ: 0.07 * st, long: 0.3 * st, stretchU: STRETCH_U, stretchW: 0.085},
+        pos: cpos,
+        quat: cq,
+        fx: {grid: 0.6 * prog(f, 556, 566) * (1 - prog(f, 606, 616))},
+        rails: RAILS_ON,
       },
       HIDDEN_L(),
     ],
   };
-  if (f < 498) return a;
-  if (f < 512) return blend(a, b, prog(f, 498, 512, E.move));
-  if (f < 554) return b;
-  if (f < 570) return blend(b, c, prog(f, 554, 570, E.move));
+  if (f < 495) return a;
+  if (f < 508) return blend(a, b, prog(f, 495, 508, E.move));
+  if (f < 546) return b;
+  if (f < 560) return blend(b, c, prog(f, 546, 560, E.move));
   return c;
 }
 
+export const STRETCH_U = 0.6;
+/** 0 rest → 1 stretched → 0 recovered */
+export const stretchAmount = (f: number) => prog(f, 568, 582, E.inOut) * (1 - prog(f, 590, 604, E.inOut));
+
+/** world position + normal of a point on a rail centreline */
+export const railPoint = (pose: Pose, pos: Vec3, quat: Quat, idx: number, t: number, lift = 0) => {
+  const c = railCentre(RAILS[idx], t);
+  const {P, n} = surfaceFrame(c.u, c.th, pose);
+  return {p: toWorld({position: pos, quat}, [P[0] + n[0] * lift, P[1] + n[1] * lift, P[2] + n[2] * lift]), n: rotateVec(quat, n)};
+};
+
 function shotLR(f: number): Shot {
-  const split = prog(f, 606, 640, E.move);
-  const rot = prog(f, 628, 688, E.inOut);
+  const split = prog(f, 622, 652, E.move);
+  const rot = prog(f, 644, 698, E.inOut);
   const alpha = lerp(0, 72, rot);
-  const camP = lerp3([0, -0.7, 18.2], [0, -0.75, 17.4], prog(f, 600, 690));
+  const camP = lerp3([0, -0.7, 18.2], [0, -0.75, 17.4], prog(f, 610, 704));
   return {
     camera: cam(camP, [0, -0.75, 0], 30),
     light: 1,
@@ -285,15 +305,17 @@ function shotLR(f: number): Shot {
         pose: {...restPose(true), flex: deg(6)},
         pos: [lerp(0, -2.0, split), 0, -0.01],
         quat: faceV(alpha),
-        fx: {reveal: lerp(0, 1.06, prog(f, 610, 646, E.inOut)), revealDir: 1},
+        fx: {reveal: lerp(0, 1.06, prog(f, 624, 656, E.inOut)), revealDir: 1},
         rails: RAILS_ON,
       },
     ],
   };
 }
 
+export const SPIN_A = 700;
+export const SPIN_B = 750;
 function shotBuild(f: number): Shot {
-  // a) seamless orbit (690–735) b) cuff cutaway (735–765) c) wrist (765–795)
+  // a) 360° seamless spin (700–750) b) cuff cutaway: internal grip vs external rail (754–782) c) wrist (788–808)
   const base = (q: Quat): SleeveState => ({
     key: 'R',
     pose: {...restPose(false), flex: deg(8)},
@@ -302,38 +324,42 @@ function shotBuild(f: number): Shot {
     fx: {},
     rails: RAILS_ON,
   });
-  const orbit = prog(f, 684, 742, E.inOut);
-  const ang = lerp(deg(-50), deg(70), orbit);
-  // orbit around the forearm (sleeve horizontal, axis = world X) at u≈0.72 → x≈1.6
-  const R = 3.3;
+  // the tube turns a full 360° about its own axis in front of a macro camera
+  const spin = prog(f, SPIN_A, SPIN_B, E.inOut);
   const a: Shot = {
-    camera: cam([0.7, Math.sin(ang) * R * 0.6 + 0.3, Math.cos(ang) * R], [1.55, 0, 0], 30),
+    camera: cam(lerp3([0.35, 0.55, 3.2], [0.55, 0.45, 2.95], prog(f, 690, 752)), [1.45, 0.02, 0], 30),
     light: 1,
     exposure: 1,
-    focusZ: 2.6,
+    focusZ: 3.0,
     focusRange: 1.4,
-    sleeves: [{...base(faceH(40, 0)), fx: {seam: prog(f, 694, 704) * (1 - prog(f, 742, 750)), seamProg: prog(f, 696, 736, E.inOut), seamU: 0.71}}, HIDDEN_L()],
+    sleeves: [
+      {
+        ...base(faceH(70 + 360 * spin, 0.05)),
+        fx: {seam: prog(f, 702, 710) * (1 - prog(f, 750, 758)), seamProg: spin, seamU: 0.71},
+      },
+      HIDDEN_L(),
+    ],
   };
   const b: Shot = {
-    camera: cam(lerp3([-4.6, 1.45, 2.3], [-4.35, 1.3, 2.05], prog(f, 735, 768)), [-2.75, 0.1, 0.05], 30),
+    camera: cam(lerp3([-4.75, 1.75, 2.95], [-4.55, 1.62, 2.75], prog(f, 748, 786)), [-2.25, 0.08, 0.1], 30),
     light: 1,
     exposure: 1,
-    focusZ: 2.6,
-    focusRange: 1.4,
-    sleeves: [{...base(faceH(40, 0)), fx: {cut: prog(f, 740, 756, E.settle), grip: prog(f, 748, 760)}}, HIDDEN_L()],
+    focusZ: 3.2,
+    focusRange: 1.8,
+    sleeves: [{...base(faceH(70, 0)), fx: {cut: prog(f, 756, 770, E.settle), grip: prog(f, 764, 774)}}, HIDDEN_L()],
   };
   const c: Shot = {
-    camera: cam(lerp3([4.9, 0.85, 2.3], [4.7, 0.75, 2.1], prog(f, 765, 800)), [3.1, -0.05, 0], 30),
+    camera: cam(lerp3([4.9, 0.85, 2.3], [4.7, 0.75, 2.1], prog(f, 780, 812)), [3.1, -0.05, 0], 30),
     light: 1,
     exposure: 1,
     focusZ: 2.6,
     focusRange: 1.4,
-    sleeves: [{...base(faceH(40, 0)), fx: {wristMark: prog(f, 772, 782) * (1 - prog(f, 796, 806))}}, HIDDEN_L()],
+    sleeves: [{...base(faceH(70, 0)), fx: {wristMark: prog(f, 790, 798) * (1 - prog(f, 806, 814))}}, HIDDEN_L()],
   };
-  if (f < 730) return a;
-  if (f < 742) return blend(a, b, prog(f, 730, 742, E.move));
-  if (f < 760) return b;
-  if (f < 772) return blend(b, c, prog(f, 760, 772, E.move));
+  if (f < 746) return a;
+  if (f < 756) return blend(a, b, prog(f, 746, 756, E.move));
+  if (f < 780) return b;
+  if (f < 790) return blend(b, c, prog(f, 780, 790, E.move));
   return c;
 }
 
@@ -417,9 +443,9 @@ const SHOTS: {fn: (f: number) => Shot; until: number; tr: number}[] = [
   {fn: shotReveal, until: 214, tr: 26}, // reveal → zones (camera pulls back to full view)
   {fn: shotZones, until: 340, tr: 26}, // zones → elbow (push in + rotate)
   {fn: shotElbow, until: 462, tr: 22}, // elbow → rails
-  {fn: shotRails, until: 612, tr: 24}, // macro → L/R pull back
-  {fn: shotLR, until: 700, tr: 20}, // L/R → construction orbit
-  {fn: shotBuild, until: 814, tr: 20}, // wrist → hero
+  {fn: shotRails, until: 626, tr: 20}, // macro → L/R pull back
+  {fn: shotLR, until: 706, tr: 16}, // L/R → construction spin
+  {fn: shotBuild, until: 826, tr: 18}, // wrist → hero
   {fn: shotHero, until: 99999, tr: 0},
 ];
 
@@ -445,8 +471,8 @@ export function stageAt(f: number): StageState {
     .map((x) => ({key: x.key, pose: x.pose, position: x.pos, quat: x.quat, fx: x.fx, rails: x.rails}));
 
   // swing ghost trails (technical motion study)
-  if (f >= 512 && f <= 572) {
-    const vis = prog(f, 512, 520) * (1 - prog(f, 556, 570));
+  if (f >= 506 && f <= 562) {
+    const vis = prog(f, 506, 514) * (1 - prog(f, 546, 558));
     for (let k = 1; k <= 6; k++) {
       const ph = swingPhase(f - k * 1.6);
       const sw = swingSleeve(ph);

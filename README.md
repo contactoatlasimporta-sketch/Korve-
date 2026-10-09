@@ -27,10 +27,11 @@ and no state builds up between frames.
 | 3–7 s | Product reveal | A masked scan reveals the sleeve from cuff to wrist under directional light; the camera travels from the upper arm to the wrist |
 | 7–11 s | Zonal compression | A scan ring passes along the sleeve, the four zones light up, and contour rings draw on (ring spacing shows relative density intent; no values) |
 | 11–15 s | Elbow flex zone | Flexion goes 20° → 105° → 62°; the open knit expands with stretch; airflow strokes; goniometer |
-| 15–20 s | Silicone rails | Rails draw on from the forearm toward the elbow; forehand motion study with ghost trails and a racket outline; a light trace runs along the rails; macro stretch with a grid printed on both knit and rails |
-| 20–23 s | Left / Right | The left sleeve is revealed out of the right across a mirror plane; both rotate in opposite directions |
-| 23–26.5 s | Construction | Orbit with a continuous knit course traced around the tube (no seam); cutaway of the upper cuff showing the internal anti-slip grip; low-profile wrist hem |
-| 26.5–30 s | Hero | LEFT + RIGHT suspended, KORVE ARM PRO, "Support without restricting motion", "Preliminary engineering concept" |
+| 15–20.5 s | Silicone rails | Rails draw on from the forearm toward the elbow; forehand motion study with ghost trails and a racket outline; a light trace runs along the rails |
+| 18.7–20.5 s | Silicone + knit co-deformation | Macro: rest → stretched → recovered. A grid printed on knit and rails plus gauge marks on a rail show that the silicone deforms with the fabric (illustrative, not a measured value) |
+| 20.5–23.5 s | Left / Right | The left sleeve is revealed out of the right across a mirror plane; both rotate in opposite directions |
+| 23.3–27.5 s | Construction | Full 360° turn of the tubular body with a continuous knit course traced around it and a degree counter (no longitudinal sewn seam, shown as a manufacturing target); cuff cutaway labelling A · internal grip (printed dot-wave on the inner face) and B · external support rail (smooth bead on the outer face); low-profile wrist hem |
+| 27.5–30 s | Hero | LEFT + RIGHT suspended, KORVE ARM PRO, "Support without restricting motion", "Preliminary engineering concept" |
 
 ## Design decisions (concept interpretation of the brief)
 
@@ -41,23 +42,31 @@ and no state builds up between frames.
 - **True LEFT/RIGHT mirroring.** The LEFT sleeve is the anatomical mirror of the
   RIGHT sleeve (x → −x). It is not the same sleeve with a different label.
 - **Rail geometry (original KORVE layout, not a copy of any commercial product):**
-  - L1 and L2: two lateral rails. They spiral up the dorsal-lateral forearm along the
-    pronation line and pass the elbow on its lateral side.
-  - M1: one medial rail. It runs from the volar (front-inner) forearm to the medial
-    epicondyle.
-  - S1 and S2: two short secondary elements. S1 is a dorsal forearm accent; S2 is a
-    lateral anchor above the elbow.
+  - R1: primary extensor spiral. It runs from the distal dorsal forearm, up along the
+    supination line, to the lateral epicondyle.
+  - R2: primary rail on the brachioradialis line. It converges with R1 toward the
+    lateral epicondyle and stops below the flexion crease.
+  - R3: primary volar / medial line. It runs from the anterior-medial forearm to the
+    medial epicondyle.
+  - S1: short secondary element on the dorsal-ulnar forearm, aligned with the rotation
+    spiral.
+  - S2: short secondary element on the upper arm. It continues R1's line after a
+    deliberate gap over the joint.
   - Where the rails pass the elbow, they stay on its sides, close to the bending
     neutral axis. They never cross the flexion crease (front) or the olecranon apex
-    (back), so they don't fight elbow flexion.
-- **Rails are soft silicone, not plastic.** Each rail is a narrow-to-medium, low
-  bead (about 1.5 mm) with tapered rounded tips, a satin finish and contact
-  shading on the knit around it.
+    (back).
+- **Rails are soft silicone deposited on the knit, not separate parts.** Each rail is a
+  narrow-to-medium, flat-topped deposit about 0.7–1 mm high. Its edge feathers to zero
+  height on the fabric, so there is no step and no gap. The knit texture shows through
+  the thin coat, most strongly at the edges, and the contact shadow is minimal.
 - **Elbow flex zone.** An open hexagonal knit. The openings are largest on the
   flexion axes (front and back) and smallest at the sides where the rails pass.
   They open further where the fabric is locally stretched.
 - **Knit zones blend into each other.** The zone boundaries curve with the anatomy,
   so the zones never read as stitched panels.
+- **Two silicone functions, two applications.** The internal cuff grip is a matte
+  printed dot-wave on the inner face. The external rails are smooth satin beads on the
+  outer face.
 - **Wrist.** A thin folded hem with a fine 1×1 rib and no silicone ring.
   **Upper cuff.** A low-profile welt with an internal silicone wave-grip, which is
   deliberately different from the external rails.

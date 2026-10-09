@@ -2,7 +2,7 @@ import React, {useMemo} from 'react';
 import {AbsoluteFill} from 'remotion';
 import {StageCanvas} from '../components/StageCanvas';
 import {deg} from '../director/math';
-import {faceH, faceV, stageAt} from '../director/director';
+import {faceH, faceV, railPoint, stageAt} from '../director/director';
 import {restPose, RAILS as RAIL_DEFS, railCentre, surfaceFrame, Vec3} from '../model/sleeve';
 import {sleeveMatrix} from '../three/stage';
 import * as THREE from 'three';
@@ -111,24 +111,23 @@ export const TechSheetStill: React.FC = () => {
 
 /** 3 — silicone rail + textile macro */
 export const RailMacroStill: React.FC = () => {
+  const q = faceH(-24, 0.08);
+  const pos: Vec3 = [-0.1, 0, 0];
+  const pose = {...restPose(false), flex: deg(8)};
+  const anc = railPoint(pose, pos, q, 0, 0.5, 0);
   const state: StageState = useMemo(
     () => ({
-      camera: {pos: [1.35, 0.32, 1.75], target: [1.05, 0.02, 0], fov: 26},
+      camera: {
+        pos: [anc.p[0] + anc.n[0] * 1.25 - 0.55, anc.p[1] + anc.n[1] * 1.25 + 0.2, anc.p[2] + anc.n[2] * 1.25],
+        target: [anc.p[0] + 0.1, anc.p[1], anc.p[2]],
+        fov: 30,
+      },
       light: 1,
       exposure: 1.05,
-      focusZ: 1.75,
-      focusRange: 0.7,
+      focusZ: 1.3,
+      focusRange: 0.8,
       time: 0,
-      sleeves: [
-        {
-          key: 'R',
-          pose: {...restPose(false), flex: deg(8)},
-          position: [-0.1, 0, 0],
-          quat: faceH(-30, 0.06),
-          fx: {},
-          rails: RAILS,
-        },
-      ],
+      sleeves: [{key: 'R', pose, position: pos, quat: q, fx: {}, rails: RAILS}],
     }),
     [],
   );
@@ -143,7 +142,7 @@ export const RailMacroStill: React.FC = () => {
       const {P: p, n} = surfaceFrame(c.u, c.th, sp.pose);
       const lift = def.height * 0.9;
       const q = P(worldOf(sp, [p[0] + n[0] * lift, p[1] + n[1] * lift, p[2] + n[2] * lift]));
-      const d = Math.hypot(q.x - 1050, q.y - 420);
+      const d = Math.hypot(q.x - 1000, q.y - 470);
       if (q.ok && d < best) {
         best = d;
         a = q;
@@ -161,7 +160,7 @@ export const RailMacroStill: React.FC = () => {
         </div>
         <div style={{...mono(13, C.dim, 0.2), marginTop: 12}}>NARROW-TO-MEDIUM WIDTH · LOW PROFILE · STRETCHES WITH THE KNIT · CONCEPT ONLY</div>
       </div>
-      <Callout f={100} inAt={0} outAt={1000} ax={a.x} ay={a.y} dx={-220} dy={200} label="CONTINUOUS CURVED RAIL" sub="width / thickness / hardness to be defined" accent />
+      <Callout f={100} inAt={0} outAt={1000} ax={a.x} ay={a.y} dx={-260} dy={220} label="LOW-PROFILE BONDED RAIL" sub="width / thickness / hardness to be defined" accent />
     </AbsoluteFill>
   );
 };

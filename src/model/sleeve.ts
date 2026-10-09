@@ -374,38 +374,38 @@ export type RailDef = {
 
 export const RAILS: RailDef[] = [
   {
-    id: 'L1', // primary lateral rail — forearm dorsal → lateral epicondyle → lower upper arm
-    pts: [[0.84, 300], [0.76, 318], [0.67, 338], [0.58, 353], [0.5, 4], [0.43, 8], [0.36, 12]],
-    width: 0.105,
-    height: 0.022,
-    primary: true,
-  },
-  {
-    id: 'L2', // companion lateral rail, slightly shorter, parallel offset toward anterior
-    pts: [[0.8, 330], [0.72, 345], [0.64, 2], [0.57, 16], [0.5, 24], [0.445, 28]],
+    id: 'R1', // primary — extensor spiral: distal dorsal forearm → lateral epicondyle (follows the supination line)
+    pts: [[0.9, 262], [0.82, 282], [0.73, 305], [0.64, 330], [0.56, 350], [0.49, 4], [0.43, 10], [0.375, 14]],
     width: 0.085,
-    height: 0.019,
+    height: 0.013,
     primary: true,
   },
   {
-    id: 'M1', // medial rail — anterior-medial (volar) forearm → medial epicondyle
-    pts: [[0.81, 148], [0.73, 154], [0.65, 162], [0.575, 170], [0.5, 176], [0.44, 178], [0.39, 177]],
-    width: 0.092,
-    height: 0.02,
+    id: 'R2', // primary — brachioradialis line, converges with R1 toward the lateral epicondyle, stops below the crease
+    pts: [[0.86, 322], [0.78, 338], [0.69, 356], [0.61, 14], [0.54, 26], [0.485, 30], [0.45, 31]],
+    width: 0.075,
+    height: 0.012,
     primary: true,
   },
   {
-    id: 'S1', // secondary — short dorsal forearm accent between rails
-    pts: [[0.7, 272], [0.64, 285], [0.585, 300]],
-    width: 0.06,
-    height: 0.016,
+    id: 'R3', // primary — volar / medial line: anterior-medial forearm → medial epicondyle
+    pts: [[0.88, 128], [0.8, 138], [0.71, 150], [0.62, 162], [0.54, 172], [0.47, 178], [0.41, 180], [0.375, 180]],
+    width: 0.08,
+    height: 0.0125,
+    primary: true,
+  },
+  {
+    id: 'S1', // secondary — short dorsal-ulnar element, aligned with the rotation spiral
+    pts: [[0.77, 230], [0.705, 243], [0.64, 256]],
+    width: 0.055,
+    height: 0.0095,
     primary: false,
   },
   {
-    id: 'S2', // secondary — short lateral upper-arm anchor above the elbow
-    pts: [[0.33, 20], [0.285, 24], [0.24, 26]],
-    width: 0.06,
-    height: 0.016,
+    id: 'S2', // secondary — upper-arm continuation of R1 after a deliberate gap over the joint
+    pts: [[0.335, 17], [0.29, 19], [0.245, 20]],
+    width: 0.055,
+    height: 0.0095,
     primary: false,
   },
 ];
@@ -439,7 +439,7 @@ const unwrap = (pts: [number, number][]) => {
 };
 
 export const RAIL_SAMPLES = 120;
-export const RAIL_ACROSS = 9;
+export const RAIL_ACROSS = 13;
 
 export type RailBuffers = {
   position: Float32Array;
@@ -514,15 +514,18 @@ export const buildRails = (p: Pose, rails: RailDef[] = RAILS): RailBuffers => {
         const uu = u + (k * halfW * ps) / SLEEVE_LENGTH;
         const tt = th + (k * halfW * pw) / rr;
         // soft silicone bead: flat-ish crown, rounded shoulders, embedded base
-        const prof = Math.pow(Math.max(0, 1 - Math.pow(Math.abs(k), 2.6)), 0.55);
-        const h = def.height * taper * prof - 0.004;
+        // low, flat-topped deposit that feathers to zero at its edge (bonded, no step / gap)
+        const ak = Math.abs(k);
+        const e = Math.min(1, Math.max(0, (ak - 0.4) / 0.6));
+        const prof = 1 - e * e * (3 - 2 * e);
+        const h = def.height * taper * prof + 0.0004;
         const {P, n} = surfaceFrame(uu, tt, p);
         const id = r * per + i * RAIL_ACROSS + j;
         position[id * 3] = P[0] + n[0] * h;
         position[id * 3 + 1] = P[1] + n[1] * h;
         position[id * 3 + 2] = P[2] + n[2] * h;
         uv[id * 2] = uu;
-        uv[id * 2 + 1] = (((tt / TAU) % 1) + 1) % 1;
+        uv[id * 2 + 1] = tt / TAU; // unwrapped: no interpolation jump across θ = 0
         rail[id * 4] = t;
         rail[id * 4 + 1] = k;
         rail[id * 4 + 2] = r;
