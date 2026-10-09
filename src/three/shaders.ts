@@ -13,6 +13,7 @@ uniform float uExposure;
 uniform vec3 uLime;
 uniform float uFocusZ;     // view-space focus distance
 uniform float uFocusRange; // detail falloff (fake DOF on micro texture)
+uniform float uRimBoost;   // extra silhouette rim light only (edge separation)
 uniform float uTime;
 
 vec3 aces(vec3 x){ const float a=2.51,b=0.03,c=2.43,d=0.59,e=0.14; return clamp((x*(a*x+b))/(x*(c*x+d)+e),0.,1.); }
@@ -42,6 +43,8 @@ vec3 studio(vec3 N, vec3 V, vec3 alb, float rough, float specAmt, float sheenAmt
   vec3 R1 = normalize(vec3(-1.0,0.35,-0.45));
   vec3 R2 = normalize(vec3(1.0,0.2,-0.5));
   col += fr*(max(dot(N,R1),0.)*0.32 + max(dot(N,R2),0.)*0.26)*vec3(0.86,0.9,1.0)*(0.35+0.65*sheenAmt);
+  // optional edge-only lift: concentrated at grazing angles, zero on faces seen head-on
+  col += uRimBoost*pow(1.-NoV, 4.0)*(0.5*max(dot(N,R1),0.) + 0.5*max(dot(N,R2),0.) + 0.25)*vec3(0.78,0.84,0.92)*0.22;
   // overhead softbox (environment)
   float sky = clamp(N.y*0.5+0.5,0.,1.);
   col += alb*(0.12 + 0.55*sky*sky);

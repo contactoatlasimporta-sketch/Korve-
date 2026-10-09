@@ -13,11 +13,15 @@ and no state builds up between frames.
 
 | File | What |
 |---|---|
-| `korve-arm-pro-concept.mp4` | Final film, 30 s, 1920×1080, 30 fps, H.264 |
-| `01-hero-frame.png` | Clean hero frame (LEFT + RIGHT, final title) |
-| `02-technical-left-right-front-back.png` | LEFT / RIGHT × FRONT / BACK technical frame |
-| `03-rail-textile-closeup.png` | Silicone rail + knit macro |
-| `contact-sheet.png` | Representative frames (0 s, 5 s, 9 s, 13 s, 18 s, 22 s, 25 s, 29 s) |
+| `korve-arm-pro-concept.mp4` | Final film: 30 s, 1920×1080, 30 fps, H.264 (1.5× supersampled render) |
+| `01-hero-frame.png` | Hero frame: LEFT + RIGHT with the final title |
+| `02-technical-left-right-front-back.png` | Technical frame: LEFT / RIGHT × FRONT / BACK |
+| `03-rail-textile-closeup.png` | Silicone rail macro: low-profile bonded rail on the knit |
+| `04-silicone-knit-co-deformation.png` | Silicone + knit co-deformation, stretched state |
+| `05-elbow-flex-zone.png` | Elbow flex zone during flexion |
+| `06-seamless-tubular-body.png` | Seamless tubular body during the 360° turn |
+| `07-upper-cuff-internal-grip.png` | Upper-cuff cutaway: internal grip vs external support rail |
+| `contact-sheet.png` | Representative frames (1.5 s, 5 s, 9 s, 13 s, 18 s, 22 s, 25 s, 29 s) |
 
 ## Storyboard as built
 

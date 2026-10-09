@@ -499,7 +499,7 @@ const RailsOverlay: React.FC<{f: number; state: StageState}> = ({f, state}) => {
 const LROverlay: React.FC<{f: number; state: StageState}> = ({f, state}) => {
   if (f < 626 || f > 712) return null;
   const P = projector(state);
-  const out = prog(f, 692, 704);
+  const out = prog(f, 668, 682);
   const nodes: React.ReactNode[] = [];
   for (const k of ['L', 'R'] as const) {
     const s = state.sleeves.find((x) => x.key === k);
@@ -520,7 +520,7 @@ const LROverlay: React.FC<{f: number; state: StageState}> = ({f, state}) => {
       </svg>,
     );
   }
-  const mirror = prog(f, 620, 642, E.inOut) * (1 - prog(f, 686, 700));
+  const mirror = prog(f, 648, 662, E.inOut) * (1 - prog(f, 666, 682)); // only once both sleeves have cleared the centre
   nodes.push(
     <svg key="mirror" width={W} height={H} style={{position: 'absolute', inset: 0}}>
       <line x1={960} y1={lerp(540, 150, mirror)} x2={960} y2={lerp(540, 930, mirror)} stroke={C.lime} strokeOpacity={0.6 * mirror} strokeDasharray="2 8" />
@@ -609,7 +609,7 @@ export const Overlays: React.FC<{f: number; state: StageState}> = ({f, state}) =
     <SectionTitle f={f} inAt={470} outAt={546} index="04" title="Flexible silicone support rails" sub="FUNCTIONAL — NOT DECORATIVE" subAt={484} size={48} />
     <SectionTitle f={f} inAt={562} outAt={612} index="04 · B" title="Silicone + knit — co-deformation" sub="FLEXIBLE BONDED STRUCTURE" subAt={570} size={44} />
     <RailsOverlay f={f} state={state} />
-    <SectionTitle f={f} inAt={636} outAt={696} index="05" title={"Left / Right\nanatomical design"} sub="MIRRORED ZONES AND RAIL GEOMETRY" size={46} y={760} />
+    <SectionTitle f={f} inAt={636} outAt={670} index="05" title={"Left / Right\nanatomical design"} sub="MIRRORED ZONES AND RAIL GEOMETRY" size={46} y={760} />
     <LROverlay f={f} state={state} />
     <BuildOverlay f={f} state={state} />
     <HeroTitle f={f} />

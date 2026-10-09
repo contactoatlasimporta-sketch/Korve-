@@ -37,6 +37,7 @@ type Shot = {
   exposure: number;
   focusZ: number;
   focusRange: number;
+  rimBoost?: number;
   sleeves: SleeveState[];
 };
 
@@ -291,6 +292,7 @@ function shotLR(f: number): Shot {
     exposure: 1,
     focusZ: 16,
     focusRange: 6,
+    rimBoost: 1,
     sleeves: [
       {
         key: 'R',
@@ -434,6 +436,7 @@ export function blend(a: Shot, b: Shot, t: number): Shot {
     exposure: lerp(a.exposure, b.exposure, t),
     focusZ: lerp(a.focusZ, b.focusZ, t),
     focusRange: lerp(a.focusRange, b.focusRange, t),
+    rimBoost: lerp(a.rimBoost ?? 0, b.rimBoost ?? 0, t),
     sleeves,
   };
 }
@@ -488,6 +491,7 @@ export function stageAt(f: number): StageState {
     exposure: s.exposure,
     focusZ: s.focusZ,
     focusRange: s.focusRange,
+    rimBoost: s.rimBoost ?? 0,
     sleeves,
     time: f / FPS,
   };

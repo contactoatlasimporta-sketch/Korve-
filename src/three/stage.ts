@@ -73,6 +73,7 @@ export type StageState = {
   exposure: number;
   focusZ: number;
   focusRange: number;
+  rimBoost?: number;
   sleeves: SleeveSpec[];
   lines?: LineSpec[];
   time: number;
@@ -164,6 +165,7 @@ export class Stage {
       uLime: {value: LIME_LINEAR.clone()},
       uFocusZ: {value: state.focusZ},
       uFocusRange: {value: state.focusRange},
+      uRimBoost: {value: state.rimBoost ?? 0},
       uTime: {value: state.time},
     };
   }
