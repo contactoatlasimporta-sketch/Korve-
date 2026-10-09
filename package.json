@@ -1,0 +1,26 @@
+{
+  "name": "korve-arm-pro-concept-film",
+  "version": "1.0.0",
+  "private": true,
+  "description": "KORVE ARM PRO — preliminary engineering concept film (Remotion + Three.js)",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render KorveArmPro out/korve-arm-pro-concept.mp4",
+    "still": "remotion still"
+  },
+  "dependencies": {
+    "@fontsource-variable/archivo": "^5.1.0",
+    "@fontsource/inter": "5.1.0",
+    "@fontsource/jetbrains-mono": "5.1.0",
+    "@remotion/cli": "4.0.534",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "4.0.534",
+    "three": "0.170.0"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.12",
+    "@types/three": "0.170.0",
+    "typescript": "5.6.3"
+  }
+}
