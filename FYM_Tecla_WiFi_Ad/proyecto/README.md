@@ -1,7 +1,45 @@
-# FYM · Tecla Wi-Fi 2 botones · Anuncio V1 (Reels / TikTok)
+# FYM · Tecla Wi-Fi 2 botones · Anuncios V1 y V2 (Reels / TikTok)
 
-**Entregable:** `04_export/FYM_Tecla_WiFi_Ad_V1.mp4`
-1080 × 1920 (9:16) · 30 fps · H.264 High · AAC 48 kHz estéreo 192 kbps · 23,2 s · −14 LUFS (pico real −1,5 dBTP)
+| Versión | Archivo | Duración | Script |
+|---|---|---|---|
+| **V2 (actual)** | `04_export/FYM_Tecla_WiFi_Ad_V2.mp4` | 21,8 s | `proyecto/fym_ad_v2.py` |
+| V1 (para comparar, sin cambios) | `04_export/FYM_Tecla_WiFi_Ad_V1.mp4` | 23,2 s | `proyecto/fym_ad.py` |
+
+Ambas: 1080 × 1920 (9:16) · 30 fps · H.264 High · AAC 48 kHz estéreo · −14 LUFS.
+Textos y gráficos se dibujan directamente a 1080 × 1920; el video del vendedor
+viene de un original de 576 × 1024 y se amplía (no recupera detalle).
+
+## V2 — qué cambió respecto de V1
+
+1. **Sin plano del manual/QR.** Ese tramo ("Está para iPhone y Android. Lo mejor de todo,")
+   lo cubre un plano del producto. El audio se mantiene porque la frase queda completa:
+   sigue a "…para que funcione por la aplicación de prender y apagar", así que "Está"
+   se refiere a la aplicación.
+2. **Insertos alternados.** Vendedor → ambiente (tecla en el living) → detalle del frente
+   → tecla en la pared → vendedor → producto completo → vendedor → cierre.
+   La foto instalada se usa 2 veces (antes 3) y con encuadres distintos; ninguna foto se
+   alarga para completar tiempo (cada plano dura lo que dura su frase).
+3. **Más presencia del producto.** La foto de la tecla negra se endereza con una rotación
+   rígida (sin deformar) para llenar el cuadro vertical: recorrido lento por el frente,
+   plano completo con giro leve, fondo cálido con paralaje y un reflejo de luz muy suave.
+   No se simula ningún encendido ni interfaz.
+4. **Subtítulos debajo del rostro.** Con detección de rostro cuadro a cuadro: el vendedor
+   se escala a ancho completo y se sube 90 px; el subtítulo queda al menos 40 px por debajo
+   del mentón en todos los cuadros y dentro de la zona segura. Los subtítulos incrustados
+   del original quedan ocultos bajo un fundido oscuro en la zona de interfaz (y > 1600).
+5. **Cierre** con el logo auténtico de FYM extraído de la foto 05 (formas y colores originales,
+   sin redibujar: `03_recursos/logo_fym_extraido.png`), producto más grande, precio y
+   "Escribinos para comprar".
+6. **Audio revisado:** filtro paso alto a 95 Hz (quita el retumbe de 70–85 Hz), tono de sala
+   tomado de silencios reales, fundidos de igual potencia (sin clics), pausas largas
+   recortadas solo bajo insertos, nivel por frase igualado (variación 1,6 LU) y
+   normalización estática (ganancia fija + limitador; sin control automático que suba
+   el fondo). Sincronía verificada: 0,0 ms en los 12 tramos.
+
+> Nota: V1 se conserva tal cual para comparar; tiene pequeños clics en algunos cortes y
+> el normalizador dinámico que se corrigieron en V2.
+
+## V1 (documentación original)
 
 ## Carpetas
 
@@ -44,7 +82,9 @@ Requisitos: `ffmpeg`, Python 3 con `numpy`, `opencv-python-headless`, `pillow` (
 
 ```bash
 cd proyecto
-python3 fym_ad.py --timeline           # ver la línea de tiempo calculada
+python3 fym_ad_v2.py --timeline        # V2: ver la línea de tiempo calculada
+python3 fym_ad_v2.py                   # V2: export completo
+python3 fym_ad.py --timeline           # V1: ver la línea de tiempo calculada
 python3 fym_ad.py --stills 1,6,17.5    # PNG de control en 02_trabajo/stills/
 python3 fym_ad.py                      # export completo (~3–4 min)
 python3 fym_ad.py --audio-only         # rehacer solo el audio
