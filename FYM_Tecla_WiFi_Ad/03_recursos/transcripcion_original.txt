@@ -1,0 +1,25 @@
+Transcripción del video original (Whisper large-v3 local + verificación con alineación forzada wav2vec2).
+Tiempos en segundos del original. [USADO] = fragmento incluido en V1. Notas entre corchetes = correcciones verificadas.
+
+[  0.00 -   2.72] Este productito nuevo que nos ingresó en Hidrofim.  [USADO (sin 'en Hidrofim')]
+[  4.46 -   6.02] Son teclas de luz.  [USADO]
+[  6.20 -   9.66] Tengo de un punto, de dos puntos, para tres luces.
+[ 10.00 -  13.68] Y se instalan como si fuera un enchufe normal y corriente.  [USADO]
+[ 13.92 -  15.04] Línea neutro la luz.
+[ 15.46 -  16.88] Manualcito de conexión.
+[ 17.04 -  18.72] Te lo muestro rápido para que lo veas.
+[ 18.86 -  21.50] Súper sencillo la instalación de esto.  [USADO]
+[ 21.62 -  23.60] Y la instalación para que funcione con la aplicación.  [USADO] [audio: 'por la aplicación', confirmado por alineación forzada]
+[ 23.66 -  24.84] Debe prender y apagar.  [USADO] [audio: 'de prender y apagar']
+[ 25.26 -  26.70] Está en este código QR.   [ambiguo: 'está en' / '(lo) escaneás este código QR' -> no usado]
+[ 26.96 -  28.88] Está para iPhone y Android.  [USADO]
+[ 28.88 -  31.06] Lo mejor de todo, tenemos 200 unidades.  [USADO ('Lo mejor de todo,' sin '200 unidades')] [audio: 'Lo mejor de todo, tenemos 200 unidades' -> stock omitido]
+[ 31.12 -  33.18] Y las vamos a vender a 17.500 pesos.  [USADO ('vamos a vender a 17.500 pesos')] [audio: 'y (los) vamos a vender...']
+[ 34.14 -  34.86] Cota Gaita.   [dirección 'Cotagaita 2280, Ramos Mejía' (34.1–36.4 s) -> omitida]
+[ 34.88 -  35.76] 2-2-8-0.
+[ 35.78 -  36.42] Ramos Mejía.
+[ 36.48 -  37.46] Nos estamos liquidando.   [condición comercial no confirmada -> omitida; + 'De verdad en ningún lado ni...' según subtítulos originales -> omitido]
+[ 37.56 -  39.42] Te llega así, con los camisitos para murar.   [audio: 'tornillitos para amurar' -> no usado]
+[ 40.20 -  41.70] Capacitor, en caso de que no tengas el neutro.
+[ 41.76 -  42.96] Es una pavada de conectar.
+[ 43.48 -  45.02] Y lo tengo en color negro también.  [USADO]
