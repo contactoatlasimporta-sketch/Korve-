@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KORVE · Explorador de palas</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="top-inner">
+      <a class="brand" href="#mapa"><b>KORVE</b><span>Explorador de mercado y desarrollo de palas</span></a>
+      <div class="cutoff" id="cutoff"></div>
+    </div>
+    <nav class="tabs" aria-label="Vistas">
+      <ul>
+        <li><a href="#mapa" data-view="mapa">Mapa</a></li>
+        <li><a href="#mercado" data-view="mercado">Explorador del mercado</a></li>
+        <li><a href="#comparador" data-view="comparador">Comparador</a></li>
+        <li><a href="#muestras" data-view="muestras">Nuestras muestras</a></li>
+        <li><a href="#desarrollo" data-view="desarrollo">Desarrollo y pruebas</a></li>
+        <li><a href="#fabrica" data-view="fabrica">Decisión de fábrica</a></li>
+        <li><a href="#fuentes" data-view="fuentes">Fuentes y método</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="app" tabindex="-1"></main>
+
+  <footer id="footer"></footer>
+
+  <!-- Datos (editar estos archivos para actualizar la investigación) -->
+  <script src="data/meta.js"></script>
+  <script src="data/brands.js"></script>
+  <script src="data/references.js"></script>
+  <script src="data/korve.js"></script>
+  <script src="data/branches.js"></script>
+  <!-- Interfaz -->
+  <script src="js/core.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/views.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
