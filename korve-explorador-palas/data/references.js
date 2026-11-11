@@ -57,7 +57,7 @@ window.KORVE_DATA = window.KORVE_DATA || {};
       face: D("16K aluminizado"), core: D("EVA High Memory"), finish: M("NP"), hardness: null,
       other: D("38 mm; ajuste de distribución de masa"),
       use: "Ataque y ajuste de distribución de masa; 38 mm.",
-      config: NO_CONFIG + " Ficha alojada en tienda (allforpadel).",
+      config: NO_CONFIG + " Ficha publicada por All For Padel, licenciatario oficial de adidas pádel.",
       friction: { v: "0,214", u: "(sin unidad)", ev: "L", note: "Coeficiente de fricción estática, Padel University / TWU. Una unidad por modelo. No es rpm ni potencia." },
       pending: ["Balance en mm", "Acabado"] },
 
@@ -211,7 +211,7 @@ window.KORVE_DATA = window.KORVE_DATA || {};
   /* Sección 6: coeficiente de fricción estática (L), sin unidad. */
   window.KORVE_DATA.frictionData = {
     source: "Padel University / Tennis Warehouse University",
-    sourceUrl: null,
+    sourceUrl: "https://twu.tennis-warehouse.com/learning_center/padel/padelspecs.php",
     caveat: "Externa a las marcas, pero vinculada a un grupo comercial. Una unidad por modelo: sirve para comparar esas unidades, no para estimar dispersión de producción. No son rpm, potencia, comodidad ni un ranking general. La tabla consultada no permite fijar todas las condiciones de pelota, humedad y desgaste.",
     rows: [
       { model: "Babolat Technical Viper 3.0", value: "0,346", refId: "bb-technical-viper-30" },
@@ -224,6 +224,9 @@ window.KORVE_DATA = window.KORVE_DATA || {};
   };
 
   window.KORVE_DATA.measurementSources = [
+    { name: "Padel University / Tennis Warehouse University: especificaciones de palas", url: "https://twu.tennis-warehouse.com/learning_center/padel/padelspecs.php",
+      documents: "Mediciones de propiedades de palas, entre ellas el coeficiente de fricción estática.",
+      limits: "Externa a las marcas, pero vinculada a un grupo comercial. Una unidad por modelo: no estima dispersión de producción." },
     { name: "Testea Padel: ensayos", url: "https://testeapadel.com/en/test/",
       documents: "Deformación/rigidez, rebote, potencia, vibración y durabilidad.",
       limits: "Marco para contratar ensayos. Un sello sin informe no demuestra superioridad sobre todo el mercado." },

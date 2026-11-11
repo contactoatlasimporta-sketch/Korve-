@@ -79,12 +79,12 @@ window.KORVE_DATA.branches = [
       summary: "MC-005 (William): referencia de comportamiento HYBRID. El rival interno sigue siendo MC hasta que otra la supere.",
       details: [
         "Es referencia por uso, no ficha de laboratorio.",
-        "Tomi pidió conservar movilidad y tacto seco y añadir peso: merece una variante controlada."
+        "Tomás pidió conservar movilidad y tacto seco y añadir peso: merece una variante controlada."
       ] },
     refs: {
-      summary: "AT10 2026 de Tomi como comparación disponible; Genius 12K 2027; Neuron 27. Adicionales: StarVie Eternal y Wilson Bela.",
+      summary: "AT10 2026 de Tomás como comparación disponible; Genius 12K 2027; Neuron 27. Adicionales: StarVie Eternal y Wilson Bela.",
       items: [
-        { name: "NOX AT10 Luxury Genius 12K Alum XTREM 2026 (Tomi)", why: "Comparación disponible y vinculada al feedback de MC. Sin ficha en el informe.", tier: "Prioritaria" },
+        { name: "NOX AT10 Luxury Genius 12K Alum XTREM 2026 (Tomás)", why: "Comparación disponible y vinculada al feedback de MC. Sin ficha en el informe.", tier: "Prioritaria" },
         { refId: "nx-genius-12k-2027", why: "Comprobar si aporta una mejora real sobre la 2026.", tier: "Prioritaria" },
         { refId: "bp-neuron-27", why: "Contrastar un tacto firme.", tier: "Prioritaria" },
         { name: "StarVie Eternal", why: "Referencia adicional; no sustituye el ensayo directo. Sin ficha en el informe.", tier: "Adicional" },
@@ -93,7 +93,7 @@ window.KORVE_DATA.branches = [
     develop: {
       summary: "Distribución de masa (incluida una variante más pesada), consistencia, tolerancias, núcleo multicapa, acabado y EVA.",
       devIds: ["dev-masa", "dev-nucleo", "dev-tolerancias", "dev-multicapa", "dev-rugosidad", "dev-eva"],
-      details: ["Incluir la variante más pesada solicitada por Tomi."] },
+      details: ["Incluir la variante más pesada solicitada por Tomás."] },
     tests: {
       summary: "MC actual vs. MC con redistribución reversible vs. futura HYBRID de la fábrica elegida.",
       criterion: { main: "Rendimiento consistente entre defensa, construcción y ataque.", also: "Mantener cualidades preferidas de MC; no aceptar mejora mínima de una fase que empeore mucho otra." },
@@ -108,7 +108,7 @@ window.KORVE_DATA.branches = [
         "La referencia del proveedor (360 ±5 g / 255 ±7 mm) es sin overgrip: no comparable directamente.",
         "La preferencia por MC procede de una persona."
       ] },
-    window: { mass: "358–367 g", balance: "252–260 mm", pending: "Qué combinación conserva sensación MC y mejora estabilidad/rapidez; incluir variante más pesada solicitada por Tomi." } },
+    window: { mass: "358–367 g", balance: "252–260 mm", pending: "Qué combinación conserva sensación MC y mejora estabilidad/rapidez; incluir variante más pesada solicitada por Tomás." } },
 
   { id: "CONTROL", name: "CONTROL", tagline: "Colocar y defender con precisión",
     behavior: {

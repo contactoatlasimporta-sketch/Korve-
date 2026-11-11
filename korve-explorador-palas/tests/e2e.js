@@ -1,7 +1,7 @@
 /* Prueba de punta a punta con Playwright. Uso: node tests/e2e.js [carpeta-capturas] */
 const { chromium } = require("playwright");
 const path = require("path"), fs = require("fs"), assert = require("assert");
-const URL = "file://" + path.join(__dirname, "..", "index.html");
+const URL = "file://" + (process.env.KORVE_FILE || path.join(__dirname, "..", "index.html"));
 const shots = process.argv[2];
 if (shots) fs.mkdirSync(shots, { recursive: true });
 
@@ -27,7 +27,7 @@ if (shots) fs.mkdirSync(shots, { recursive: true });
   assert.strictEqual(await page.locator('.node[data-kind="aspect"]').count(), 7);
   for (const t of ["Comportamiento", "Jugador", "Muestra candidata", "Referencias", "Desarrollar", "Pruebas que deciden", "Información faltante", "Ventana exploratoria"])
     assert.ok((await page.locator("#panel").textContent()).includes(t), "panel POWER incluye " + t);
-  assert.ok(page.url().endsWith("#mapa/POWER"));
+  assert.ok(page.url().endsWith("#mapa--POWER"));
   step("Rama POWER: 7 aspectos en mapa y panel, ventana marcada como propuesta");
 
   const vb1 = await page.locator("#map svg").getAttribute("viewBox");
@@ -50,15 +50,15 @@ if (shots) fs.mkdirSync(shots, { recursive: true });
   step("Tercer nivel: referencias y ficha con etiquetas de evidencia");
 
   await page.click('[data-cmd="back"]'); await page.waitForTimeout(100);
-  assert.ok(page.url().endsWith("#mapa/POWER/refs"));
+  assert.ok(page.url().endsWith("#mapa--POWER--refs"));
   await page.locator("#map").press("Escape");
   await page.waitForTimeout(100);
-  assert.ok(page.url().endsWith("#mapa/POWER"), "Esc vuelve un nivel: " + page.url());
+  assert.ok(page.url().endsWith("#mapa--POWER"), "Esc vuelve un nivel: " + page.url());
   await page.click('[data-cmd="back"]'); await page.waitForTimeout(100);
   assert.strictEqual(await page.locator('.node[data-kind="aspect"]').count(), 0);
   step("Volver al nivel anterior con botón y Esc");
 
-  await page.goto(URL + "#mapa/HYBRID/sample");
+  await page.goto(URL + "#mapa--HYBRID--sample");
   await page.waitForTimeout(400);
   assert.ok((await page.locator("#panel").textContent()).includes("MC-005"));
   await page.focus('.node[data-item="mc005"]'); await page.keyboard.press("Enter");
@@ -122,7 +122,7 @@ if (shots) fs.mkdirSync(shots, { recursive: true });
   step("Comparador: 3 palas, advertencias de configuración, escalas, K y balance cualitativo");
 
   /* ---------- Muestras: medición local ---------- */
-  await page.goto(URL + "#muestras/w3");
+  await page.goto(URL + "#muestras--w3");
   for (const t of ["Objetivo solicitado", "Construcción declarada", "Medición real", "Opinión de tester", "Candidata POWER", "Referencia de comportamiento HYBRID"])
     assert.ok((await page.locator("main").textContent()).includes(t));
   await page.click("#sample-w3 details:has(.measure-form) > summary");
@@ -149,25 +149,43 @@ if (shots) fs.mkdirSync(shots, { recursive: true });
   step("Desarrollo: ensayos pendientes por defecto, estado y nota persistentes");
 
   /* ---------- Exportar / importar ---------- */
-  const [dl] = await Promise.all([page.waitForEvent("download"), page.click('[data-action="export"]')]);
+  await page.click('[data-action="export"]');
+  const expText = await page.locator("#export-json").inputValue();
+  const [dl] = await Promise.all([page.waitForEvent("download"), page.click(".dialog [data-dl]")]);
   const file = await dl.path();
   const exp = JSON.parse(fs.readFileSync(file, "utf8"));
+  assert.deepStrictEqual(JSON.parse(expText).data, exp.data, "texto copiable = archivo descargado");
   assert.strictEqual(exp.app, "korve-explorador");
   assert.strictEqual(exp.data.status["dev-masa"], "planificado");
   assert.ok(exp.data.measurements.w3.length === 1 && exp.data.notes["dev-dev-nucleo"]);
-  page.on("dialog", (d) => d.accept());
+  await page.click(".dialog [data-close]");
   await page.goto(URL + "#fuentes");
   await page.click('[data-action="clear-local"]');
+  await page.click(".dialog [data-close]");
+  await page.goto(URL + "#desarrollo");
+  assert.strictEqual(await page.locator('select[data-status="dev-masa"]').inputValue(), "planificado", "cancelar no borra");
+  await page.goto(URL + "#fuentes");
+  await page.click('[data-action="clear-local"]');
+  await page.click(".dialog [data-ok]");
   await page.goto(URL + "#desarrollo");
   assert.strictEqual(await page.locator('select[data-status="dev-masa"]').inputValue(), "pendiente");
   await page.setInputFiles('input[data-action="import"]', file);
-  await page.waitForTimeout(300);
+  await page.click(".dialog [data-ok]");
+  await page.waitForTimeout(200);
   assert.strictEqual(await page.locator('select[data-status="dev-masa"]').inputValue(), "planificado");
   const bad = path.join(path.dirname(file), "bad.json"); fs.writeFileSync(bad, '{"x":1}');
   await page.setInputFiles('input[data-action="import"]', bad);
-  await page.waitForTimeout(300);
+  await page.click(".dialog [data-ok]");
+  await page.waitForTimeout(200);
   assert.strictEqual(await page.locator('select[data-status="dev-masa"]').inputValue(), "planificado", "importación inválida no borra datos");
-  step("Exportar, borrar, importar y rechazar archivo inválido");
+  await page.goto(URL + "#fuentes");
+  await page.click('[data-action="clear-local"]'); await page.click(".dialog [data-ok]");
+  await page.click('[data-action="paste-import"]');
+  await page.fill("#import-json", expText);
+  await page.click(".dialog [data-imp]"); await page.click(".dialog [data-ok]");
+  await page.goto(URL + "#desarrollo");
+  assert.strictEqual(await page.locator('select[data-status="dev-masa"]').inputValue(), "planificado", "importación pegada");
+  step("Exportar (copiar y descargar), confirmar dentro de la página, importar archivo o texto y rechazar inválido");
 
   /* ---------- Fábrica y fuentes ---------- */
   await page.goto(URL + "#fabrica");
@@ -176,19 +194,21 @@ if (shots) fs.mkdirSync(shots, { recursive: true });
   if (shots) await page.screenshot({ path: path.join(shots, "5-fabrica.png") });
   await page.goto(URL + "#fuentes");
   const links = await page.locator('main a[href^="http"]').count();
-  assert.ok(links >= 41 + 19 + 4, "enlaces de fuentes: " + links);
-  assert.ok((await page.locator("main").textContent()).includes("11/11/2026"));
+  assert.ok(links >= 41 + 19 + 5 + 1, "enlaces de fuentes: " + links);
+  const fsrc = await page.locator("main").textContent();
+  assert.ok(fsrc.includes("11/11/2026") && !/\bTomi\b/.test(fsrc));
+  assert.ok(await page.locator('a[href="https://twu.tennis-warehouse.com/learning_center/padel/padelspecs.php"]').count() >= 2, "enlace Padel University");
   step("Fábrica sin ganador; fuentes con " + links + " enlaces y fecha de corte");
 
   /* ---------- Móvil ---------- */
   const m = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
   const mp = await m.newPage();
   mp.on("pageerror", (e) => errors.push("mobile pageerror: " + e.message));
-  for (const v of ["mapa/CONTROL", "mercado", "comparador", "muestras", "desarrollo", "fabrica", "fuentes"]) {
+  for (const v of ["mapa--CONTROL", "mercado", "comparador", "muestras", "desarrollo", "fabrica", "fuentes"]) {
     await mp.goto(URL + "#" + v); await mp.waitForTimeout(450);
     const over = await mp.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     assert.ok(over <= 1, v + ": desborde horizontal de " + over + "px");
-    if (shots) await mp.screenshot({ path: path.join(shots, "m-" + v.replace("/", "-") + ".png") });
+    if (shots) await mp.screenshot({ path: path.join(shots, "m-" + v.replace("--", "-") + ".png") });
   }
   await mp.goto(URL + "#mapa");
   await mp.tap('.node[data-branch="CONTROL"][data-kind="branch"]');

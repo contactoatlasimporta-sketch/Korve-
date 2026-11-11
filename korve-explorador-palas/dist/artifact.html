@@ -1,0 +1,2695 @@
+<title>KORVE · Explorador de palas</title>
+  <style>
+:root {
+  --black: #0d0d0d;
+  --ink: #161616;
+  --white: #ffffff;
+  --paper: #f6f4f2;
+  --line: #dcd6d2;
+  --muted: #5d5753;
+  --burgundy: #7a1f2e;
+  --burgundy-2: #9c2a3d;
+  --burgundy-soft: #f3e6e8;
+  --focus: #c23a52;
+  --radius: 10px;
+  --font: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { font-family: var(--font); background: var(--paper); color: var(--ink); line-height: 1.45; font-size: 15px; }
+a { color: var(--burgundy); }
+a:hover { color: var(--burgundy-2); }
+button, select, input, textarea { font: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- Header ---------- */
+.top { background: var(--black); color: var(--white); position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 25; background: var(--black); }
+.overlay { position: fixed; inset: 0; background: rgba(13,13,13,.6); z-index: 60; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.dialog { background: var(--white); color: var(--ink); border-radius: var(--radius); padding: 16px; width: min(560px, 100%); max-height: 90vh; overflow: auto; border-top: 4px solid var(--burgundy); }
+.dialog h2 { margin-top: 0; }
+.dialog textarea { font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+.dialog-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin-top: 10px; }
+.top-inner { max-width: 1320px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.brand { display: flex; align-items: baseline; gap: 10px; text-decoration: none; color: var(--white); }
+.brand b { letter-spacing: .28em; font-size: 20px; }
+.brand span { color: #c9b9bc; font-size: 12px; }
+.cutoff { margin-left: auto; font-size: 12px; color: #c9b9bc; }
+nav.tabs { background: var(--black); border-top: 1px solid #2a2a2a; }
+nav.tabs ul { list-style: none; margin: 0 auto; padding: 0 8px; max-width: 1320px; display: flex; gap: 2px; overflow-x: auto; scrollbar-width: thin; }
+nav.tabs a { display: block; padding: 10px 12px; color: #e8e2e3; text-decoration: none; white-space: nowrap; font-size: 14px; border-bottom: 3px solid transparent; }
+nav.tabs a[aria-current="page"] { color: var(--white); border-bottom-color: var(--burgundy-2); font-weight: 600; }
+nav.tabs a:hover { color: var(--white); }
+
+main { max-width: 1320px; margin: 0 auto; padding: 16px; }
+h1 { font-size: 22px; margin: 4px 0 6px; letter-spacing: .02em; }
+h2 { font-size: 18px; margin: 18px 0 8px; }
+h3 { font-size: 15px; margin: 12px 0 6px; }
+.lead { color: var(--muted); max-width: 900px; margin: 0 0 12px; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+
+/* ---------- Generic ---------- */
+.card { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; }
+.grid { display: grid; gap: 12px; }
+.grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.grid-3 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.btn { display: inline-flex; align-items: center; gap: 6px; background: var(--white); color: var(--ink); border: 1px solid var(--ink); border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 14px; text-decoration: none; }
+.btn:hover { background: var(--burgundy-soft); }
+.btn.primary { background: var(--burgundy); border-color: var(--burgundy); color: var(--white); }
+.btn.primary:hover { background: var(--burgundy-2); }
+.btn.small { padding: 3px 8px; font-size: 13px; }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+.banner { border-left: 4px solid var(--burgundy); background: var(--burgundy-soft); padding: 10px 12px; border-radius: 6px; margin: 10px 0; font-size: 14px; }
+.banner.neutral { border-left-color: var(--ink); background: #eeeae7; }
+details { border-top: 1px solid var(--line); padding: 6px 0; }
+details > summary { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--burgundy); list-style: revert; }
+details[open] > summary { margin-bottom: 6px; }
+ul.clean { margin: 4px 0; padding-left: 18px; }
+ul.clean li { margin: 3px 0; }
+.empty { padding: 24px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--radius); background: var(--white); }
+.chip { display: inline-block; border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; font-size: 12px; background: var(--white); margin: 2px 2px 2px 0; }
+
+/* ---------- Evidence badges (text first, color second) ---------- */
+.ev { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; letter-spacing: .02em; border-radius: 4px; padding: 1px 6px; border: 1px solid; white-space: nowrap; vertical-align: middle; }
+.ev .code { font-weight: 800; }
+.ev-D { background: #fff; color: #222; border-color: #222; }
+.ev-F { background: #fff; color: #222; border-color: #222; border-style: dashed; }
+.ev-L { background: #1d1d1d; color: #fff; border-color: #1d1d1d; }
+.ev-P { background: #fff; color: #6b6b6b; border-color: #9b9b9b; border-style: dotted; }
+.ev-KP, .ev-KO { background: #fff; color: var(--burgundy); border-color: var(--burgundy); }
+.ev-KM { background: var(--burgundy); color: #fff; border-color: var(--burgundy); }
+.ev-KT { background: var(--burgundy-soft); color: var(--burgundy); border-color: var(--burgundy); border-style: dashed; }
+.ev-PR { background: #fff7e0; color: #5a4300; border-color: #8a6a00; border-style: dashed; }
+.ev-A { background: #eeeae7; color: #333; border-color: #888; }
+.miss { display: inline-block; font-size: 12px; font-style: italic; color: var(--muted); border: 1px dashed #aaa; border-radius: 4px; padding: 0 6px; }
+.cov { font-size: 11px; font-weight: 700; border-radius: 4px; padding: 1px 6px; border: 1px solid; }
+.cov-completa { color: #1d1d1d; border-color: #1d1d1d; }
+.cov-parcial { color: var(--burgundy); border-color: var(--burgundy); border-style: dashed; }
+.val { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; margin: 2px 0; }
+.val .num { font-weight: 600; }
+.val .note { flex-basis: 100%; font-size: 12px; color: var(--muted); }
+
+/* ---------- Map ---------- */
+.map-layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(320px, 1fr); gap: 14px; align-items: start; }
+.map-wrap { position: relative; background: var(--black); border-radius: var(--radius); overflow: hidden; height: calc(100vh - 170px); min-height: 460px; touch-action: none; }
+.map-wrap svg { width: 100%; height: 100%; display: block; cursor: grab; user-select: none; }
+.map-wrap svg.dragging { cursor: grabbing; }
+.map-controls { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; gap: 6px; z-index: 2; }
+.map-controls button { width: 40px; height: 40px; border-radius: 8px; border: 1px solid #555; background: #1b1b1b; color: #fff; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.map-controls button:hover { background: var(--burgundy); }
+.map-controls button[disabled] { opacity: .35; cursor: not-allowed; background: #1b1b1b; }
+.crumbs { position: absolute; top: 10px; left: 60px; right: 10px; color: #ddd; font-size: 13px; z-index: 2; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; pointer-events: none; }
+.crumbs button { pointer-events: auto; background: rgba(0,0,0,.6); border: 1px solid #444; color: #fff; border-radius: 6px; padding: 2px 8px; cursor: pointer; font-size: 12px; }
+.crumbs span.sep { color: #888; }
+.map-note { position: absolute; bottom: 8px; left: 10px; right: 10px; color: #bdb3b5; font-size: 11px; z-index: 2; pointer-events: none; }
+.node { cursor: pointer; }
+.node text { fill: #fff; font-family: var(--font); pointer-events: none; }
+.node .shape { transition: fill .15s; }
+.node:hover .shape, .node:focus .shape { stroke: #fff; stroke-width: 3; }
+.node:focus { outline: none; }
+.node.dim { opacity: .28; }
+.node.selected .shape { stroke: #fff; stroke-width: 3; }
+.edge { stroke: #6b2a35; stroke-width: 2; }
+.edge.strong { stroke: var(--burgundy-2); stroke-width: 3; }
+
+.panel { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; max-height: calc(100vh - 170px); overflow: auto; }
+.panel h2 { margin-top: 0; }
+.aspect { border: 1px solid var(--line); border-radius: 8px; padding: 10px; margin: 8px 0; background: #fff; }
+.aspect.highlight { border-color: var(--burgundy); box-shadow: 0 0 0 2px var(--burgundy-soft); }
+.aspect h3 { margin: 0 0 4px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.help { font-size: 13px; }
+.help li { margin: 3px 0; }
+
+/* ---------- Explorer ---------- */
+.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; align-items: end; background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; margin-bottom: 12px; }
+.filters label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; }
+.filters input[type=search], .filters select { padding: 7px 8px; border: 1px solid #b9b1ad; border-radius: 6px; background: #fff; }
+.feature-filter { grid-column: 1 / -1; }
+.feature-filter fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 10px; }
+.feature-filter legend { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.feature-filter label { flex-direction: row; font-weight: 400; align-items: center; gap: 4px; }
+.result-count { margin: 6px 0 10px; font-size: 14px; }
+.brand-card h3 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 0; }
+.fam { display: grid; grid-template-columns: minmax(110px, 160px) 1fr auto; gap: 6px; padding: 4px 0; border-bottom: 1px solid #f0ebe8; font-size: 13px; }
+.fam:last-child { border-bottom: 0; }
+.fam.match { background: #fff5f6; }
+.fam b { font-weight: 600; }
+.enum-tag { font-size: 11px; color: var(--muted); }
+.refs-list { margin-top: 8px; }
+
+/* ---------- Comparator ---------- */
+.cmp-picker { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; }
+.cmp-picker label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; min-width: 220px; flex: 1; }
+.cmp-picker select { padding: 7px; border-radius: 6px; border: 1px solid #b9b1ad; }
+.table-scroll { overflow-x: auto; }
+table.cmp { width: 100%; border-collapse: collapse; background: var(--white); min-width: 640px; }
+table.cmp th, table.cmp td { border: 1px solid var(--line); padding: 8px; vertical-align: top; text-align: left; font-size: 14px; }
+table.cmp thead th { background: var(--black); color: var(--white); }
+table.cmp tbody th { background: #f2eeeb; width: 170px; font-size: 13px; }
+table.cmp thead th .btn { color: var(--ink); }
+
+/* ---------- Samples / dev / factory ---------- */
+.sample-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 12px; }
+.quad { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.quad > div { border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+.quad h4 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; }
+.kv { font-size: 13px; margin: 4px 0; }
+.kv .k { color: var(--muted); display: block; font-size: 12px; }
+.role { display: inline-block; font-size: 12px; font-weight: 700; color: #fff; background: var(--black); border-radius: 4px; padding: 2px 8px; }
+textarea { width: 100%; min-height: 70px; border: 1px solid #b9b1ad; border-radius: 6px; padding: 6px; resize: vertical; }
+.form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 6px; margin: 6px 0; }
+.form-row input, .form-row select { padding: 6px; border: 1px solid #b9b1ad; border-radius: 6px; width: 100%; }
+.form-row label { font-size: 12px; display: flex; flex-direction: column; gap: 2px; }
+table.simple { width: 100%; border-collapse: collapse; font-size: 14px; background: #fff; }
+table.simple th, table.simple td { border-bottom: 1px solid var(--line); padding: 8px 6px; text-align: left; vertical-align: top; }
+table.simple th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.prio { display: inline-block; min-width: 26px; text-align: center; font-weight: 800; border: 2px solid var(--ink); border-radius: 6px; padding: 0 4px; }
+.status-pill { font-size: 12px; font-weight: 700; border-radius: 4px; padding: 1px 6px; border: 1px dashed var(--ink); }
+.status-pendiente { border-style: dashed; }
+.status-local { font-size: 11px; color: var(--burgundy); }
+.dev-card { display: grid; grid-template-columns: 60px 1fr; gap: 10px; }
+.fact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; }
+.storage-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+footer { max-width: 1320px; margin: 20px auto; padding: 0 16px 30px; color: var(--muted); font-size: 12px; }
+
+@media (max-width: 900px) {
+  .map-layout { grid-template-columns: 1fr; }
+  .map-wrap { height: 58vh; min-height: 360px; }
+  .panel { max-height: none; }
+  .cutoff { margin-left: 0; width: 100%; }
+}
+@media (max-width: 520px) {
+  body { font-size: 14px; }
+  .quad { grid-template-columns: 1fr; }
+  .fam { grid-template-columns: 1fr; }
+  .dev-card { grid-template-columns: 1fr; }
+  table.cmp tbody th { width: 110px; }
+}
+@media print {
+  .top, .map-controls { position: static; }
+}
+
+</style>
+<header class="top">
+    <div class="top-inner">
+      <a class="brand" href="#mapa"><b>KORVE</b><span>Explorador de mercado y desarrollo de palas</span></a>
+      <div class="cutoff" id="cutoff"></div>
+    </div>
+    <nav class="tabs" aria-label="Vistas">
+      <ul>
+        <li><a href="#mapa" data-view="mapa">Mapa</a></li>
+        <li><a href="#mercado" data-view="mercado">Explorador del mercado</a></li>
+        <li><a href="#comparador" data-view="comparador">Comparador</a></li>
+        <li><a href="#muestras" data-view="muestras">Nuestras muestras</a></li>
+        <li><a href="#desarrollo" data-view="desarrollo">Desarrollo y pruebas</a></li>
+        <li><a href="#fabrica" data-view="fabrica">Decisión de fábrica</a></li>
+        <li><a href="#fuentes" data-view="fuentes">Fuentes y método</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="app" tabindex="-1"></main>
+
+  <footer id="footer"></footer>
+
+  <!-- Datos (editar estos archivos para actualizar la investigación) -->
+  <script>
+/*
+ * KORVE — Datos de investigación: metadatos, clases de evidencia y reglas.
+ * Fuente: informe "KORVE — Mercado de palas y objetivos de desarrollo".
+ * Para actualizar la investigación, editar estos archivos de /data (no la interfaz).
+ */
+window.KORVE_DATA = window.KORVE_DATA || {};
+
+window.KORVE_DATA.meta = {
+  title: "KORVE — Mercado de palas y objetivos de desarrollo",
+  cutoff: "11/11/2026",
+  cutoffNote:
+    "Fecha de consulta de todas las fuentes: 11/11/2026. Salvo indicación expresa, la fecha de publicación y el día exacto de lanzamiento no están publicados o no se verificaron.",
+  status:
+    "Decisiones propuestas, no especificaciones aprobadas para producción.",
+  conclusion:
+    "La oportunidad de KORVE es ofrecer tres comportamientos claramente diferenciados y reproducibles: POWER para acelerar y finalizar; HYBRID para jugar sólido en todas las fases; CONTROL para colocar y defender con precisión, incluso fuera del centro. Las tres tienen que mantener estabilidad, comodidad y calidad de fabricación. Ninguna debería convertirse en una versión inferior de otra.",
+  noBest:
+    "No hay evidencia pública suficiente para declarar una pala como la mejor del mundo. Los catálogos describen materiales y tecnologías, pero rara vez publican rigidez, inercia, dispersión de rebote, variación entre unidades y desgaste bajo un protocolo común. Por eso se proponen referencias de comparación, no un ranking de rendimiento.",
+  recommendation:
+    "Mantener MC-005 como referencia de comportamiento HYBRID; evaluar W3 como POWER y AMP22 como CONTROL sin aprobarlas todavía; enfrentar las cuatro muestras a referencias comerciales concretas. Elegir una fábrica por su capacidad para conseguir los tres perfiles y repetirlos en serie, no por la suma de nombres de tecnologías.",
+  scope:
+    "Se revisaron catálogos o páginas oficiales de 41 marcas, además de pruebas y publicaciones técnicas. El inventario enumera las familias y variantes identificadas; no es una certificación de que se localizaron todos los SKU mundiales. Ya aparecen colecciones 2027: el año del nombre comercial no demuestra fecha de puesta a la venta.",
+  finalResult:
+    "Hay suficientes referencias y evidencia metodológica para diseñar una comparación seria. Todavía no hay evidencia de que nuestras muestras sean iguales a un modelo comercial, superiores a todo el mercado o listas para producción. El siguiente avance decisivo será medir y probar lo que ya llegó."
+};
+
+/*
+ * Clases de evidencia. Cada dato de la app lleva una de estas claves en "ev".
+ * D, F, L, P y K provienen del informe. K se subdivide para distinguir
+ * proveedor, objetivo, medición y opinión. "PR" (propuesta) y "A" (análisis)
+ * marcan criterio propio del informe, no datos del mercado.
+ */
+window.KORVE_DATA.evidence = {
+  D:  { code: "D",  label: "Declaración del fabricante", desc: "Ficha técnica o descripción del fabricante: materiales, pesos y balances comerciales." },
+  F:  { code: "F",  label: "Ensayo del fabricante", desc: "Resultado con protocolo identificable. No se encontró una batería homogénea F que permita ordenar el mercado." },
+  L:  { code: "L",  label: "Medición externa", desc: "Laboratorio o investigación ajena al fabricante, con sus propias limitaciones y conflictos comerciales declarados." },
+  P:  { code: "P",  label: "Publicidad", desc: "Beneficios, porcentajes o puntuaciones sin documentación suficiente para verificarlos." },
+  KP: { code: "K",  label: "Declaración de proveedor", desc: "Información interna KORVE: lo que declara la fábrica (NEX, William). No es medición local." },
+  KO: { code: "K",  label: "Objetivo solicitado", desc: "Información interna KORVE: valor pedido a la fábrica. No demuestra que la unidad lo cumpla." },
+  KM: { code: "K",  label: "Medición interna", desc: "Información interna KORVE: medición local de una unidad, con su configuración." },
+  KT: { code: "K",  label: "Opinión de tester", desc: "Información interna KORVE: percepción de un jugador. Útil, pero procede de una persona." },
+  PR: { code: "PR", label: "Propuesta, no aprobada", desc: "Propuesta de ingeniería o de método del informe. No es especificación ni resultado." },
+  A:  { code: "A",  label: "Análisis del informe", desc: "Interpretación o criterio de uso escrito en el informe a partir de las fuentes." }
+};
+
+/* Estados para datos ausentes. */
+window.KORVE_DATA.missingStates = {
+  NP: "No publicado",
+  PEND: "Pendiente de confirmar",
+  NI: "No incluido en el informe",
+  BLANK: "En blanco (no medido)"
+};
+
+window.KORVE_DATA.rules = [
+  "No hay rankings de rendimiento: la publicidad no ordena el mercado.",
+  "12K/16K/18K describen haces de filamentos, no una escala de calidad. 18K no es mejor que 12K. T700 tampoco equivale a un número K.",
+  "No equiparar durezas sin conocer la escala (Shore C, “5/10” comercial, grados sin escala identificada).",
+  "No mezclar temporadas ni configuraciones con/sin overgrips, correa o protector.",
+  "Balances cualitativos (alto/medio/bajo) no se convierten en milímetros.",
+  "Las ventanas de peso y balance propuestas para KORVE son exploratorias, no especificaciones aprobadas.",
+  "La cercanía visual en el mapa no indica equivalencia técnica.",
+  "Un material no publicado no equivale a material ausente. Un catálogo oficial demuestra oferta declarada, no fabricación propia.",
+  "Los ensayos propuestos figuran como pendientes hasta que se registre un resultado."
+];
+
+window.KORVE_DATA.inconsistencies = [
+  "HEAD Gravity Motion 2027 tiene diferencias entre descripción de tejido y tabla de material. No se resolvieron suponiendo que una sección era correcta.",
+  "Black Crown Patron Kore y Special Max muestran rangos de masa distintos entre texto y ficha. No se eligió arbitrariamente uno.",
+  "Algunas fichas Wilson contienen unidades o campos mal renderizados. Se evitó transformar esos campos en medidas confiables.",
+  "El “92 cm² de punto dulce” de Siux y porcentajes de ampliación de otras marcas no comparten protocolo público verificable. No son superficies comparables.",
+  "“3D” puede ser relieve de acabado, decal con relieve curado o estructura de molde. No demuestra ni proceso ni durabilidad por sí solo."
+];
+
+window.KORVE_DATA.gaps = {
+  brands: ["Atila", "Prince", "DoPadel", "Fila", "Salming", "Rossignol", "Cartri"],
+  text:
+    "No quedaron cubiertas con un catálogo oficial actual suficientemente completo y coherente en esta revisión. Tampoco se censaron todas las marcas privadas de marketplaces. No se las descarta por rendimiento; quedan fuera de las conclusiones técnicas."
+};
+
+window.KORVE_DATA.trends = [
+  { id: "t1", title: "Masa, balance e inercia antes que un número K",
+    summary: "Dos palas de igual masa y balance pueden distribuir la masa de forma distinta. Hay que medir resistencia al giro al moverla y ante impactos descentrados.",
+    detail: "La investigación de Sensors sobre 137 palas y evaluación con 50 usuarios respalda caracterizar inercias, sin convertir sus resultados en una regla universal. adidas, NOX, Bullpadel, StarVie y Oxdog ofrecen formas de ajustar masa: eso justifica experimentar con posiciones de peso, no incorporar cinco sistemas de ajuste a la primera KORVE." },
+  { id: "t2", title: "Núcleo y laminado funcionan juntos",
+    summary: "La dureza nominal no predice por sí sola salida, velocidad, precisión o comodidad. Las palas deben probarse como sistemas completos.",
+    detail: "W3 y AMP22 declaran el mismo núcleo y capas similares, pero tienen masas, balances, tejidos y geometrías diferentes. Sin gramaje, fibra, resina, proporción, orientación, compactación, espesor y control de curado, una comparación de caras queda incompleta. No cambiar a “24K” sin una hipótesis mecánica verificable." },
+  { id: "t3", title: "Rugosidad útil y que sobreviva al uso",
+    summary: "Arena visible o mucha fricción estática no garantizan más efecto en todas las condiciones.",
+    detail: "Medir trayectoria/rotación y repetir después del desgaste, con la misma pelota y condiciones." },
+  { id: "t4", title: "Amortiguación sin destruir sensaciones ni distribución de masa",
+    summary: "La presencia de EVA no demuestra reducción de vibración ni prevención de lesiones.",
+    detail: "NEX declara alrededor de 10 g de relleno parcial: cualquier ensayo con/sin espuma debe controlar esa diferencia de masa para no confundir amortiguación con redistribución de peso." },
+  { id: "t5", title: "Calidad repetible como diferenciación premium",
+    summary: "Una muestra excelente no demuestra una producción excelente.",
+    detail: "Conviene publicar pesos reales, configuración de medición y controles por lote." }
+];
+
+window.KORVE_DATA.recommendedDecisions = [
+  "Conservar las cuatro muestras sin modificaciones irreversibles; comenzar por ficha normalizada y prueba comparativa.",
+  "Mantener MC como benchmark HYBRID y NOX 2026 como referencia comercial concreta.",
+  "Validar W3 y AMP22 antes de invertir en nuevos moldes o cambiar grados de carbono.",
+  "Definir CONTROL por precisión, tolerancia y estabilidad; POWER por ataque útil; HYBRID por consistencia entre fases.",
+  "Cerrar objetivos numéricos de inercia, rigidez y respuesta después de medir las bases, no a partir de publicidad.",
+  "Elegir una sola fábrica únicamente cuando sus resultados y capacidad de repetición justifiquen los tres modelos."
+];
+
+</script>
+  <script>
+/*
+ * Mapa de marcas (sección 3 del informe). 41 marcas.
+ * - families: familias/modelos ENUMERADOS en la fuente. No son fichas técnicas.
+ *   season: año de colección/nombre comercial SOLO cuando el informe lo indica;
+ *   null = sin temporada indicada. El año del nombre no demuestra fecha de venta.
+ * - coverage: "completa" = cobertura completa de la página revisada;
+ *             "parcial"  = el informe declara cobertura parcial / paginada / regional.
+ *   coverageBasis cita el motivo según el informe.
+ * - features: temas documentados en el informe para esa marca (ver featureTags).
+ */
+window.KORVE_DATA = window.KORVE_DATA || {};
+
+window.KORVE_DATA.featureTags = {
+  "masa-ajustable": "Masa ajustable / pesos intercambiables",
+  "distribucion-masa": "Balance y distribución de masa",
+  "nucleo": "Núcleo y dureza",
+  "materiales-cara": "Materiales y laminado de cara",
+  "geometria": "Geometría / forma",
+  "acabado": "Acabado y superficie",
+  "confort": "Confort / amortiguación (sin evidencia clínica)",
+  "polietileno": "Núcleo de polietileno",
+  "linea-perfiles": "Línea por perfiles (ataque / híbrida / control)",
+  "config-medicion": "Configuración de medición explícita",
+  "escala-dureza": "Dureza con escala no identificada",
+  "valor-costo": "Referencia de valor / costo",
+  "argentina": "Oferta argentina observada",
+  "temporadas-mezcladas": "Temporadas o ediciones mezcladas"
+};
+
+window.KORVE_DATA.brands = [
+  { id: "nox", name: "NOX", url: "https://noxsport.com/en/collections/coleccion-palas-padel-2027-nox",
+    coverage: "completa", coverageBasis: "Página de 17 modelos revisada.",
+    families: [
+      { name: "Genius", detail: "18K Alum, Attack 18K Alum, 12K Alum XTREM, Attack 12K Alum XTREM, Lite", season: "2027" },
+      { name: "Ventus", detail: "Hybrid 12K XTREM, Attack 12K XTREM, Control 3K, Control 12K, Hybrid 12K Lite", season: "2027" },
+      { name: "Pro Cup", detail: "Hard / Soft", season: "2027" },
+      { name: "ML10 Pro Cup", detail: "COORP / Rough / Silver", season: "2027" },
+      { name: "Equation", detail: "Hard / Soft", season: "2027" }
+    ],
+    note: "Diferenciación por núcleo, geometría y masa; Genius como referencia HYBRID. No confundir con AT10 2026 de Tomás.",
+    features: ["nucleo", "geometria", "masa-ajustable", "distribucion-masa"] },
+
+  { id: "bullpadel", name: "Bullpadel", url: "https://www.bullpadel.com/es/39-pro-line",
+    coverage: "parcial", coverageBasis: "Catálogo mixto, paginado y con ediciones especiales: cobertura de familias, no censo íntegro de variantes.",
+    families: [
+      { name: "Hack", detail: "05 / Hybrid / Comfort", season: null },
+      { name: "Vertex", detail: "05 / Hybrid / Comfort; Vertex Geo; Vertex W", season: null },
+      { name: "XPLO", detail: "XPLO / Comfort", season: null },
+      { name: "Neuron", detail: "Neuron", season: null },
+      { name: "Icon", detail: "Icon", season: null },
+      { name: "Elite", detail: "Elite", season: null },
+      { name: "Pearl", detail: "Pearl", season: null },
+      { name: "Wonder", detail: "Wonder", season: null },
+      { name: "Flow", detail: "Flow", season: null },
+      { name: "Otras gamas", detail: "Cloud, Next, Advance, Tour y Junior", season: null }
+    ],
+    note: "Balance, estabilidad y sistemas de ajuste.",
+    features: ["distribucion-masa", "masa-ajustable"] },
+
+  { id: "adidas", name: "adidas", url: "https://allforpadel.com/es/54-palas-padel",
+    coverage: "completa", coverageBasis: "Página revisada en allforpadel.com, sitio de All For Padel (AFP), que se presenta como licenciatario oficial de adidas para pádel: diseña, gestiona y comercializa la línea. Se trata como fuente oficial de adidas pádel. Conviven temporadas y ediciones.",
+    families: [
+      { name: "Arrow", detail: "Hit / CTRL", season: null },
+      { name: "Metalbone", detail: "Metalbone / HRD+ / CTRL / Carbon / Carbon CTRL / Team / Team Light / Superlight / Reserve", season: null },
+      { name: "Cross It", detail: "Cross It / CTRL / Carbon / Carbon CTRL / Team CTRL / Team Light / Light / Pro EDT", season: null },
+      { name: "Adipower Legend", detail: "Adipower Legend", season: null },
+      { name: "RX, Discovery, Match y Junior", detail: "Gamas RX, Discovery, Match y Junior", season: null },
+      { name: "Ediciones Zidane", detail: "Ediciones Zidane", season: null }
+    ],
+    note: "Interesa la masa ajustable; no trasladar especificaciones 3.4 a 2026.",
+    features: ["masa-ajustable", "temporadas-mezcladas"] },
+
+  { id: "babolat", name: "Babolat", url: "https://www.babolat.com/es/padel/palas.html",
+    coverage: "completa", coverageBasis: "Catálogo oficial revisado. Comprobar versión exacta al conseguir una unidad.",
+    families: [
+      { name: "Technical", detail: "Viper / Veron 3.0", season: null },
+      { name: "Air", detail: "Viper / Veron / Vertuo", season: null },
+      { name: "Counter", detail: "Viper / Veron / Vertuo", season: null },
+      { name: "Juan Lebrón", detail: "Viper / Veron, con 3.1 en catálogo", season: null },
+      { name: "Vita, Energy, Spirit, Origin y Junior", detail: "Gamas Vita, Energy, Spirit, Origin y Junior", season: null }
+    ],
+    note: "Diferenciación ataque aéreo / contraataque; comprobar versión exacta al conseguir una unidad.",
+    features: ["linea-perfiles"] },
+
+  { id: "head", name: "HEAD", url: "https://www.head.com/shop-padel/racquets/tournament",
+    coverage: "parcial", coverageBasis: "Catálogos regionales parciales.",
+    families: [
+      { name: "Coello", detail: "Variantes Pro / Motion / Team según familia", season: null },
+      { name: "Extreme", detail: "Variantes según familia; Extreme ONE / ONE X", season: null },
+      { name: "Radical", detail: "Variantes según familia", season: null },
+      { name: "Speed", detail: "Variantes según familia; Speed ONE / ONE X", season: null },
+      { name: "Gravity", detail: "Gravity 2027 aparece como próxima llegada", season: "2027" },
+      { name: "ONE", detail: "ONE", season: null }
+    ],
+    note: "Gravity 2027 aparece como próxima llegada; no dar disponibilidad por confirmada.",
+    features: [] },
+
+  { id: "wilson", name: "Wilson", url: "https://www.wilson.com/en-us/products/endure-pro-v1-padel-racket-wr19030",
+    coverage: "parcial", coverageBasis: "Familias verificadas mediante páginas oficiales, no inventario completo de versiones regionales.",
+    families: [
+      { name: "Endure", detail: "Pro / V1 / LS", season: null },
+      { name: "Defy", detail: "Pro / V1 / LS", season: null },
+      { name: "Bela", detail: "Pro / V3 / LS", season: null },
+      { name: "Blade", detail: "V4 / LS V4", season: null }
+    ],
+    note: "Endure para CONTROL; Defy para ataque; Bela/Blade para contraste intermedio. Algunas fichas tienen unidades o campos mal renderizados.",
+    features: ["linea-perfiles"] },
+
+  { id: "siux", name: "Siux", url: "https://www.siuxpadel.com/collections/palas",
+    coverage: "parcial", coverageBasis: "Página paginada, varias próximas llegadas y persisten productos 2026 no enumerados.",
+    families: [
+      { name: "Obsidian", detail: "Variantes Pro / Elite según modelo (sustituye a Trilogy según ficha)", season: "2027" },
+      { name: "Fenix", detail: "Variantes Pro / Elite según modelo", season: "2027" },
+      { name: "Electra", detail: "Variantes Pro / Elite según modelo", season: "2027" },
+      { name: "Diablo", detail: "Variantes Pro / Elite según modelo", season: "2027" },
+      { name: "Valkiria", detail: "Variantes Pro / Elite según modelo", season: "2027" },
+      { name: "Pegasus", detail: "Variantes Pro / Elite según modelo", season: "2027" },
+      { name: "Tsunami Go", detail: "Hybrid / Air / Control", season: null },
+      { name: "Beat Play", detail: "Hybrid / Air / Control / Kid", season: null }
+    ],
+    note: "Obsidian sustituye a Trilogy según ficha; no comparar nombres como si fueran la misma pala. Dureza comercial 5/10 (no Shore) y “92 cm² de punto dulce” sin protocolo verificable.",
+    features: ["escala-dureza", "temporadas-mezcladas"] },
+
+  { id: "starvie", name: "StarVie", url: "https://starvie.com/collections/palas",
+    coverage: "completa", coverageBasis: "12 entradas observadas en la página revisada.",
+    families: [
+      { name: "Eternal", detail: "Eternal Sanyo", season: null },
+      { name: "Raptor+", detail: "Raptor+ Red", season: null },
+      { name: "Tritón", detail: "T-One Tamara; Power+; Balance+", season: null },
+      { name: "Black Titan", detail: "Black Titan Blue", season: null },
+      { name: "Astrum+", detail: "Astrum+ Black", season: null },
+      { name: "Metheora+", detail: "Metheora+", season: null },
+      { name: "Phantom", detail: "Phantom", season: null },
+      { name: "Drax+", detail: "Drax+", season: null },
+      { name: "Shade", detail: "Shade", season: null },
+      { name: "Kyra", detail: "Kyra", season: null }
+    ],
+    note: "Interesan distribución de masa y arquitectura de marco; nombres renovados, no asumir equivalencia con antiguas Raptor/Tritón.",
+    features: ["distribucion-masa", "masa-ajustable"] },
+
+  { id: "oxdog", name: "Oxdog", url: "https://www.oxdog.net/en/padel",
+    coverage: "completa", coverageBasis: "Catálogo oficial revisado.",
+    families: [
+      { name: "Ultimate", detail: "Pro+, Pro, Pro Smash, Pro Light, Tour X, NxtGen, Court", season: null },
+      { name: "Hyper 2.0", detail: "Pro+ / Pro / Tour X", season: null },
+      { name: "Pure", detail: "Pro+ / Tour X / Court", season: null },
+      { name: "Woman Air", detail: "Ultimate / Hyper / Pure", season: null },
+      { name: "Classic (referencias)", detail: "Ultimate / Hyper / Sense Pro", season: null }
+    ],
+    note: "Variantes de dureza, masa y pesos reemplazables. No mezclar los sistemas de contrapeso de distintas generaciones.",
+    features: ["masa-ajustable", "nucleo"] },
+
+  { id: "kuikma", name: "Kuikma", url: "https://www.decathlon.es/es/lp/c/kuikma-pro",
+    coverage: "parcial", coverageBasis: "Trío Pro revisado; las gamas inferiores no quedaron inventariadas por completo.",
+    families: [
+      { name: "Pro", detail: "Power Pro, Hybrid Pro Coki, Control Pro", season: null }
+    ],
+    note: "Trío Pro contrastado. Referencia para construcción detallada y valor por costo. Shock Block: mención de laboratorio externo = declaración de ensayo, no verificación independiente.",
+    features: ["linea-perfiles", "materiales-cara", "valor-costo"] },
+
+  { id: "tecnifibre", name: "Tecnifibre", url: "https://www.tecnifibre.com/es/pages/bomba-explosive-power",
+    coverage: "parcial", coverageBasis: "Cobertura de la familia Wall Master parcial.",
+    families: [
+      { name: "Bomba", detail: "Max / Speed / Soft / Lite", season: null },
+      { name: "Curva", detail: "Power / Speed / Soft", season: "2026" },
+      { name: "Wall Master", detail: "Familia vista en navegación; cobertura parcial", season: null }
+    ],
+    note: "Bomba y Curva muestran que potencia no exige siempre núcleo duro monodensidad.",
+    features: ["nucleo"] },
+
+  { id: "dunlop", name: "Dunlop", url: "https://dunlopsports.com/en-gb/padel/rackets",
+    coverage: "completa", coverageBasis: "Listado regional (en-gb) revisado, con duplicados.",
+    families: [
+      { name: "FX", detail: "Pro / Lite / Hybrid / Team / Hybrid Team / Start / JR", season: null },
+      { name: "Galactica", detail: "Pro / Lite / Team / OS / OS Lite / Junior / Pro LS y By Nisse", season: null },
+      { name: "Aerostar", detail: "Aerostar / Team", season: null },
+      { name: "Tristorm", detail: "Pro / Lite", season: null },
+      { name: "Nanomax", detail: "Pro / Lite", season: null },
+      { name: "Megamax", detail: "Megamax", season: null }
+    ],
+    note: "Permite comparar escalones de una misma familia.",
+    features: [] },
+
+  { id: "varlion", name: "Varlion", url: "https://www.varlion.com/es/palas/",
+    coverage: "completa", coverageBasis: "Página revisada; separa catálogo histórico 2025 de oferta actual.",
+    families: [
+      { name: "Bourne", detail: "Carbon Black / Prisma Carbon Soft / Carbon Platinum", season: null },
+      { name: "Maxima", detail: "Carbon Chrome / Prisma Orquídea", season: null },
+      { name: "LW", detail: "Carbon 3 Summum", season: null },
+      { name: "Cube (catálogo 2025)", detail: "Cube / Elbowcare y variantes S/W", season: "2025" }
+    ],
+    note: "Conceptos de temperatura y geometría, sin eficacia clínica demostrada aquí.",
+    features: ["geometria", "temporadas-mezcladas"] },
+
+  { id: "royal", name: "Royal Padel", url: "https://royalpadel.com/product-category/palas/",
+    coverage: "completa", coverageBasis: "Página revisada, más oferta argentina observada.",
+    families: [
+      { name: "M27 Poly", detail: "M27 Poly", season: "2027" },
+      { name: "Whip Polietileno", detail: "Whip Polietileno", season: "2027" },
+      { name: "RACE", detail: "RACE", season: "2026" },
+      { name: "Oferta argentina", detail: "Whip Pro, M27, Junior", season: null }
+    ],
+    note: "Contrapunto de polietileno frente a EVA; no generalizar la goma de una variante a toda la familia.",
+    features: ["polietileno", "nucleo", "confort", "argentina"] },
+
+  { id: "blackcrown", name: "Black Crown", url: "https://blackcrown.es/product/pala-pdel-black-crown-patron-kore",
+    coverage: "parcial", coverageBasis: "Cobertura parcial: dos modelos verificados técnicamente.",
+    families: [
+      { name: "Patron Kore", detail: "Verificada técnicamente", season: null },
+      { name: "Special Max", detail: "Verificada técnicamente", season: null }
+    ],
+    note: "Interesan núcleos multicapa y combinación carbono/UD; inconsistencias de rango de peso en sus propias fichas.",
+    features: ["nucleo", "materiales-cara"] },
+
+  { id: "volt", name: "Volt", url: "https://www.voltpadel.com/shop/products/rackets",
+    coverage: "completa", coverageBasis: "Catálogo oficial revisado.",
+    families: [
+      { name: "v5", detail: "950, 900, 600, 1000, 700, 500", season: null },
+      { name: "v4 (referencias)", detail: "950 / 900 / 1000", season: null },
+      { name: "Otras referencias", detail: "1000 V23 y 500 Junior", season: null }
+    ],
+    note: "Arquitectura de línea fácil de entender: ataque / híbrida / control. No confundir v4 con v5.",
+    features: ["linea-perfiles"] },
+
+  { id: "vibora", name: "Víbora", url: "https://viborapadel.com/8-palas",
+    coverage: "parcial", coverageBasis: "Primera parte del catálogo paginado; no todos los modelos.",
+    families: [
+      { name: "Titan", detail: "Berus / Nerodia", season: null },
+      { name: "Yarara", detail: "Atrox / Evo Pro / Radical 12K 3.0 / Pro Bifid", season: null },
+      { name: "Black Mamba", detail: "Pro Neo / Atrox / Re-Edition", season: null },
+      { name: "King Cobra", detail: "Ruby", season: null },
+      { name: "Diva", detail: "Evo Pro / Elite Cream", season: null }
+    ],
+    note: "Primera parte del catálogo paginado; no todos los modelos.",
+    features: [] },
+
+  { id: "akkeron", name: "Akkeron", url: "https://akkeron.com/palas-2025/",
+    coverage: "completa", coverageBasis: "Página “palas 2025” revisada; colección rotulada 2025 todavía visible.",
+    families: [
+      { name: "A25", detail: "Armageddon / Poseidon / Atlas / Fenix y Black", season: "2025" },
+      { name: "Otros modelos", detail: "Vega, Oro / Black Oro, Plata, Helios, Andrómeda, Nexus, Calypso", season: null },
+      { name: "En portada", detail: "Diablo / Stormbreaker 25", season: "2025" }
+    ],
+    note: "Acabados y personalización; no presentarla como lanzamiento 2027.",
+    features: ["acabado"] },
+
+  { id: "sane", name: "SANE", url: "https://sane.com.ar/",
+    coverage: "completa", coverageBasis: "Sitio revisado; también vende otras marcas, que no se atribuyen a SANE.",
+    families: [
+      { name: "Precissor", detail: "Precissor Carbon", season: null },
+      { name: "Agressor", detail: "VII Juani Rubini Textreme 12K Alum; VI Black / Legend", season: null },
+      { name: "Cinetik 28", detail: "Advanced / Professional 12K", season: null },
+      { name: "Rissing", detail: "Classic Carbon EVA Compact", season: null },
+      { name: "Assassin", detail: "Tactic 3K", season: null },
+      { name: "Elis", detail: "Elis 2", season: null }
+    ],
+    note: "Cinetik permite estudiar una arquitectura distinta de espesor/mango.",
+    features: ["geometria", "argentina"] },
+
+  { id: "lok", name: "LOK", url: "https://loksports.com/es/3-palas-padel",
+    coverage: "parcial", coverageBasis: "Familias oficiales verificadas; no toda la segunda generación (catálogos alojados por terceros).",
+    families: [
+      { name: "Maxx", detail: "Hype / Flow", season: null },
+      { name: "Carb-On", detail: "Hype / Flow y Franco", season: null },
+      { name: "Easy", detail: "Hype / Flow", season: null },
+      { name: "Be", detail: "Hype / Flow", season: null }
+    ],
+    note: "No dar por verificada toda segunda generación desde catálogos alojados por terceros.",
+    features: [] },
+
+  { id: "hirostar", name: "Hirostar", url: "https://hirostar.com/gb/3-padel-rackets",
+    coverage: "completa", coverageBasis: "Catálogo oficial revisado.",
+    families: [
+      { name: "Alien", detail: "Alien Pro 26, Alien Core 26", season: "2026" },
+      { name: "Alien (otras)", detail: "Alien Junior; Alien / Alien Pro anteriores", season: null },
+      { name: "Horizon", detail: "Horizon 26", season: "2026" },
+      { name: "Precision", detail: "Familia Precision", season: null },
+      { name: "Starter", detail: "Familia Starter", season: null }
+    ],
+    note: "Las especificaciones de Alien antigua no se trasladan a Alien Pro 26.",
+    features: ["temporadas-mezcladas"] },
+
+  { id: "cork", name: "Cork", url: "https://www.corkpadel.com/en/",
+    coverage: "completa", coverageBasis: "Sitio oficial revisado.",
+    families: [
+      { name: "Classic", detail: "Classic II", season: null },
+      { name: "Premium", detail: "Woman; Control / Power / Hybrid III", season: null },
+      { name: "Supreme", detail: "Control / Power / Hybrid IV", season: null }
+    ],
+    note: "Confort y acabado como propuesta; no inferir reducción de vibraciones por presencia de corcho sin ensayo.",
+    features: ["confort", "acabado", "linea-perfiles"] },
+
+  { id: "tactical", name: "Tactical Padel", url: "https://tacticalpadel.com/",
+    coverage: "completa", coverageBasis: "Sitio revisado durante renovación de tienda; disponibilidad incierta.",
+    families: [
+      { name: "El Jefe", detail: "Master, Midnight 3K / 12K / 18K y ediciones", season: null },
+      { name: "El Toro", detail: "Master y ediciones", season: null },
+      { name: "Katana", detail: "Black / Pro", season: null },
+      { name: "Anteriores", detail: "El Sabio, El Unico, El Mago, El Torito, El Maestro", season: null }
+    ],
+    note: "Disponibilidad incierta durante renovación de tienda; separar oferta antigua agotada.",
+    features: ["temporadas-mezcladas"] },
+
+  { id: "vidar", name: "Vidar", url: "https://vidarpadel.com/en-en",
+    coverage: "completa", coverageBasis: "Sitio oficial revisado.",
+    families: [
+      { name: "Vantage", detail: "Pro V2; Pro S / Air", season: null },
+      { name: "Motion", detail: "Pro S2", season: null }
+    ],
+    note: "Posicionamiento ergonómico; las promesas de prevenir lesiones no se aceptan como evidencia clínica.",
+    features: ["confort"] },
+
+  { id: "stiga", name: "STIGA", url: "https://www.stigasports.com/en-row/explore-stiga-sports/how-to-choose-a-padel-racket",
+    coverage: "completa", coverageBasis: "Línea Cybershape Gen 2 revisada.",
+    families: [
+      { name: "Cybershape Gen 2", detail: "1.3K Ultra LW / Hard, 3K / LW, 18K / LW", season: null }
+    ],
+    note: "Geometría no convencional y versiones ligeras; no tomar el porcentaje de punto dulce como medida comparable.",
+    features: ["geometria"] },
+
+  { id: "dropshot", name: "Drop Shot", url: "https://es.dropshotstore.com/collections/palas-padel-2027",
+    coverage: "completa", coverageBasis: "Página revisada. La URL dice 2027 y el encabezado recuperado dice 2026: se mantiene la ambigüedad.",
+    families: [
+      { name: "Attack", detail: "Axion, Explorer Pro, Canyon Pro, Conqueror, Prime, Cyber, Furia", season: "Ambigua" },
+      { name: "Soft", detail: "Flame, Axion, Explorer Pro, Canyon Pro, Quantum W", season: "Ambigua" },
+      { name: "Comfort", detail: "Axion, Canyon Pro, Explorer Pro", season: "Ambigua" },
+      { name: "Explorer Soft", detail: "W / 9.0", season: "Ambigua" },
+      { name: "Axion Junior", detail: "Axion Junior", season: "Ambigua" }
+    ],
+    note: "URL dice 2027, encabezado recuperado 2026. Versiones 2.0 en varias familias.",
+    features: ["temporadas-mezcladas"] },
+
+  { id: "enebe", name: "Enebe", url: "https://www.enebe.com/en/padel-enebe/",
+    coverage: "completa", coverageBasis: "Amplio catálogo oficial revisado; colores agrupados.",
+    families: [
+      { name: "Phoenix Attack", detail: "16K / 3K", season: null },
+      { name: "Mercury Attack", detail: "3K / 12K", season: null },
+      { name: "MX Turbo", detail: "12K", season: null },
+      { name: "Furius Max", detail: "Furius Max", season: null },
+      { name: "Combat", detail: "Fiber / JR; Combat 7.1", season: null },
+      { name: "Spitfire Ultra", detail: "12K", season: null },
+      { name: "Scape", detail: "Scape", season: null },
+      { name: "Mustang Pro", detail: "15K / 3K", season: null },
+      { name: "Genius", detail: "Genius", season: null },
+      { name: "Space", detail: "Space", season: null },
+      { name: "Response", detail: "3K Evo / 24K", season: null },
+      { name: "Suburban", detail: "12K Pro / 3K", season: null },
+      { name: "Point Light", detail: "Point Light", season: null },
+      { name: "Astra", detail: "Astra", season: null },
+      { name: "RSX / Aerox", detail: "RSX 7.1, Aerox 7.1", season: null }
+    ],
+    note: "Colores agrupados; no suponer identidad mecánica entre grados distintos.",
+    features: ["materiales-cara"] },
+
+  { id: "kombat", name: "Kombat", url: "https://kombatpadel.com/es/palas-padel?productListView=list",
+    coverage: "parcial", coverageBasis: "Catálogo paginado, cobertura parcial.",
+    families: [
+      { name: "Legend", detail: "SWAT / O’Neil, Hunter / Black Edition", season: null },
+      { name: "Mirage", detail: "Mirage Pro 26", season: "2026" },
+      { name: "Onyx", detail: "Onyx Pro 26", season: "2026" },
+      { name: "Troya", detail: "Aquiles / Ulises 2.5", season: null },
+      { name: "Galeras / Arenal", detail: "Galeras / Arenal 26", season: "2026" },
+      { name: "Xifos", detail: "Xifos V2", season: null }
+    ],
+    note: "Referencia de precio/construcción, no equivalencia de rendimiento por 18K.",
+    features: ["valor-costo"] },
+
+  { id: "joma", name: "Joma", url: "https://www.joma-sport.com/es_AR/deporte/padel/palas-de-padel/",
+    coverage: "completa", coverageBasis: "Oferta argentina (es_AR) revisada, con temporadas mezcladas.",
+    families: [
+      { name: "Hyper Pro", detail: "HRD / SFT", season: null },
+      { name: "Blast Pro", detail: "HRD", season: null },
+      { name: "Valkiria", detail: "Flex / Pro SFT / Pro HRD", season: null },
+      { name: "Master", detail: "Master", season: null },
+      { name: "Tournament Pro Iconic", detail: "Tournament Pro Iconic", season: null },
+      { name: "Slam Pro Iconic", detail: "Slam Pro Iconic", season: null },
+      { name: "Gold Pro", detail: "Gold Pro", season: null },
+      { name: "Ediciones", detail: "Ediciones de jugadores / clubes", season: null }
+    ],
+    note: "Composición global y capa exterior pueden describir cosas diferentes.",
+    features: ["argentina", "temporadas-mezcladas", "materiales-cara"] },
+
+  { id: "osaka", name: "Osaka", url: "https://osakaworld.com/collections/equipment-padel",
+    coverage: "completa", coverageBasis: "Nueve entradas observadas en la página revisada.",
+    families: [
+      { name: "Custom Pro", detail: "Control", season: null },
+      { name: "Vision", detail: "Power / Control", season: null },
+      { name: "Vision Pro", detail: "Control / Power", season: null },
+      { name: "Pro Tour LTD", detail: "Control / Power", season: null },
+      { name: "Raúl Marcos Pro", detail: "Power", season: null },
+      { name: "Deshi", detail: "Control", season: null }
+    ],
+    note: "Arquitectura de dos polos de juego.",
+    features: ["linea-perfiles"] },
+
+  { id: "forza", name: "FZ Forza", url: "https://fz-forza.com/padel/",
+    coverage: "completa", coverageBasis: "Oferta identificada en la página revisada.",
+    families: [
+      { name: "Brace", detail: "Power / Spin", season: null },
+      { name: "Champion", detail: "Power / Spin", season: null },
+      { name: "Ultra Power", detail: "Ultra Power", season: null },
+      { name: "Blast Power", detail: "Blast Power", season: null },
+      { name: "X Power", detail: "X Power", season: null },
+      { name: "Power", detail: "Power", season: null },
+      { name: "Match", detail: "Match", season: null }
+    ],
+    note: "Datos técnicos comparables limitados.",
+    features: [] },
+
+  { id: "pallap", name: "Pallap", url: "https://pallapsport.com/es/collections/raquetas",
+    coverage: "completa", coverageBasis: "16 entradas con colores observadas.",
+    families: [
+      { name: "Evoforce", detail: "Team / Pro / Elite / Dark Star / Bright Star", season: null },
+      { name: "Power Pro", detail: "HDR / Star / Elite / Team", season: null },
+      { name: "Velocity", detail: "Star / Team Light / Elite / Team", season: null },
+      { name: "Kids", detail: "Kids", season: null }
+    ],
+    note: "Alternativas fuera de las grandes marcas; especificaciones por variante pendientes de ensayo.",
+    features: [] },
+
+  { id: "rs", name: "RS", url: "https://rs-sports.com/en-global/collections/padelracket",
+    coverage: "completa", coverageBasis: "Once entradas observadas.",
+    families: [
+      { name: "Pro Edition", detail: "Pro Edition Power", season: null },
+      { name: "Prime", detail: "Prime Pro Edition 2.0; Prime Power Edition 3.0; Prime Team / Light 2.0; Prime Cobra / Light", season: null },
+      { name: "Rialto", detail: "Pro / Light 3.0", season: null },
+      { name: "Cobra Junior", detail: "Cobra Junior", season: null },
+      { name: "Margaux Kids", detail: "Margaux Kids", season: null }
+    ],
+    note: "Once entradas observadas.",
+    features: [] },
+
+  { id: "alkemia", name: "Alkemia", url: "https://alkemiapadel.com/",
+    coverage: "completa", coverageBasis: "Cinco modelos 2026 observados.",
+    families: [
+      { name: "Línea 2026", detail: "Vento, Ignis, Tenebris, Thunder, Terra", season: "2026" }
+    ],
+    note: "Selección de peso como referencia de servicio al comprador.",
+    features: ["masa-ajustable"] },
+
+  { id: "prokennex", name: "ProKennex", url: "https://www.prokennex.eu/en/padel/",
+    coverage: "completa", coverageBasis: "Página oficial revisada.",
+    families: [
+      { name: "Black Ace", detail: "Black Ace, Black Ace RND", season: null },
+      { name: "Focus", detail: "Focus, Focus Pro", season: null }
+    ],
+    note: "Sistemas Kinetic y cámaras de amortiguación: interés experimental, no conclusión médica.",
+    features: ["confort"] },
+
+  { id: "gamma", name: "Gamma", url: "https://gammasports.com/pages/padel",
+    coverage: "completa", coverageBasis: "Página oficial revisada.",
+    families: [
+      { name: "Modelos", detail: "Sterling, Ashford, Parker, Sullivan, Brooks", season: null }
+    ],
+    note: "Sterling explicita peso sin correa: ejemplo de por qué hay que normalizar configuraciones.",
+    features: ["config-medicion"] },
+
+  { id: "torpey", name: "Torpey", url: "https://torpey.ie/pages/padel",
+    coverage: "completa", coverageBasis: "Página oficial revisada.",
+    families: [
+      { name: "Modelos", detail: "FÍOR y SAOR", season: null }
+    ],
+    note: "Alternativas ataque / polivalencia; dureza expresada en grados sin escala identificada. No equiparar a Shore C.",
+    features: ["escala-dureza", "linea-perfiles"] },
+
+  { id: "palbea", name: "Palbea", url: "https://www.palbea.com/en/explore/products/hector-padel-racket/",
+    coverage: "parcial", coverageBasis: "Cobertura parcial: HECTOR y THESEUS verificadas.",
+    families: [
+      { name: "HECTOR", detail: "Verificada", season: null },
+      { name: "THESEUS", detail: "Verificada", season: null }
+    ],
+    note: "HECTOR combina 12K y EVA H/S/H: compartir descripción no demuestra equivalencia con nuestras palas.",
+    features: ["nucleo", "acabado"] },
+
+  { id: "puma", name: "PUMA", url: "https://ar.puma.com/pd/paleta-de-padel-nova-padel-elite-hyb/049029.html?color=02",
+    coverage: "parcial", coverageBasis: "Cobertura parcial: solo Nova Elite HYB verificada.",
+    families: [
+      { name: "Nova", detail: "Nova Elite HYB", season: null }
+    ],
+    note: "12K Twill y EVA Zote UK declarados. No adjudicar escala a la dureza 37–38 sin aclaración.",
+    features: ["escala-dureza", "materiales-cara", "argentina"] },
+
+  { id: "lacoste", name: "Lacoste", url: "https://corporate.lacoste.com/lacoste-unveils-its-debut-padel-collection/",
+    coverage: "completa", coverageBasis: "Anuncio corporativo fechado 20/09/2026 con dos modelos.",
+    families: [
+      { name: "Colección debut", detail: "L.MAX y L.SOFT", season: null }
+    ],
+    note: "Colaboración técnica con Tecnifibre. Diferenciar posicionamiento de moda de rendimiento probado.",
+    features: [] },
+
+  { id: "steelcustom", name: "Steel Custom", url: "https://steelcustom2.mitiendanube.com/",
+    coverage: "completa", coverageBasis: "Tienda revisada.",
+    families: [
+      { name: "Modelos", detail: "Boss Carbon, Tiger Air, Dark Plus Foam / EVA, Air Impact, Imperia Blackcore", season: null }
+    ],
+    note: "Alternativas de foam y fibra de vidrio presentes en Argentina.",
+    features: ["nucleo", "materiales-cara", "argentina"] }
+];
+
+</script>
+  <script>
+/*
+ * Comparativa técnica de referencias (sección 4) + mediciones externas (sección 6).
+ * Todos los datos de ficha son D (declaración del fabricante), no mediciones de
+ * nuestras unidades. Masa en g, balance en mm. Los balances cualitativos se
+ * guardan como texto (qual) y NUNCA se convierten en mm.
+ *
+ * Formato de un valor:
+ *   { v: "365–375", u: "g", ev: "D", note: "..." }   dato con clase de evidencia
+ *   { missing: "NP" | "PEND" | "NI" | "BLANK", note: "..." }   dato ausente
+ *   { qual: "Alto", ev: "D", note: "..." }   valor cualitativo
+ * Un campo puede ser un arreglo de valores (p. ej. declaración + medición).
+ */
+window.KORVE_DATA = window.KORVE_DATA || {};
+
+(function () {
+  var NO_CONFIG = "La ficha no especifica simultáneamente grip, overgrip, protector, correa, incertidumbre ni tamaño de muestra.";
+  function D(v, u, note) { return { v: v, u: u || "", ev: "D", note: note || "" }; }
+  function Q(q, note) { return { qual: q, ev: "D", note: note || "Balance cualitativo: no se convierte a mm." }; }
+  function M(k, note) { return { missing: k, note: note || "" }; }
+
+  window.KORVE_DATA.references = [
+    { id: "bp-hack05-27", brandId: "bullpadel", name: "Bullpadel Hack 05 27", season: "2027",
+      url: "https://www.bullpadel.com/es/6828-pala-bullpadel-hack-05-27.html",
+      mass: D("365–375", "g"), balance: D("265", "mm"),
+      face: { v: "Tacto intermedio-duro (declarado)", ev: "D", note: "Detalles de laminado completos no publicados." },
+      core: M("NP", "Detalles de laminado/núcleo completos no publicados."),
+      finish: M("NP"), hardness: null,
+      other: D("Forma diamante; 38 mm; superficie 522 cm²"),
+      use: "Ataque, diamante, 38 mm y superficie 522 cm².",
+      config: NO_CONFIG,
+      friction: { missing: "NP", note: "Existe dato L para Vertex/otros, no para esta versión." },
+      pending: ["Laminado completo", "Núcleo", "Acabado", "Configuración de pesaje"] },
+
+    { id: "bp-neuron-27", brandId: "bullpadel", name: "Bullpadel Neuron 27", season: "2027",
+      url: "https://www.bullpadel.com/es/6836-pala-bullpadel-neuron-27.html",
+      mass: D("365–375", "g"), balance: D("255", "mm"),
+      face: D("X-Tend 3K"), core: D("MultiEVA"), finish: D("3D Grain"), hardness: null,
+      other: D("38 mm; superficie 525 cm²"),
+      use: "Híbrida firme, 38 mm, 525 cm².",
+      config: NO_CONFIG, friction: M("NP"),
+      pending: ["Configuración de pesaje"] },
+
+    { id: "bp-vertex05-27", brandId: "bullpadel", name: "Bullpadel Vertex 05 27", season: "2027",
+      url: "https://www.bullpadel.com/es/6831-pala-bullpadel-vertex-05-27.html",
+      mass: D("365–375", "g"), balance: D("255", "mm"),
+      face: D("12K"), core: { v: "MultiEVA", ev: "D", note: "Según familia oficial." }, finish: M("NP"), hardness: null,
+      other: D("Diamante; 38 mm; superficie 530 cm²"),
+      use: "Diamante sin balance nominal extremo; 38 mm, 530 cm².",
+      config: NO_CONFIG,
+      friction: { missing: "NP", note: "Hay un dato L (0,645) para Vertex 05 2026: es otra temporada y no se traslada a la 27." },
+      pending: ["Acabado", "Configuración de pesaje"] },
+
+    { id: "ad-metalbone-hrdplus-2026", brandId: "adidas", name: "adidas Metalbone HRD+ 2026", season: "2026",
+      url: "https://allforpadel.com/en/padel-rackets/7522-padel-racket-adidas-metalbone-hrd-2026-ale-galan-8435739405826.html",
+      mass: D("345–360 + 0–11,2 ajustables", "g", "Masa ajustable declarada."),
+      balance: Q("Alto"),
+      face: D("16K aluminizado"), core: D("EVA High Memory"), finish: M("NP"), hardness: null,
+      other: D("38 mm; ajuste de distribución de masa"),
+      use: "Ataque y ajuste de distribución de masa; 38 mm.",
+      config: NO_CONFIG + " Ficha publicada por All For Padel, licenciatario oficial de adidas pádel.",
+      friction: { v: "0,214", u: "(sin unidad)", ev: "L", note: "Coeficiente de fricción estática, Padel University / TWU. Una unidad por modelo. No es rpm ni potencia." },
+      pending: ["Balance en mm", "Acabado"] },
+
+    { id: "bb-technical-viper-30", brandId: "babolat", name: "Babolat Technical Viper 3.0", season: null,
+      url: "https://www.babolat.com/es/padel/palas.html",
+      mass: D("370 ±10", "g"), balance: Q("Alto"),
+      face: D("3K"), core: D("Hard EVA"), finish: M("NP"),
+      hardness: { v: "“Hard” EVA (sin escala)", ev: "D", note: "Denominación comercial, sin escala." },
+      other: D("38 mm"),
+      use: "Ataque firme; 38 mm.",
+      config: NO_CONFIG,
+      friction: { v: "0,346", u: "(sin unidad)", ev: "L", note: "Coeficiente de fricción estática, Padel University / TWU. Una unidad por modelo." },
+      pending: ["Balance en mm", "Acabado"] },
+
+    { id: "bb-counter-viper-26", brandId: "babolat", name: "Babolat Counter Viper 2.6", season: null,
+      url: "https://www.babolat.com/es/padel/palas.html",
+      mass: D("365 ±10", "g"), balance: Q("Alto"),
+      face: D("3K"), core: D("X-EVA"), finish: M("NP"), hardness: null,
+      other: D("Forma redonda"),
+      use: "Redonda de contraataque: control no equivale necesariamente a balance bajo.",
+      config: NO_CONFIG, friction: M("NP"),
+      pending: ["Balance en mm", "Acabado", "Ficha individual (dato tomado del catálogo general)"] },
+
+    { id: "hd-coello-pro-2026", brandId: "head", name: "HEAD Coello Pro 2026", season: "2026",
+      url: "https://www.head.com/es_ES/product/coello-pro-2026-special-packaging-225066",
+      mass: D("370", "g"), balance: D("272", "mm"),
+      face: D("Carbon Hybrid Woven"), core: D("Power Foam"), finish: M("NP"), hardness: null,
+      other: M("NP"),
+      use: "Extremo ofensivo para establecer el costo de maniobrabilidad.",
+      config: NO_CONFIG,
+      friction: { v: "0,277", u: "(sin unidad)", ev: "L", note: "Coeficiente de fricción estática, Padel University / TWU. Una unidad por modelo." },
+      pending: ["Acabado"] },
+
+    { id: "hd-gravity-pro-2027", brandId: "head", name: "HEAD Gravity Pro 2027", season: "2027",
+      url: "https://www.head.com/en_MT/product/gravity-pro-2027-224017",
+      mass: D("360", "g"), balance: D("258", "mm"),
+      face: D("Hybrid Woven"), core: D("Control Foam"), finish: D("Spin Surface"), hardness: null,
+      other: { v: "Próxima llegada en la página consultada", ev: "D", note: "Disponibilidad no confirmada." },
+      use: "Control con masa intermedia; próxima llegada en página consultada.",
+      config: NO_CONFIG, friction: M("NP"),
+      pending: ["Disponibilidad", "Configuración de pesaje"] },
+
+    { id: "nx-genius-12k-2027", brandId: "nox", name: "NOX Genius 12K Alum XTREM 2027", season: "2027",
+      url: "https://noxsport.com/products/genius-12k-alum-xtrem-agustin-tapia-2027",
+      mass: D("360–375", "g"), balance: M("NP", "Balance no publicado en mm."),
+      face: D("12K Alum XTREM"), core: D("MLD Black EVA"), finish: D("Dual Spin"), hardness: null,
+      other: D("Pesos intercambiables hasta 8 g (declarado)"),
+      use: "Polivalencia; pesos intercambiables hasta 8 g declarados.",
+      config: NO_CONFIG, friction: M("NP"),
+      pending: ["Balance en mm"] },
+
+    { id: "nx-genius-12k-lite-2027", brandId: "nox", name: "NOX Genius 12K Alum XTREM Lite 2027", season: "2027",
+      url: "https://noxsport.com/products/genius-12k-alum-xtrem-lite-agustin-tapia-2027",
+      mass: D("350–360", "g"), balance: M("NP", "Balance no publicado en mm."),
+      face: D("12K Alum XTREM"), core: D("HR3 White EVA"), finish: M("NP"), hardness: null,
+      other: M("NP"),
+      use: "Contraste de masa y núcleo dentro de una misma línea.",
+      config: NO_CONFIG, friction: M("NP"),
+      pending: ["Balance en mm", "Acabado"] },
+
+    { id: "sx-obsidian-pro-2027", brandId: "siux", name: "Siux Obsidian Pro 2027", season: "2027",
+      url: "https://www.siuxpadel.com/products/obsidian-pro-2027-silver",
+      mass: D("355–375", "g"), balance: Q("Bajo"),
+      face: D("16K"), core: D("EVA Soft"), finish: D("Satinado + 3D"),
+      hardness: { v: "5/10 (escala comercial, no Shore)", ev: "D", note: "No equiparar con Shore C." },
+      other: D("Forma lágrima"),
+      use: "Lágrima de control; dureza comercial 5/10, no Shore.",
+      config: NO_CONFIG, friction: M("NP"),
+      pending: ["Balance en mm"] },
+
+    { id: "ox-ultimate-proplus", brandId: "oxdog", name: "Oxdog Ultimate Pro+", season: null,
+      url: "https://www.oxdog.net/en/padel",
+      mass: D("370", "g"), balance: M("NP", "Balance no publicado en mm."),
+      face: { v: "HES Carbon", ev: "D", note: "HES es denominación comercial, no caracterización completa." },
+      core: D("Hard"), finish: M("NP"),
+      hardness: { v: "“Hard” (sin escala)", ev: "D", note: "Denominación comercial sin escala." },
+      other: M("NP"),
+      use: "Ataque; HES es denominación comercial, no caracterización completa.",
+      config: NO_CONFIG, friction: M("NP", "El dato L 0,865 corresponde a Ultimate Pro Smash 2026, otro modelo."),
+      pending: ["Balance en mm", "Temporada", "Acabado"] },
+
+    { id: "ox-ultimate-pro-light", brandId: "oxdog", name: "Oxdog Ultimate Pro Light", season: null,
+      url: "https://www.oxdog.net/en/padel",
+      mass: D("350", "g"), balance: M("NP", "Balance no publicado en mm."),
+      face: D("HES Carbon"), core: D("Medium+"), finish: M("NP"),
+      hardness: { v: "“Medium+” (sin escala)", ev: "D", note: "Denominación comercial sin escala." },
+      other: M("NP"),
+      use: "Evaluar si conserva estabilidad con menor masa; no asumirlo.",
+      config: NO_CONFIG, friction: M("NP"),
+      pending: ["Balance en mm", "Temporada", "Acabado"] },
+
+    { id: "kk-control-pro", brandId: "kuikma", name: "Kuikma Control Pro", season: null,
+      url: "https://www.decathlon.es/es/p/pala-de-padel-adulto-kuikma-control-pro/349709/c142m8826017",
+      mass: D("Ficha incluye 361–375", "g"), balance: Q("Neutro"),
+      face: { v: "3 capas vidrio + 1 TeXtreme 18K", ev: "D", note: "“18K” no significa cara íntegramente de carbono." },
+      core: D("Dual Foam"), finish: M("NP"), hardness: null,
+      other: M("NP"),
+      use: "Construcción explícita: “18K” no significa cara íntegramente de carbono.",
+      config: NO_CONFIG, friction: M("NP"),
+      pending: ["Balance en mm", "Acabado"] },
+
+    { id: "tf-bomba-max", brandId: "tecnifibre", name: "Tecnifibre Bomba Max", season: null,
+      url: "https://www.tecnifibre.com/en/products/bomba-max",
+      mass: D("365", "g"), balance: D("265", "mm"),
+      face: D("18K"), core: D("Multi Soft Foam, tres capas, centro más blando"), finish: M("NP"), hardness: null,
+      other: D("Diamante; 38 mm"),
+      use: "Diamante 38 mm: comparar progresividad frente a H/S/H de NEX.",
+      config: NO_CONFIG, friction: M("NP"),
+      pending: ["Acabado", "Temporada"] },
+
+    { id: "tf-curva-speed-2026", brandId: "tecnifibre", name: "Tecnifibre Curva Speed 2026", season: "2026",
+      url: "https://www.tecnifibre.com/es/collections/padel/products/curva-speed-2026",
+      mass: D("355", "g"), balance: M("NP", "Balance no publicado en mm."),
+      face: D("16K"), core: D("Espuma firme tipo sándwich"), finish: M("NP"), hardness: null,
+      other: M("NP"),
+      use: "Precisión y rapidez; contraste con Curva Power de espuma blanda.",
+      config: NO_CONFIG, friction: M("NP"),
+      pending: ["Balance en mm", "Acabado"] },
+
+    { id: "st-18k-lw-cyber-g2", brandId: "stiga", name: "STIGA 18K LW Cybershape Gen 2", season: null,
+      url: "https://www.stigasports.com/en/product/padel-racket-18k-lw-cybershape-gen-2",
+      mass: D("345 ±8", "g"), balance: Q("Medio"),
+      face: D("18K"), core: { v: "Carbon Duplex (declarado)", ev: "D", note: "Así figura en la columna cara/núcleo del informe." },
+      finish: M("NP"), hardness: null,
+      other: D("Geometría Cybershape"),
+      use: "Estudiar geometría y estabilidad a baja masa; no validar por forma.",
+      config: NO_CONFIG, friction: M("NP"),
+      pending: ["Balance en mm", "Acabado"] },
+
+    { id: "gm-sterling", brandId: "gamma", name: "Gamma Sterling", season: null,
+      url: "https://gammasports.com/products/sterling-padel-racquet",
+      mass: D("365", "g", "Declarado SIN correa: hay que sumar accesorios para comparar."),
+      balance: Q("Ligeramente alto"),
+      face: D("18K"), core: D("EVA alta densidad"), finish: M("NP"), hardness: null,
+      other: D("Cara orientada 45° (declarado)"),
+      use: "Cara orientada 45° declarada; requiere sumar accesorios para comparar.",
+      config: "Peso declarado sin correa. Resto de accesorios no especificado.",
+      friction: M("NP"),
+      pending: ["Balance en mm", "Peso de la correa", "Acabado"] },
+
+    { id: "pb-hector", brandId: "palbea", name: "Palbea HECTOR", season: null,
+      url: "https://www.palbea.com/en/explore/products/hector-padel-racket/",
+      mass: D("360 ±10", "g"), balance: D("266", "mm"),
+      face: D("12K"), core: D("EVA H/S/H"), finish: D("Mate, arena y 3D"), hardness: null,
+      other: M("NP"),
+      use: "Otra receta nominal próxima, no “la misma pala”.",
+      config: NO_CONFIG, friction: M("NP"),
+      pending: ["Configuración de pesaje"] }
+  ];
+
+  /* Sección 6: coeficiente de fricción estática (L), sin unidad. */
+  window.KORVE_DATA.frictionData = {
+    source: "Padel University / Tennis Warehouse University",
+    sourceUrl: "https://twu.tennis-warehouse.com/learning_center/padel/padelspecs.php",
+    caveat: "Externa a las marcas, pero vinculada a un grupo comercial. Una unidad por modelo: sirve para comparar esas unidades, no para estimar dispersión de producción. No son rpm, potencia, comodidad ni un ranking general. La tabla consultada no permite fijar todas las condiciones de pelota, humedad y desgaste.",
+    rows: [
+      { model: "Babolat Technical Viper 3.0", value: "0,346", refId: "bb-technical-viper-30" },
+      { model: "adidas Metalbone HRD+ 2026", value: "0,214", refId: "ad-metalbone-hrdplus-2026" },
+      { model: "HEAD Coello Pro 2026", value: "0,277", refId: "hd-coello-pro-2026" },
+      { model: "Wilson Endure Pro V1", value: "0,482", refId: null },
+      { model: "Bullpadel Vertex 05 2026", value: "0,645", refId: null, note: "Temporada 2026: no trasladar a Vertex 05 27." },
+      { model: "Oxdog Ultimate Pro Smash 2026", value: "0,865", refId: null }
+    ]
+  };
+
+  window.KORVE_DATA.measurementSources = [
+    { name: "Padel University / Tennis Warehouse University: especificaciones de palas", url: "https://twu.tennis-warehouse.com/learning_center/padel/padelspecs.php",
+      documents: "Mediciones de propiedades de palas, entre ellas el coeficiente de fricción estática.",
+      limits: "Externa a las marcas, pero vinculada a un grupo comercial. Una unidad por modelo: no estima dispersión de producción." },
+    { name: "Testea Padel: ensayos", url: "https://testeapadel.com/en/test/",
+      documents: "Deformación/rigidez, rebote, potencia, vibración y durabilidad.",
+      limits: "Marco para contratar ensayos. Un sello sin informe no demuestra superioridad sobre todo el mercado." },
+    { name: "Testfakta, protocolo del 7/03/2022", url: "https://www.testfakta.com/en/test/it-could-be-your-padel-rackets-fault-if-your-game-has-gotten-worse/about-the-test",
+      documents: "Mapa de 90 puntos; impactos repetidos y comparación antes/después; ensayo destructivo.",
+      limits: "Antecedente metodológico. Sus palas y resultados históricos no ordenan colecciones 2027; no adoptar automáticamente sus umbrales." },
+    { name: "Sensors 2023, 225 palas", url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC10747547/",
+      documents: "Localización de respuesta vibratoria mediante impactos controlados.",
+      limits: "No equiparar mínimo de vibración en una línea con mapa bidimensional de máxima restitución o control." },
+    { name: "Sensors 2022, inercias", url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC9741144/",
+      documents: "Caracterización mecánica de 137 palas y evaluación de usuarios.",
+      limits: "Fundamento para medir distribución de masa; no prescribe una masa ideal para todos." }
+  ];
+})();
+
+</script>
+  <script>
+/*
+ * Información interna KORVE (secciones 7 a 12 del informe).
+ * Fuente interna: save maestro KORVE del 11/11/2026, ficha NEX consolidada y
+ * evaluación de Tomás Sánchez. Las cifras de proveedor no se transforman en mediciones.
+ *
+ * Para agregar resultados reales: completar "measurements" / "testerOpinion" de
+ * cada muestra o "results" de cada ensayo, con su clase de evidencia y fecha.
+ */
+window.KORVE_DATA = window.KORVE_DATA || {};
+
+(function () {
+  function M(k, note) { return { missing: k, note: note || "" }; }
+
+  window.KORVE_DATA.internalSource = "Save maestro KORVE del 11/11/2026, ficha NEX consolidada y evaluación de Tomás Sánchez.";
+
+  /* ---------- Muestras ---------- */
+  window.KORVE_DATA.samples = [
+    { id: "w3", name: "W3", factory: "NEX", role: "Candidata POWER", roleStatus: "Sin validación definitiva",
+      requested: [
+        { label: "Masa objetivo", v: "368 ±3", u: "g", ev: "KO" },
+        { label: "Balance objetivo", v: "268 ±3", u: "mm", ev: "KO" },
+        { label: "Configuración del objetivo", v: "Grip original + correa, sin overgrip/protector", u: "", ev: "KO" }
+      ],
+      declared: [
+        { label: "Cara", v: "Exterior 12K Twill; 2 capas carbono + 1 vidrio", ev: "KP", note: "W3 contiene vidrio: no describirla como cara íntegramente de carbono." },
+        { label: "Núcleo", v: "H/S/H 28/15/28 Shore C, aprox. 7/14/7 mm", ev: "KP" },
+        { label: "Marco", v: "Carbono 0/90/±45°", ev: "KP", note: "Orientaciones confirmadas para marco/puente, no para toda la cara." },
+        { label: "Relleno", v: "EVA parcial de mango ≈10 g", ev: "KP" },
+        { label: "Acabado", v: "Mate arenoso, sin 3D en muestra", ev: "KP" }
+      ],
+      measured: [],
+      measuredNote: "Recibida. La ficha del proveedor repite rangos, no lecturas individuales: no hay medición real registrada.",
+      tester: [],
+      testerNote: "Sin resultado de cancha local consolidado.",
+      status: "Recibida. Candidata POWER, sin resultado de cancha local consolidado.",
+      warnings: [
+        "Que tenga H/S/H no prueba igualdad de comportamiento con MC ni con una NOX.",
+        "No aligerar el mango indiscriminadamente: puede subir el balance y empeorar el resultado buscado."
+      ],
+      compare: {
+        mass: [{ v: "368 ±3", u: "g", ev: "KO", note: "Objetivo solicitado, no medición." }, M("PEND", "Medición individual pendiente (Etapa A).")],
+        balance: [{ v: "268 ±3", u: "mm", ev: "KO", note: "Objetivo solicitado, no medición." }, M("PEND", "Medición individual pendiente (Etapa A).")],
+        face: { v: "Exterior 12K Twill; 2 carbono + 1 vidrio", ev: "KP" },
+        core: { v: "H/S/H; EVA parcial de mango ≈10 g", ev: "KP" },
+        hardness: { v: "28/15/28 Shore C", ev: "KP", note: "Escala Shore C declarada por proveedor." },
+        finish: { v: "Mate arenoso, sin 3D", ev: "KP" },
+        other: { v: "Marco carbono 0/90/±45° (marco/puente)", ev: "KP" },
+        config: "Objetivo con grip original + correa, sin overgrip ni protector.",
+        friction: M("PEND", "No medida."),
+        pending: ["Masa real (0,1 g)", "Balance real (mm)", "Inercia y torsión", "Resultado de cancha"]
+      } },
+
+    { id: "amp22", name: "AMP22", factory: "NEX", role: "Candidata CONTROL / SPEED", roleStatus: "Sin validación definitiva",
+      requested: [
+        { label: "Masa objetivo", v: "357 ±3", u: "g", ev: "KO" },
+        { label: "Balance objetivo", v: "250 ±3", u: "mm", ev: "KO" },
+        { label: "Configuración del objetivo", v: "Grip original + correa, sin overgrip/protector (misma configuración que W3)", u: "", ev: "KO" }
+      ],
+      declared: [
+        { label: "Cara", v: "Exterior carbono, designación T700; 2 carbono + 1 vidrio en capas separadas", ev: "KP", note: "“Flat-laid” pendiente de precisión. No inferir tacto solo por T700." },
+        { label: "Núcleo", v: "Mismo núcleo que W3 (H/S/H 28/15/28 Shore C, aprox. 7/14/7 mm)", ev: "KP" },
+        { label: "Marco y relleno", v: "Mismo marco y relleno que W3", ev: "KP" },
+        { label: "Acabado", v: "Mate arenoso, sin 3D", ev: "KP" }
+      ],
+      measured: [],
+      measuredNote: "Recibida. Sin medición individual registrada.",
+      tester: [],
+      testerNote: "Sin opinión de tester registrada en el informe.",
+      status: "Recibida. Candidata CONTROL/SPEED.",
+      warnings: [
+        "Falta validar que no pague rapidez con poca estabilidad.",
+        "Si fuera fácil de mover pero inconsistente al bloquear, habría que redistribuir masa o revisar laminado antes de declararla terminada."
+      ],
+      compare: {
+        mass: [{ v: "357 ±3", u: "g", ev: "KO", note: "Objetivo solicitado, no medición." }, M("PEND", "Medición individual pendiente (Etapa A).")],
+        balance: [{ v: "250 ±3", u: "mm", ev: "KO", note: "Objetivo solicitado, no medición." }, M("PEND", "Medición individual pendiente (Etapa A).")],
+        face: { v: "Carbono, designación T700; 2 carbono + 1 vidrio", ev: "KP", note: "T700 no equivale a un número K." },
+        core: { v: "H/S/H (mismo que W3)", ev: "KP" },
+        hardness: { v: "28/15/28 Shore C", ev: "KP" },
+        finish: { v: "Mate arenoso, sin 3D", ev: "KP" },
+        other: { v: "“Flat-laid” pendiente de precisión", ev: "KP" },
+        config: "Objetivo con grip original + correa, sin overgrip ni protector.",
+        friction: M("PEND", "No medida."),
+        pending: ["Masa real (0,1 g)", "Balance real (mm)", "Precisión de “flat-laid”", "Masa periférica necesaria", "Resultado de cancha"]
+      } },
+
+    { id: "mc005", name: "MC-005", factory: "William", role: "Referencia de comportamiento HYBRID", roleStatus: "Benchmark interno por uso, no ficha de laboratorio",
+      requested: [],
+      requestedNote: "El informe no indica un objetivo solicitado para MC-005.",
+      declared: [
+        { label: "Cara", v: "12K", ev: "KP" },
+        { label: "Núcleo", v: "H/S/H; espuma adicional en puente y parte alta del mango", ev: "KP" },
+        { label: "Acabado", v: "Mate arenoso + 3D", ev: "KP" },
+        { label: "Masa de referencia del proveedor", v: "360 ±5 g", ev: "KP", note: "Grip + correa, sin overgrip." },
+        { label: "Balance de referencia del proveedor", v: "255 ±7 mm", ev: "KP", note: "Grip + correa, sin overgrip." }
+      ],
+      measured: [
+        { label: "Masa", v: "364,1", u: "g", ev: "KM", who: "Tomás Sánchez", config: "Con DOS overgrips, sin protector", note: "No comparable directamente con la referencia del proveedor (sin overgrip)." },
+        { label: "Balance", missing: "BLANK", who: "Tomás Sánchez", note: "Balance en blanco. No atribuirle un balance medido de 250 mm." }
+      ],
+      tester: [
+        { who: "Tomás Sánchez", text: "Preferencia por MC frente a otras opciones probadas.", ev: "KT" },
+        { who: "Tomás Sánchez", text: "Pidió conservar movilidad y tacto seco y añadir peso.", ev: "KT", note: "Merece una variante controlada, no bajar peso automáticamente." }
+      ],
+      testerNote: "Evidencia de usuario útil, pero procede de una sola persona: mediciones y opiniones de MC-005 y KS-01 son de Tomás Sánchez.",
+      status: "Referencia HYBRID por uso, no ficha de laboratorio.",
+      warnings: [
+        "No atribuirle balance medido de 250 mm por Tomás.",
+        "No pedir una copia de su molde a otra fábrica: encargar con objetivo medido."
+      ],
+      compare: {
+        mass: [
+          { v: "360 ±5", u: "g", ev: "KP", note: "Referencia de proveedor; grip + correa, sin overgrip." },
+          { v: "364,1", u: "g", ev: "KM", note: "Tomás, con dos overgrips, sin protector." }
+        ],
+        balance: [
+          { v: "255 ±7", u: "mm", ev: "KP", note: "Referencia de proveedor." },
+          { missing: "BLANK", note: "Medición de Tomás: balance en blanco." }
+        ],
+        face: { v: "12K", ev: "KP" },
+        core: { v: "H/S/H; espuma adicional en puente y parte alta del mango", ev: "KP" },
+        hardness: M("NI", "Escala y valores de dureza no incluidos en el informe."),
+        finish: { v: "Mate arenoso + 3D", ev: "KP" },
+        other: M("NI"),
+        config: "Proveedor: grip + correa sin overgrip. Medición interna: dos overgrips, sin protector.",
+        friction: M("PEND", "No medida."),
+        pending: ["Balance medido", "Ficha normalizada (sin overgrips)", "Inercia y torsión"]
+      } },
+
+    { id: "ks01", name: "KS-01", factory: "William", role: "Rol por determinar", roleStatus: "No asignarla a CONTROL solo para completar la línea",
+      requested: [],
+      requestedNote: "El informe no indica un objetivo solicitado para KS-01.",
+      declared: [
+        { label: "Cara", v: "Carbono", ev: "KP" },
+        { label: "Núcleo", v: "EVA medio", ev: "KP" },
+        { label: "Acabado", v: "Liso / brillante", ev: "KP" },
+        { label: "Valores históricos de proveedor", missing: "NI", note: "Mencionados en el informe sin cifras; requieren normalizar configuración." }
+      ],
+      measured: [
+        { label: "Masa", v: "366,6", u: "g", ev: "KM", who: "Tomás Sánchez", config: "Con DOS overgrips, sin protector" },
+        { label: "Balance", missing: "BLANK", who: "Tomás Sánchez", note: "Balance en blanco." }
+      ],
+      tester: [
+        { who: "Tomás Sánchez", text: "Menor preferencia ofensiva.", ev: "KT" }
+      ],
+      testerNote: "",
+      status: "Menor preferencia ofensiva de Tomás. Rol a determinar por pruebas.",
+      warnings: ["No asignarla a CONTROL solo para completar la línea."],
+      compare: {
+        mass: [M("NI", "Valores históricos de proveedor no incluidos en el informe."), { v: "366,6", u: "g", ev: "KM", note: "Tomás, con dos overgrips, sin protector." }],
+        balance: [{ missing: "BLANK", note: "Medición de Tomás: balance en blanco." }],
+        face: { v: "Carbono", ev: "KP" },
+        core: { v: "EVA medio", ev: "KP" },
+        hardness: { v: "“Medio” (sin escala)", ev: "KP", note: "Sin escala identificada." },
+        finish: { v: "Liso / brillante", ev: "KP" },
+        other: M("NI"),
+        config: "Medición interna: dos overgrips, sin protector.",
+        friction: M("PEND", "No medida."),
+        pending: ["Balance medido", "Ficha normalizada", "Rol por pruebas"]
+      } }
+  ];
+
+  window.KORVE_DATA.tomiReference = {
+    name: "NOX AT10 Luxury Genius 12K Alum XTREM 2026 (blanca/dorada)",
+    text: "Pala de uso de Tomás Sánchez, la misma persona que midió y evaluó MC-005 y KS-01. Es la referencia más accesible y vinculada al feedback de MC. El informe no incluye su ficha técnica.",
+    ev: "KT"
+  };
+
+  /* ---------- Ensayos y mejoras (sección 9) ---------- */
+  window.KORVE_DATA.devItems = [
+    { id: "dev-masa", priority: 1, change: "Distribución de masa", models: ["POWER", "HYBRID", "CONTROL"],
+      benefit: "Mejor compromiso entre aceleración y resistencia a torsión.",
+      test: "Medir masa, balance, inercia a 100 mm y torsión; variantes reversibles; golpes alternados y orden aleatorio.",
+      results: [] },
+    { id: "dev-nucleo", priority: 1, change: "Consistencia del núcleo y laminado", models: ["POWER", "HYBRID", "CONTROL"],
+      benefit: "Respuesta más uniforme entre zonas, temperatura y unidades.",
+      test: "Rigidez y rebote en mapa de puntos; misma pelota/velocidad; varias unidades; repetir a 15/25/35 °C tras estabilizar temperatura.",
+      results: [] },
+    { id: "dev-tolerancias", priority: 1, change: "Tolerancias y control final", models: ["POWER", "HYBRID", "CONTROL"],
+      benefit: "Que el comprador reciba el comportamiento desarrollado.",
+      test: "Lote piloto, distribución de masa/balance/inercia e inspección de acabado; no aprobar con la mejor unidad sola.",
+      results: [] },
+    { id: "dev-multicapa", priority: 2, change: "Núcleo multicapa versus alternativa bien definida", models: ["POWER", "HYBRID"],
+      benefit: "Mejor progresión entre golpe lento y fuerte.",
+      test: "Comparar igual molde/masa/balance/cara, cambiando solo núcleo; dos velocidades de impacto como mínimo.",
+      results: [] },
+    { id: "dev-rugosidad", priority: 2, change: "Rugoso arena versus relieve y combinación", models: ["POWER", "HYBRID", "CONTROL"],
+      benefit: "Efecto repetible y conservación de acabado.",
+      test: "Giro y dispersión en impactos oblicuos; fricción antes/después de desgaste; seguimiento de masa y tacto.",
+      results: [] },
+    { id: "dev-eva", priority: 2, change: "EVA mango existente versus relleno controlado/inserto", models: ["POWER", "HYBRID", "CONTROL"],
+      benefit: "Menor vibración molesta conservando información del golpe.",
+      test: "Acelerómetro mismo punto y sujeción; impacto central/descentrado; compensar masa de control; frecuencia y tiempo de decaimiento.",
+      results: [] },
+    { id: "dev-refuerzos", priority: 3, change: "Refuerzos y cambios de laminado locales", models: ["POWER", "CONTROL"],
+      benefit: "Estabilidad sin subir masa excesivamente.",
+      test: "Simulación como filtro, después rigidez/torsión, mapa de respuesta y fatiga en muestras dedicadas.",
+      results: [] },
+    { id: "dev-pesos-usuario", priority: 3, change: "Ajuste de pesos de usuario", models: ["POWER", "HYBRID", "CONTROL"],
+      benefit: "Adaptación a preferencias.",
+      test: "Solo si una solución simple produce cambios útiles y no falla ni altera negativamente estructura/garantía.",
+      results: [] },
+    { id: "dev-aero", priority: 4, change: "Agujeros aerodinámicos y geometrías radicales", models: ["POWER", "HYBRID", "CONTROL"],
+      benefit: "Menor arrastre o mapa de respuesta más favorable.",
+      test: "Medir fuerza de arrastre y velocidad de swing; validar respuesta y resistencia después. No aceptar solo CFD/render.",
+      results: [] }
+  ];
+  window.KORVE_DATA.devNote = "NEX indicó que los elastómeros viscoelásticos finos serían un desarrollo nuevo: eleva el riesgo de proceso. No convertirlo en condición inicial obligatoria. Toda modificación estructural o ensayo destructivo requiere muestras destinadas a desarrollo.";
+
+  /* Estados disponibles para ensayos (editables localmente). Valor inicial: pendiente. */
+  window.KORVE_DATA.statusOptions = [
+    { id: "pendiente", label: "Pendiente" },
+    { id: "planificado", label: "Planificado" },
+    { id: "en-curso", label: "En curso" },
+    { id: "con-resultado", label: "Con resultado registrado" },
+    { id: "descartado", label: "Descartado" }
+  ];
+
+  /* ---------- Plan de validación (sección 10) ---------- */
+  window.KORVE_DATA.stages = [
+    { id: "etapa-a", name: "Etapa A — Registrar las unidades que ya tenemos",
+      summary: "Ficha normalizada de KS, MC, W3, AMP22 y la NOX de Tomás.",
+      steps: [
+        "Identificar las unidades con códigos, fotografiar y quitar film.",
+        "Anotar masa con resolución de 0,1 g, balance en mm, dimensiones, grip/correa y accesorios.",
+        "Repetir tres lecturas retirando y recolocando la pala; registrar incertidumbre práctica. Tres lecturas de una pala siguen siendo una sola unidad.",
+        "Segunda ficha en configuración de juego: overgrips que cada persona necesite, pesar cada accesorio. Si Gonza usa dos, registrar y mantener su configuración entre pruebas.",
+        "No comparar peso listo para jugar con peso de catálogo sin aclararlo."
+      ] },
+    { id: "etapa-b", name: "Etapa B — Ensayo en cancha antes de cambiar construcción",
+      summary: "Piloto propuesto: 6–12 jugadores, tres sesiones en días distintos, orden alternado y aleatorio.",
+      steps: [
+        "Opiniones individuales antes de la conversación grupal; cubrir marcas sin alterar masa ni superficie de impacto. No es un estudio estadístico definitivo ni garantiza cegamiento completo.",
+        "Por jugador y pala: series de 20 golpes válidos por ejercicio (defensa, globo dirigido, bloqueo/volea, bandeja/víbora, remate).",
+        "Registrar aciertos, errores cortos/largos, dispersión y, si hay radar/video, velocidad y rotación.",
+        "Definir antes la selección de golpes válidos y los descansos. Mismas pelotas, presión, cancha y condiciones dentro de cada bloque.",
+        "Escalas ancladas de facilidad, estabilidad, tacto y fatiga. Analizar por perfil."
+      ] },
+    { id: "etapa-c", name: "Etapa C — Prototipos comparables y laboratorio",
+      summary: "Al menos tres unidades por variante en el piloto de ingeniería, como punto de partida.",
+      steps: [
+        "Medir varias zonas con impactos repetidos; controlar temperatura, pelota, sujeción y velocidad. Repeticiones no aumentan el número de palas ensayadas.",
+        "Inercia sobre un eje a 100 mm del tapón y torsión sobre el eje longitudinal.",
+        "Rigidez mediante carga/deformación bajo montaje conocido. Vibración: ubicación/orientación de sensor, fuerza de impacto, sujeción y señal completa.",
+        "Comparar primero en configuración normalizada, después con acabado, grip y correa finales.",
+        "Repetir controles tras desgaste/impactos en unidades dedicadas."
+      ] },
+    { id: "etapa-d", name: "Etapa D — Criterio de aprobación por perfil",
+      summary: "Márgenes de mejora y no inferioridad a definir después de conocer la repetibilidad.",
+      steps: [
+        "Una diferencia menor que el error de medida no es una mejora.",
+        "Registrar resultados negativos y fallos, no solo los mejores golpes."
+      ] }
+  ];
+
+  /* ---------- Referencias a conseguir prestadas (sección 11) ---------- */
+  window.KORVE_DATA.loanRefs = [
+    { id: "loan-at10", order: 1, name: "NOX AT10 Luxury Genius 12K Alum XTREM 2026 (de Tomás)", why: "Referencia más accesible y vinculada al feedback de MC.", refId: null },
+    { id: "loan-viper", order: 2, name: "Babolat Technical Viper 3.0", why: "Ataque firme como contraste de W3.", refId: "bb-technical-viper-30" },
+    { id: "loan-bomba", order: 3, name: "Tecnifibre Bomba Max", why: "Ataque multicapa distinto; no porque 18K sea mejor que 12K.", refId: "tf-bomba-max" },
+    { id: "loan-endure", order: 4, name: "Wilson Endure Pro V1", why: "Referencia de control para AMP22.", refId: null },
+    { id: "loan-kuikma", order: 5, name: "Kuikma Control Pro", why: "Alternativa constructiva y económica para evitar asociar calidad solo a precio.", refId: "kk-control-pro" },
+    { id: "loan-neuron", order: 6, name: "Bullpadel Neuron 27", why: "Híbrida firme, si hay unidad disponible; si no, probar la versión disponible y registrarla sin trasladar su resultado a 2027.", refId: "bp-neuron-27" }
+  ];
+  window.KORVE_DATA.loanSecondRound = "Segunda ronda si aparece una duda específica: Coello Pro para techo ofensivo y fatiga; Gravity Pro 2027/Obsidian 2027 para control cuando estén disponibles; Genius 2027 frente a la 2026; Oxdog Pro Light para masa baja; Royal Padel de polietileno para sensación de comodidad; Metalbone para distribución ajustable. La selección es un diseño de comparación, no un ranking de las mejores compras. No se compró ni se contactó a nadie.";
+
+  /* ---------- Decisión de fábrica (sección 12) ---------- */
+  window.KORVE_DATA.factories = [
+    { id: "nex", name: "NEX",
+      samples: ["w3", "amp22"],
+      contributes: [
+        { profile: "POWER", text: "W3 pasaría a desarrollo POWER.", status: "Candidata sin validar" },
+        { profile: "CONTROL", text: "AMP22 pasaría a desarrollo CONTROL.", status: "Candidata sin validar" },
+        { profile: "HYBRID", text: "Encargar HYBRID con un objetivo medido basado en MC, sin pedir una copia de su molde.", status: "Por desarrollar" }
+      ],
+      declared: [
+        "Marco carbono 0/90/±45° (confirmado para marco/puente).",
+        "EVA parcial de mango ≈10 g.",
+        "Elastómeros viscoelásticos finos serían un desarrollo nuevo (riesgo de proceso)."
+      ],
+      toValidate: [
+        "W3 y AMP22 en cancha frente a sus referencias (Etapa B).",
+        "Medición individual de W3 y AMP22: la ficha repite rangos, no lecturas.",
+        "Capacidad de lograr una HYBRID a partir de un objetivo medido de MC (requiere medir MC, cuyo balance está en blanco).",
+        "Consistencia entre unidades y lote piloto."
+      ] },
+    { id: "william", name: "William",
+      samples: ["mc005", "ks01"],
+      contributes: [
+        { profile: "HYBRID", text: "MC-005 sigue como base HYBRID.", status: "Referencia por uso" },
+        { profile: "Por determinar", text: "Determinar por pruebas qué papel puede cumplir KS-01. No adjudicarle CONTROL por descarte.", status: "Rol pendiente" },
+        { profile: "Categoría restante", text: "Desarrollar la categoría que KS-01 no cubra.", status: "Por desarrollar" }
+      ],
+      declared: [
+        "MC-005: 12K, H/S/H, espuma adicional en puente y parte alta del mango, mate arenoso + 3D.",
+        "KS-01: carbono, EVA medio, acabado liso/brillante."
+      ],
+      toValidate: [
+        "Ficha normalizada de MC-005 y KS-01 (hoy solo hay masa con dos overgrips y balance en blanco).",
+        "Rol de KS-01 por pruebas.",
+        "Capacidad de desarrollar POWER y/o CONTROL hasta cubrir la línea.",
+        "Consistencia entre unidades y lote piloto."
+      ] }
+  ];
+
+  window.KORVE_DATA.factoryMatrix = [
+    { id: "fm-rend", criterion: "Rendimiento de los tres perfiles frente a sus referencias", weight: "40%" },
+    { id: "fm-cons", criterion: "Consistencia entre unidades y capacidad de control de calidad", weight: "25%" },
+    { id: "fm-iter", criterion: "Capacidad de iteración, documentación y corrección de fallos", weight: "15%" },
+    { id: "fm-costo", criterion: "Costo total, MOQ, plazos y servicio", weight: "15%" },
+    { id: "fm-prop", criterion: "Propiedad de diseño, archivos y condiciones contractuales claras", weight: "5%" }
+  ];
+  window.KORVE_DATA.factoryGates = [
+    "Ningún perfil puede fallar durabilidad o requisitos funcionales básicos antes de sumar puntajes.",
+    "Una gran POWER no compensa una CONTROL deficiente.",
+    "Compartir proveedor no obliga a compartir exactamente el mismo núcleo, cara ni balance.",
+    "Si ninguna fábrica consigue el tercer modelo, conviene retrasarlo o seguir desarrollándolo antes que llenar la colección con una pala que no cumple su promesa."
+  ];
+})();
+
+</script>
+  <script>
+/*
+ * Ramas del mapa conceptual: POWER, HYBRID y CONTROL (secciones 8, 9, 10 y 11).
+ * Cada aspecto tiene "summary" (corto) y "details" (desplegable).
+ * refs: ids de window.KORVE_DATA.references (fichas) o { name, why } sin ficha.
+ */
+window.KORVE_DATA = window.KORVE_DATA || {};
+
+window.KORVE_DATA.aspects = [
+  { id: "behavior", label: "Comportamiento" },
+  { id: "player", label: "Jugador" },
+  { id: "sample", label: "Muestra candidata" },
+  { id: "refs", label: "Referencias" },
+  { id: "develop", label: "Desarrollar" },
+  { id: "tests", label: "Pruebas que deciden" },
+  { id: "missing", label: "Información faltante" }
+];
+
+window.KORVE_DATA.branches = [
+  { id: "POWER", name: "POWER", tagline: "Acelerar y finalizar",
+    behavior: {
+      summary: "Potencia que el jugador puede aprovechar durante un partido: velocidad de remate, profundidad de volea y víbora.",
+      details: [
+        "No volverse inestable fuera del centro ni lenta en todas las transiciones.",
+        "Se acepta que requiera más esfuerzo que CONTROL.",
+        "No se acepta que su potencia solo aparezca en un golpe perfecto y desaparezca en el resto."
+      ] },
+    player: {
+      summary: "Intermedio avanzado / avanzado ofensivo, con técnica para acelerar y que no quiere perder completamente la defensa.",
+      details: ["No intentar satisfacer con una única POWER al rematador profesional y al principiante."] },
+    sample: {
+      sampleIds: ["w3"],
+      summary: "W3 (NEX): base interna natural por objetivo de masa/balance. Candidata, sin validación.",
+      details: [
+        "Comparar la unidad original y una variante de menor inercia conservando lo máximo posible su respuesta.",
+        "No aprobar aligerar el mango indiscriminadamente: puede subir el balance y empeorar el resultado buscado."
+      ] },
+    refs: {
+      summary: "Prioritarias: Technical Viper 3.0, Coello Pro 2026 y Bomba Max. Segunda ronda: Metalbone HRD+ y Hack 05.",
+      items: [
+        { refId: "bb-technical-viper-30", why: "Respuesta firme.", tier: "Prioritaria" },
+        { refId: "hd-coello-pro-2026", why: "Extremo ofensivo; techo ofensivo y fatiga.", tier: "Prioritaria" },
+        { refId: "tf-bomba-max", why: "Respuesta progresiva multicapa (no porque 18K sea mejor que 12K).", tier: "Prioritaria" },
+        { refId: "ad-metalbone-hrdplus-2026", why: "Distribución de masa ajustable.", tier: "Segunda ronda" },
+        { refId: "bp-hack05-27", why: "Ataque, diamante.", tier: "Segunda ronda" }
+      ] },
+    develop: {
+      summary: "Distribución de masa, consistencia de núcleo/laminado y tolerancias primero; luego núcleo multicapa, acabado, EVA y refuerzos locales.",
+      devIds: ["dev-masa", "dev-nucleo", "dev-tolerancias", "dev-multicapa", "dev-rugosidad", "dev-eva", "dev-refuerzos"],
+      details: ["Variante de menor inercia de W3 conservando su respuesta."] },
+    tests: {
+      summary: "Más velocidad útil o más remates eficaces a esfuerzo comparable, sin deteriorar defensa, dispersión, estabilidad y fatiga.",
+      criterion: { main: "Más velocidad útil o más remates eficaces a esfuerzo comparable.", also: "No deteriorar defensa, dispersión, estabilidad y fatiga por encima del margen acordado." },
+      details: [
+        "W3 original vs. variante de menor inercia vs. referencias firmes y multicapa.",
+        "Series de 20 golpes válidos en remate, bandeja/víbora y volea, más defensa (Etapa B).",
+        "Inercia a 100 mm y torsión en laboratorio (Etapa C)."
+      ] },
+    missing: {
+      summary: "Medición individual de W3, resultado de cancha, inercia/torsión y márgenes de no inferioridad.",
+      details: [
+        "La ficha NEX repite rangos, no lecturas individuales.",
+        "No hay resultado de cancha local consolidado.",
+        "No hay número de swingweight/twistweight: faltan mediciones de las unidades en un mismo equipo."
+      ] },
+    window: { mass: "365–372 g", balance: "263–270 mm", pending: "Si W3 necesita menos inercia sin perder ataque." } },
+
+  { id: "HYBRID", name: "HYBRID", tagline: "Sólida en todas las fases",
+    behavior: {
+      summary: "Solidez previsible a distintas intensidades: conservar firmeza, estabilidad, salida suficiente y capacidad de atacar de MC.",
+      details: [
+        "Reducir errores de profundidad y pérdida de rendimiento fuera del centro, conservando maniobrabilidad.",
+        "No debe ser simplemente la media aritmética entre POWER y CONTROL."
+      ] },
+    player: {
+      summary: "Jugador competitivo versátil que defiende, construye y finaliza, y quiere una única pala para todo el partido.",
+      details: [] },
+    sample: {
+      sampleIds: ["mc005"],
+      summary: "MC-005 (William): referencia de comportamiento HYBRID. El rival interno sigue siendo MC hasta que otra la supere.",
+      details: [
+        "Es referencia por uso, no ficha de laboratorio.",
+        "Tomás pidió conservar movilidad y tacto seco y añadir peso: merece una variante controlada."
+      ] },
+    refs: {
+      summary: "AT10 2026 de Tomás como comparación disponible; Genius 12K 2027; Neuron 27. Adicionales: StarVie Eternal y Wilson Bela.",
+      items: [
+        { name: "NOX AT10 Luxury Genius 12K Alum XTREM 2026 (Tomás)", why: "Comparación disponible y vinculada al feedback de MC. Sin ficha en el informe.", tier: "Prioritaria" },
+        { refId: "nx-genius-12k-2027", why: "Comprobar si aporta una mejora real sobre la 2026.", tier: "Prioritaria" },
+        { refId: "bp-neuron-27", why: "Contrastar un tacto firme.", tier: "Prioritaria" },
+        { name: "StarVie Eternal", why: "Referencia adicional; no sustituye el ensayo directo. Sin ficha en el informe.", tier: "Adicional" },
+        { name: "Wilson Bela", why: "Referencia adicional; no sustituye el ensayo directo. Sin ficha en el informe.", tier: "Adicional" }
+      ] },
+    develop: {
+      summary: "Distribución de masa (incluida una variante más pesada), consistencia, tolerancias, núcleo multicapa, acabado y EVA.",
+      devIds: ["dev-masa", "dev-nucleo", "dev-tolerancias", "dev-multicapa", "dev-rugosidad", "dev-eva"],
+      details: ["Incluir la variante más pesada solicitada por Tomás."] },
+    tests: {
+      summary: "MC actual vs. MC con redistribución reversible vs. futura HYBRID de la fábrica elegida.",
+      criterion: { main: "Rendimiento consistente entre defensa, construcción y ataque.", also: "Mantener cualidades preferidas de MC; no aceptar mejora mínima de una fase que empeore mucho otra." },
+      details: [
+        "MC actual, MC con pequeña redistribución reversible de masa y futura HYBRID de la fábrica seleccionada.",
+        "Series por fase de juego (Etapa B) y análisis por perfil de jugador."
+      ] },
+    missing: {
+      summary: "Balance real de MC, ficha normalizada sin overgrips y opiniones de más de un jugador.",
+      details: [
+        "Tomás anotó 364,1 g con dos overgrips; balance en blanco.",
+        "La referencia del proveedor (360 ±5 g / 255 ±7 mm) es sin overgrip: no comparable directamente.",
+        "La preferencia por MC procede de una persona."
+      ] },
+    window: { mass: "358–367 g", balance: "252–260 mm", pending: "Qué combinación conserva sensación MC y mejora estabilidad/rapidez; incluir variante más pesada solicitada por Tomás." } },
+
+  { id: "CONTROL", name: "CONTROL", tagline: "Colocar y defender con precisión",
+    behavior: {
+      summary: "Precisión, tolerancia y rapidez sin sensación hueca, incluso fuera del centro.",
+      details: [
+        "Facilitar cambios de dirección y profundidad.",
+        "Devolver impactos descentrados sin una caída brusca de salida o torsión.",
+        "Una pelota que sale fácil puede ayudar en defensa y perjudicar el bloqueo: medir ambas cosas."
+      ] },
+    player: {
+      summary: "Jugador técnico que prioriza colocación, defensa, bloqueo y transiciones, incluyendo niveles altos.",
+      details: ["CONTROL no significa pala de iniciación ni necesariamente núcleo muy blando."] },
+    sample: {
+      sampleIds: ["amp22"],
+      summary: "AMP22 (NEX): candidata razonable por 357 g / 250 mm objetivo. Sin validación.",
+      details: [
+        "Falta validar que no pague rapidez con poca estabilidad.",
+        "Si fuera fácil de mover pero inconsistente al bloquear, redistribuir masa o revisar laminado antes de declararla terminada."
+      ] },
+    refs: {
+      summary: "Endure Pro V1, Gravity Pro 2027 (cuando esté disponible) y Obsidian Pro 2027. Contrastes: Kuikma Control Pro, Curva Speed y Royal Padel.",
+      items: [
+        { name: "Wilson Endure Pro V1", why: "Referencia de control para AMP22. Sin ficha D en el informe; tiene un dato L de fricción.", tier: "Prioritaria" },
+        { refId: "hd-gravity-pro-2027", why: "Control con masa intermedia, cuando esté disponible.", tier: "Prioritaria" },
+        { refId: "sx-obsidian-pro-2027", why: "Lágrima de control.", tier: "Prioritaria" },
+        { refId: "kk-control-pro", why: "Contraste de valor y construcción.", tier: "Contraste" },
+        { refId: "tf-curva-speed-2026", why: "Contraste de respuesta más firme.", tier: "Contraste" },
+        { name: "Royal Padel (polietileno)", why: "Límite de comodidad, sin convertir esa cualidad en la definición completa de CONTROL. Sin ficha en el informe.", tier: "Contraste" }
+      ] },
+    develop: {
+      summary: "Masa periférica de AMP22, consistencia, tolerancias, refuerzos locales, acabado y EVA.",
+      devIds: ["dev-masa", "dev-nucleo", "dev-tolerancias", "dev-refuerzos", "dev-rugosidad", "dev-eva"],
+      details: ["Cuánta masa periférica necesita AMP22 para resistir impactos descentrados."] },
+    tests: {
+      summary: "Menor dispersión y mayor tasa de acierto, central y descentrado, con salida suficiente en defensa y bloqueo estable.",
+      criterion: { main: "Menor dispersión y mayor tasa de acierto, central y descentrado.", also: "Salida suficiente en defensa, estabilidad de bloqueo y capacidad ofensiva mínima definida." },
+      details: [
+        "Medir defensa y bloqueo por separado (Etapa B).",
+        "Mapa de respuesta y torsión en impactos descentrados (Etapa C)."
+      ] },
+    missing: {
+      summary: "Medición real de AMP22, precisión de “flat-laid” y masa periférica necesaria.",
+      details: [
+        "No inferir tacto solo por la designación T700.",
+        "Sin opinión de tester registrada en el informe."
+      ] },
+    window: { mass: "352–361 g", balance: "248–257 mm", pending: "Cuánta masa periférica necesita AMP22 para resistir impactos descentrados." } }
+];
+
+window.KORVE_DATA.windowNote = "Ventanas exploratorias, no especificaciones finales: propuestas de ingeniería basadas en nuestras muestras y el mapa comercial, no óptimos demostrados. Con grip y correa de producción, sin film, overgrip ni protector. Balance desde la base del tapón, correa recogida siempre igual. No adoptar como tolerancia de producción.";
+
+</script>
+  <!-- Interfaz -->
+  <script>
+/* KORVE Explorador — utilidades, almacenamiento local y renderizado de evidencia. */
+(function () {
+  var DATA = window.KORVE_DATA;
+  var K = (window.K = {});
+
+  /* ---------- HTML helpers ---------- */
+  K.esc = function (s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  };
+  var esc = K.esc;
+
+  K.link = function (url, text) {
+    if (!url) return '<span class="miss">Enlace no incluido en el informe</span>';
+    return '<a href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + esc(text || url) + "</a>";
+  };
+
+  /* ---------- Lookups ---------- */
+  K.brandById = {}; DATA.brands.forEach(function (b) { K.brandById[b.id] = b; });
+  K.refById = {}; DATA.references.forEach(function (r) { K.refById[r.id] = r; });
+  K.sampleById = {}; DATA.samples.forEach(function (s) { K.sampleById[s.id] = s; });
+  K.devById = {}; DATA.devItems.forEach(function (d) { K.devById[d.id] = d; });
+  K.branchById = {}; DATA.branches.forEach(function (b) { K.branchById[b.id] = b; });
+
+  /* ---------- Evidence ---------- */
+  K.ev = function (code, extra) {
+    var e = DATA.evidence[code];
+    if (!e) return "";
+    var title = e.label + ". " + e.desc;
+    return '<span class="ev ev-' + esc(code) + '" title="' + esc(title) + '"><span class="code">' + esc(e.code) + "</span> · " + esc(e.label) + (extra ? " · " + esc(extra) : "") + "</span>";
+  };
+  K.missing = function (key, note) {
+    var label = DATA.missingStates[key] || key;
+    return '<span class="miss">' + esc(label) + "</span>" + (note ? '<span class="note">' + esc(note) + "</span>" : "");
+  };
+
+  /* Renderiza un valor o un arreglo de valores con su clase de evidencia. */
+  K.value = function (val) {
+    if (val == null) return '<div class="val">' + K.missing("NI") + "</div>";
+    if (Array.isArray(val)) return val.map(K.value).join("");
+    if (typeof val === "string") return '<div class="val"><span>' + esc(val) + "</span></div>";
+    if (val.missing) return '<div class="val">' + K.missing(val.missing, val.note) + "</div>";
+    var main;
+    if (val.qual) main = '<span class="num">' + esc(val.qual) + '</span> <span class="miss">cualitativo, sin mm</span>';
+    else main = '<span class="num">' + esc(val.v) + (val.u ? " " + esc(val.u) : "") + "</span>";
+    return '<div class="val">' + main + " " + K.ev(val.ev) + (val.note ? '<span class="note">' + esc(val.note) + "</span>" : "") + "</div>";
+  };
+
+  /* ---------- Local storage (con respaldo en memoria) ---------- */
+  var KEY = "korve-explorador-v1";
+  var mem = null;
+  function blank() { return { version: 1, notes: {}, status: {}, measurements: {}, results: {}, factoryNotes: {}, compare: [] }; }
+  K.storageOk = true;
+  K.load = function () {
+    if (mem) return mem;
+    try {
+      var raw = window.localStorage.getItem(KEY);
+      mem = raw ? Object.assign(blank(), JSON.parse(raw)) : blank();
+    } catch (e) { K.storageOk = false; mem = blank(); }
+    return mem;
+  };
+  K.save = function () {
+    try { window.localStorage.setItem(KEY, JSON.stringify(mem)); K.storageOk = true; }
+    catch (e) { K.storageOk = false; }
+  };
+  K.state = function () { return K.load(); };
+  K.setNote = function (id, text) { var s = K.load(); if (text) s.notes[id] = text; else delete s.notes[id]; K.save(); };
+  K.getNote = function (id) { return K.load().notes[id] || ""; };
+  K.getStatus = function (id) { return K.load().status[id] || "pendiente"; };
+  K.setStatus = function (id, st) { var s = K.load(); if (st === "pendiente") delete s.status[id]; else s.status[id] = st; K.save(); };
+  K.statusLabel = function (id) {
+    var o = DATA.statusOptions.filter(function (x) { return x.id === id; })[0];
+    return o ? o.label : id;
+  };
+
+  K.exportText = function () {
+    return JSON.stringify({ app: "korve-explorador", exportedAt: new Date().toISOString(), researchCutoff: DATA.meta.cutoff, data: K.load() }, null, 2);
+  };
+  K.downloadJSON = function (json) {
+    try {
+      var blob = new Blob([json], { type: "application/json" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "korve-notas-" + new Date().toISOString().slice(0, 10) + ".json";
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    } catch (e) {}
+  };
+  K.importText = function (text, cb) {
+    try {
+      var obj = JSON.parse(text);
+      var d = obj && obj.app === "korve-explorador" ? obj.data : null;
+      if (!d || typeof d !== "object") throw new Error("el texto no es una exportación del Explorador KORVE.");
+      var fresh = blank();
+      ["notes", "status", "measurements", "results", "factoryNotes"].forEach(function (k) {
+        if (d[k] && typeof d[k] === "object" && !Array.isArray(d[k])) fresh[k] = d[k];
+      });
+      if (Array.isArray(d.compare)) fresh.compare = d.compare.filter(function (id) { return typeof id === "string"; }).slice(0, 3);
+      mem = fresh; K.save();
+      cb(null);
+    } catch (e) { cb(e instanceof SyntaxError ? new Error("el JSON no es válido.") : e); }
+  };
+  K.clearData = function () { mem = blank(); K.save(); };
+
+  /* Barra de exportación/importación reutilizable. */
+  K.storageBar = function () {
+    return '<div class="storage-bar card small">' +
+      "<span><b>Notas y estados locales.</b> Se guardan solo en este navegador" + (K.storageOk ? "" : " (almacenamiento no disponible: se perderán al cerrar)") + ".</span>" +
+      '<button class="btn small" data-action="export">Exportar JSON</button>' +
+      '<label class="btn small">Importar archivo<input type="file" accept="application/json,.json" data-action="import" class="sr-only"></label>' +
+      '<button class="btn small" data-action="paste-import">Importar pegando JSON</button>' +
+      "</div>";
+  };
+
+  /* Campo de nota reutilizable. */
+  K.noteField = function (id, label) {
+    return '<details class="note-box"><summary>' + esc(label || "Notas locales") + (K.getNote(id) ? " (con contenido)" : "") + "</summary>" +
+      '<textarea data-note="' + esc(id) + '" aria-label="' + esc(label || "Notas locales") + '" placeholder="Escribí una nota. Se guarda en este navegador.">' + esc(K.getNote(id)) + "</textarea></details>";
+  };
+
+  /* Etiqueta del item comparable (referencia o muestra). */
+  K.itemName = function (id) {
+    if (K.refById[id]) return K.refById[id].name;
+    if (K.sampleById[id]) return "KORVE " + K.sampleById[id].name + " (muestra " + K.sampleById[id].factory + ")";
+    return id;
+  };
+})();
+
+</script>
+  <script>
+/* KORVE Explorador — mapa conceptual interactivo (SVG, sin dependencias). */
+(function () {
+  var DATA = window.KORVE_DATA, K = window.K, esc = K.esc;
+  var SVGNS = "http://www.w3.org/2000/svg";
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var BRANCH_ANGLE = { HYBRID: -90, POWER: 150, CONTROL: 30 };
+  var BR_DIST = 230, AS_DIST = 200;
+
+  function rad(a) { return a * Math.PI / 180; }
+  function polar(cx, cy, r, a) { return { x: cx + r * Math.cos(rad(a)), y: cy + r * Math.sin(rad(a)) }; }
+
+  /* Ítems de tercer nivel según aspecto. */
+  function itemsFor(branch, aspectId) {
+    if (aspectId === "refs") return branch.refs.items.map(function (it, i) {
+      return { id: it.refId || ("noref-" + i), label: it.refId ? K.refById[it.refId].name : it.name, kind: it.refId ? "ref" : "noref", data: it };
+    });
+    if (aspectId === "sample") return branch.sample.sampleIds.map(function (sid) {
+      return { id: sid, label: K.sampleById[sid].name + " · " + K.sampleById[sid].factory, kind: "sample" };
+    });
+    if (aspectId === "develop") return branch.develop.devIds.map(function (did) {
+      return { id: did, label: "P" + K.devById[did].priority + " · " + K.devById[did].change, kind: "dev" };
+    });
+    return [];
+  }
+
+  function layout(path) {
+    var nodes = [], edges = [];
+    nodes.push({ key: "root", level: 0, x: 0, y: 0, label: "KORVE", sub: "3 palas", kind: "root" });
+    DATA.branches.forEach(function (b) {
+      var p = polar(0, 0, BR_DIST, BRANCH_ANGLE[b.id]);
+      var sel = path.branch === b.id;
+      nodes.push({ key: "b:" + b.id, level: 1, x: p.x, y: p.y, label: b.name, sub: b.tagline, kind: "branch", branch: b.id, selected: sel && !path.aspect, dim: path.branch && !sel });
+      edges.push({ a: { x: 0, y: 0 }, b: p, strong: sel });
+      if (!sel) return;
+      var base = BRANCH_ANGLE[b.id], n = DATA.aspects.length, spread = 230;
+      DATA.aspects.forEach(function (as, i) {
+        var ang = base - spread / 2 + (spread * i) / (n - 1);
+        var q = polar(p.x, p.y, AS_DIST, ang);
+        var items = itemsFor(b, as.id);
+        var aSel = path.aspect === as.id;
+        nodes.push({ key: "a:" + b.id + ":" + as.id, level: 2, x: q.x, y: q.y, label: as.label, sub: items.length ? items.length + " ítems" : "", kind: "aspect", branch: b.id, aspect: as.id, selected: aSel && !path.item, dim: path.aspect && !aSel, angle: ang });
+        edges.push({ a: p, b: q, strong: aSel });
+        if (!aSel || !items.length) return;
+        /* Tercer nivel en columna hacia afuera: legible y sin superposiciones. */
+        var m = items.length, cosA = Math.cos(rad(ang));
+        var side = Math.abs(cosA) > 0.2 ? (cosA > 0 ? 1 : -1) : (q.x >= 0 ? 1 : -1);
+        items.forEach(function (it, j) {
+          var w = { x: q.x + side * 200, y: q.y + (j - (m - 1) / 2) * 52 };
+          nodes.push({ key: "i:" + it.id, level: 3, x: w.x, y: w.y, label: it.label, kind: "item", itemKind: it.kind, branch: b.id, aspect: as.id, item: it.id, selected: path.item === it.id });
+          edges.push({ a: q, b: w, strong: path.item === it.id });
+        });
+      });
+    });
+    return { nodes: nodes, edges: edges };
+  }
+
+  function wrap(text, max) {
+    var words = String(text).split(/\s+/), lines = [], cur = "";
+    words.forEach(function (w) {
+      if ((cur + " " + w).trim().length > max && cur) { lines.push(cur); cur = w; }
+      else cur = (cur + " " + w).trim();
+    });
+    if (cur) lines.push(cur);
+    if (lines.length > 3) { lines = lines.slice(0, 3); lines[2] = lines[2].replace(/.{0,2}$/, "…"); }
+    return lines;
+  }
+
+  function el(name, attrs) {
+    var e = document.createElementNS(SVGNS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  function MapView(host, onSelect) {
+    this.host = host; this.onSelect = onSelect;
+    this.path = {};
+    this.cam = { x: 0, y: 0, s: 1 };
+    this.build();
+  }
+
+  MapView.prototype.build = function () {
+    var self = this;
+    this.host.innerHTML =
+      '<div class="map-controls" role="toolbar" aria-label="Controles del mapa">' +
+      '<button type="button" data-cmd="in" title="Acercar" aria-label="Acercar">+</button>' +
+      '<button type="button" data-cmd="out" title="Alejar" aria-label="Alejar">−</button>' +
+      '<button type="button" data-cmd="center" title="Centrar en la selección" aria-label="Centrar en la selección">◎</button>' +
+      '<button type="button" data-cmd="back" title="Volver al nivel anterior (Esc)" aria-label="Volver al nivel anterior">↩</button>' +
+      "</div>" +
+      '<div class="crumbs" aria-live="polite"></div>' +
+      '<div class="map-note">La distancia o cercanía en el mapa no indica equivalencia técnica.</div>';
+    this.svg = el("svg", { role: "group", "aria-label": "Mapa conceptual KORVE" });
+    this.gEdges = el("g", {}); this.gNodes = el("g", {});
+    this.svg.appendChild(this.gEdges); this.svg.appendChild(this.gNodes);
+    this.host.appendChild(this.svg);
+
+    this.host.querySelector(".map-controls").addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (!b) return;
+      var c = b.getAttribute("data-cmd");
+      if (c === "in") self.zoomBy(1.25);
+      else if (c === "out") self.zoomBy(0.8);
+      else if (c === "center") self.focus(true);
+      else if (c === "back") self.back();
+    });
+    this.host.querySelector(".crumbs").addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-level]"); if (!b) return;
+      var lvl = +b.getAttribute("data-level"), p = self.path, np = {};
+      if (lvl >= 1) np.branch = p.branch;
+      if (lvl >= 2) np.aspect = p.aspect;
+      self.select(np);
+    });
+
+    /* Selección de nodos */
+    this.gNodes.addEventListener("click", function (e) {
+      if (self.dragMoved) return;
+      var g = e.target.closest(".node"); if (g) self.activate(g);
+    });
+    this.gNodes.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { var g = e.target.closest(".node"); if (g) { e.preventDefault(); self.activate(g); } }
+    });
+    this.host.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") { e.preventDefault(); self.back(); }
+      else if (e.key === "+" || e.key === "=") self.zoomBy(1.25);
+      else if (e.key === "-") self.zoomBy(0.8);
+    });
+
+    /* Zoom con rueda y arrastre / pellizco */
+    this.svg.addEventListener("wheel", function (e) {
+      e.preventDefault();
+      var pt = self.toWorld(e.clientX, e.clientY);
+      self.zoomBy(e.deltaY < 0 ? 1.12 : 1 / 1.12, pt);
+    }, { passive: false });
+    var pointers = {}, start = null, pinch = null;
+    this.svg.addEventListener("pointerdown", function (e) {
+      pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+      var ids = Object.keys(pointers);
+      self.dragMoved = false;
+      if (ids.length === 1) start = { x: e.clientX, y: e.clientY, cx: self.cam.x, cy: self.cam.y };
+      else if (ids.length === 2) {
+        var a = pointers[ids[0]], b = pointers[ids[1]];
+        pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), s: self.cam.s };
+      }
+    });
+    this.svg.addEventListener("pointermove", function (e) {
+      if (!pointers[e.pointerId]) return;
+      pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+      var ids = Object.keys(pointers);
+      if (ids.length === 2 && pinch) {
+        var a = pointers[ids[0]], b = pointers[ids[1]];
+        var d = Math.hypot(a.x - b.x, a.y - b.y);
+        self.cam.s = clamp(pinch.s * d / pinch.d); self.dragMoved = true; self.apply();
+      } else if (ids.length === 1 && start) {
+        var dx = e.clientX - start.x, dy = e.clientY - start.y;
+        if (!self.dragMoved && Math.hypot(dx, dy) < 6) return;
+        if (!self.dragMoved) { try { self.svg.setPointerCapture(e.pointerId); } catch (err) {} }
+        self.dragMoved = true; self.svg.classList.add("dragging");
+        var r = self.ratio();
+        self.cam.x = start.cx - dx * r; self.cam.y = start.cy - dy * r; self.apply();
+      }
+    });
+    function end(e) {
+      delete pointers[e.pointerId];
+      if (Object.keys(pointers).length < 2) pinch = null;
+      if (!Object.keys(pointers).length) { start = null; self.svg.classList.remove("dragging"); setTimeout(function () { self.dragMoved = false; }, 0); }
+    }
+    this.svg.addEventListener("pointerup", end);
+    this.svg.addEventListener("pointercancel", end);
+    this.resizeObs = new ResizeObserver(function () { self.apply(); });
+    this.resizeObs.observe(this.host);
+  };
+
+  function clamp(s) { return Math.max(0.35, Math.min(3.5, s)); }
+
+  MapView.prototype.ratio = function () {
+    return 1 / (this.baseScale() * this.cam.s);
+  };
+  /* Escala base: cuántos px por unidad de mundo para que el mapa raíz quepa. */
+  MapView.prototype.baseScale = function () {
+    var w = this.host.clientWidth || 600, h = this.host.clientHeight || 500;
+    return Math.min(w, h) / 720;
+  };
+  MapView.prototype.toWorld = function (cx, cy) {
+    var r = this.svg.getBoundingClientRect(), k = this.baseScale() * this.cam.s;
+    return { x: this.cam.x + (cx - r.left - r.width / 2) / k, y: this.cam.y + (cy - r.top - r.height / 2) / k };
+  };
+  MapView.prototype.apply = function () {
+    var w = this.host.clientWidth || 600, h = this.host.clientHeight || 500, k = this.baseScale() * this.cam.s;
+    var vw = w / k, vh = h / k;
+    this.svg.setAttribute("viewBox", (this.cam.x - vw / 2) + " " + (this.cam.y - vh / 2) + " " + vw + " " + vh);
+  };
+  MapView.prototype.zoomBy = function (f, pt) {
+    var ns = clamp(this.cam.s * f), real = ns / this.cam.s;
+    if (pt) { this.cam.x = pt.x - (pt.x - this.cam.x) / real; this.cam.y = pt.y - (pt.y - this.cam.y) / real; }
+    this.cam.s = ns; this.apply();
+  };
+  MapView.prototype.animateTo = function (t) {
+    var self = this, from = { x: this.cam.x, y: this.cam.y, s: this.cam.s }, t0 = null, dur = 380;
+    if (reduceMotion) { this.cam = t; this.apply(); return; }
+    cancelAnimationFrame(this.raf);
+    function step(ts) {
+      if (!t0) t0 = ts;
+      var p = Math.min(1, (ts - t0) / dur), e = p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+      self.cam = { x: from.x + (t.x - from.x) * e, y: from.y + (t.y - from.y) * e, s: from.s + (t.s - from.s) * e };
+      self.apply();
+      if (p < 1) self.raf = requestAnimationFrame(step);
+    }
+    this.raf = requestAnimationFrame(step);
+  };
+
+  /* Encuadre automático: ajusta el zoom a los nodos relevantes del nivel actual. */
+  MapView.prototype.focus = function (animate) {
+    var p = this.path, L = layout(p);
+    var rel = L.nodes.filter(function (n) {
+      if (!p.branch) return true;
+      if (!p.aspect) return n.branch === p.branch && n.level >= 1;
+      return n.branch === p.branch && (n.aspect === p.aspect || n.level === 1);
+    });
+    var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    rel.forEach(function (n) {
+      var hw = n.level === 0 ? 64 : n.level === 1 ? 56 : 80, hh = n.level <= 1 ? 58 : 30;
+      x0 = Math.min(x0, n.x - hw); x1 = Math.max(x1, n.x + hw); y0 = Math.min(y0, n.y - hh); y1 = Math.max(y1, n.y + hh);
+    });
+    var w = this.host.clientWidth || 600, h = this.host.clientHeight || 500, pad = 24;
+    var k = Math.min((w - 2 * pad) / (x1 - x0), (h - 2 * pad - 50) / (y1 - y0));
+    var t = { x: (x0 + x1) / 2, y: (y0 + y1) / 2 - 18 / k, s: Math.min(2.4, clamp(k / this.baseScale())) };
+    if (animate) this.animateTo(t); else { this.cam = t; this.apply(); }
+  };
+
+  MapView.prototype.activate = function (g) {
+    var d = g.dataset, np = {};
+    if (d.kind === "root") np = {};
+    else if (d.kind === "branch") np = { branch: d.branch };
+    else if (d.kind === "aspect") np = { branch: d.branch, aspect: d.aspect };
+    else if (d.kind === "item") np = { branch: d.branch, aspect: d.aspect, item: d.item };
+    this.select(np, true);
+  };
+
+  MapView.prototype.select = function (np, fromMap) {
+    var prevKey = (this.path.branch || "") + "|" + (this.path.aspect || "");
+    this.path = np || {};
+    this.render();
+    var newKey = (this.path.branch || "") + "|" + (this.path.aspect || "");
+    if (prevKey !== newKey || !fromMap) this.focus(true);
+    this.onSelect(this.path);
+    if (fromMap) {
+      var key = this.path.item ? "i:" + this.path.item : this.path.aspect ? "a:" + this.path.branch + ":" + this.path.aspect : this.path.branch ? "b:" + this.path.branch : "root";
+      var n = this.gNodes.querySelector('[data-key="' + key + '"]');
+      if (n) n.focus({ preventScroll: true });
+    }
+  };
+
+  MapView.prototype.back = function () {
+    var p = this.path;
+    if (p.item) this.select({ branch: p.branch, aspect: p.aspect });
+    else if (p.aspect) this.select({ branch: p.branch });
+    else if (p.branch) this.select({});
+    else this.focus(true);
+  };
+
+  MapView.prototype.render = function () {
+    var L = layout(this.path), self = this;
+    this.gEdges.innerHTML = ""; this.gNodes.innerHTML = "";
+    L.edges.forEach(function (e) {
+      self.gEdges.appendChild(el("line", { x1: e.a.x, y1: e.a.y, x2: e.b.x, y2: e.b.y, "class": "edge" + (e.strong ? " strong" : "") }));
+    });
+    /* Los nodos atenuados se dibujan primero para que la selección quede encima. */
+    L.nodes.sort(function (a, b) { return (a.dim ? 0 : 1) - (b.dim ? 0 : 1); });
+    L.nodes.forEach(function (n) {
+      var g = el("g", { "class": "node" + (n.dim ? " dim" : "") + (n.selected ? " selected" : ""), tabindex: "0", role: "button",
+        transform: "translate(" + n.x + "," + n.y + ")", "data-key": n.key, "data-kind": n.kind });
+      if (n.branch) g.setAttribute("data-branch", n.branch);
+      if (n.aspect) g.setAttribute("data-aspect", n.aspect);
+      if (n.item) g.setAttribute("data-item", n.item);
+      var aria = n.label + (n.sub ? ", " + n.sub : "") + (n.selected ? ", seleccionado" : "");
+      g.setAttribute("aria-label", aria);
+      var title = el("title", {}); title.textContent = n.label; g.appendChild(title);
+      if (n.kind === "root") {
+        g.appendChild(el("circle", { r: 62, "class": "shape", fill: "#ffffff", stroke: "#7a1f2e", "stroke-width": 4 }));
+        var t1 = el("text", { "text-anchor": "middle", y: 4, "font-size": 22, "font-weight": 800, "letter-spacing": 5, style: "fill:#0d0d0d" }); t1.textContent = "KORVE"; g.appendChild(t1);
+        var t2 = el("text", { "text-anchor": "middle", y: 26, "font-size": 11, style: "fill:#7a1f2e" }); t2.textContent = "POWER · HYBRID · CONTROL"; g.appendChild(t2);
+      } else if (n.kind === "branch") {
+        g.appendChild(el("circle", { r: 54, "class": "shape", fill: n.selected || self.path.branch === n.branch ? "#7a1f2e" : "#1e1e1e", stroke: "#9c2a3d", "stroke-width": 2 }));
+        var tb = el("text", { "text-anchor": "middle", y: -2, "font-size": 17, "font-weight": 800, "letter-spacing": 2 }); tb.textContent = n.label; g.appendChild(tb);
+        wrap(n.sub, 16).forEach(function (ln, i) { var s = el("text", { "text-anchor": "middle", y: 16 + i * 12, "font-size": 10, style: "fill:#e7d9db" }); s.textContent = ln; g.appendChild(s); });
+      } else if (n.kind === "aspect") {
+        var al = wrap(n.label, 13), W = 122, H = 14 + al.length * 15 + (n.sub ? 12 : 0);
+        g.appendChild(el("rect", { x: -W / 2, y: -H / 2, width: W, height: H, rx: 8, "class": "shape", fill: n.selected || self.path.aspect === n.aspect ? "#9c2a3d" : "#2a2a2a", stroke: "#9c2a3d", "stroke-width": 1.5 }));
+        al.forEach(function (ln, i) { var ta = el("text", { "text-anchor": "middle", y: -H / 2 + 19 + i * 15, "font-size": 14, "font-weight": 600 }); ta.textContent = ln; g.appendChild(ta); });
+        if (n.sub) { var ts = el("text", { "text-anchor": "middle", y: H / 2 - 8, "font-size": 10.5, style: "fill:#e0cfd2" }); ts.textContent = n.sub + " ▸"; g.appendChild(ts); }
+      } else {
+        var lines = wrap(n.label, 24), Wi = 170, Hi = 16 + lines.length * 13;
+        g.appendChild(el("rect", { x: -Wi / 2, y: -Hi / 2, width: Wi, height: Hi, rx: 6, "class": "shape", fill: n.selected ? "#ffffff" : "#141414", stroke: n.itemKind === "noref" ? "#888" : "#ffffff", "stroke-dasharray": n.itemKind === "noref" ? "4 3" : "", "stroke-width": 1.2 }));
+        lines.forEach(function (ln, i) {
+          var tt = el("text", { "text-anchor": "middle", y: -Hi / 2 + 18 + i * 13, "font-size": 12, style: n.selected ? "fill:#0d0d0d" : "" }); tt.textContent = ln; g.appendChild(tt);
+        });
+      }
+      self.gNodes.appendChild(g);
+    });
+    this.renderCrumbs();
+    this.host.querySelector('[data-cmd="back"]').disabled = !this.path.branch;
+  };
+
+  MapView.prototype.renderCrumbs = function () {
+    var p = this.path, parts = ['<button type="button" data-level="0">KORVE</button>'];
+    if (p.branch) parts.push('<span class="sep">›</span><button type="button" data-level="1">' + esc(p.branch) + "</button>");
+    if (p.aspect) parts.push('<span class="sep">›</span><button type="button" data-level="2">' + esc(DATA.aspects.filter(function (a) { return a.id === p.aspect; })[0].label) + "</button>");
+    if (p.item) parts.push('<span class="sep">›</span><span>' + esc(itemLabel(p)) + "</span>");
+    this.host.querySelector(".crumbs").innerHTML = parts.join(" ");
+  };
+  function itemLabel(p) {
+    var it = itemsFor(K.branchById[p.branch], p.aspect).filter(function (x) { return x.id === p.item; })[0];
+    return it ? it.label : p.item;
+  }
+
+  MapView.prototype.destroy = function () { if (this.resizeObs) this.resizeObs.disconnect(); cancelAnimationFrame(this.raf); };
+
+  window.KMap = { MapView: MapView, itemsFor: itemsFor };
+})();
+
+</script>
+  <script>
+/* KORVE Explorador — vistas. Cada vista devuelve HTML y, si hace falta, una función mount(). */
+(function () {
+  var DATA = window.KORVE_DATA, K = window.K, esc = K.esc;
+  var V = (window.KViews = {});
+
+  function evLegendInline() {
+    return Object.keys(DATA.evidence).map(function (k) { return K.ev(k); }).join(" ");
+  }
+  function list(items) { return items && items.length ? '<ul class="clean">' + items.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>" : ""; }
+  function propBadge() { return K.ev("PR"); }
+
+  /* ---------- Fichas reutilizables ---------- */
+  V.refCard = function (r, opts) {
+    opts = opts || {};
+    var b = K.brandById[r.brandId];
+    return '<div class="card ref-card" data-ref="' + esc(r.id) + '">' +
+      "<h3>" + esc(r.name) + "</h3>" +
+      '<div class="small muted">Temporada: ' + (r.season ? esc(r.season) + " (nombre comercial)" : K.missing("NP")) + " · Marca: " + esc(b ? b.name : "") + "</div>" +
+      '<div class="kv"><span class="k">Masa</span>' + K.value(r.mass) + "</div>" +
+      '<div class="kv"><span class="k">Balance</span>' + K.value(r.balance) + "</div>" +
+      '<div class="kv"><span class="k">Cara</span>' + K.value(r.face) + "</div>" +
+      '<div class="kv"><span class="k">Núcleo</span>' + K.value(r.core) + "</div>" +
+      '<div class="kv"><span class="k">Acabado</span>' + K.value(r.finish) + "</div>" +
+      '<div class="kv"><span class="k">Otros datos declarados</span>' + K.value(r.other) + "</div>" +
+      '<div class="kv"><span class="k">Configuración de medición</span>' + esc(r.config) + "</div>" +
+      '<div class="kv"><span class="k">Fricción estática</span>' + K.value(r.friction) + "</div>" +
+      '<div class="kv"><span class="k">Uso como referencia</span>' + esc(r.use) + " " + K.ev("A") + "</div>" +
+      (r.pending && r.pending.length ? '<div class="kv"><span class="k">Datos pendientes</span>' + r.pending.map(function (p) { return '<span class="chip">' + esc(p) + "</span>"; }).join("") + "</div>" : "") +
+      '<div class="kv"><span class="k">Fuente</span>' + K.link(r.url, "Ficha oficial / catálogo") + " · consultada " + esc(DATA.meta.cutoff) + "</div>" +
+      (opts.noCompare ? "" : '<p><button class="btn small primary" data-action="add-compare" data-id="' + esc(r.id) + '">Agregar al comparador</button></p>') +
+      "</div>";
+  };
+
+  V.sampleMini = function (s) {
+    return '<div class="card">' +
+      "<h3>" + esc(s.name) + ' <span class="role">' + esc(s.role) + "</span></h3>" +
+      '<div class="small muted">Fábrica: ' + esc(s.factory) + " · " + esc(s.roleStatus) + "</div>" +
+      '<div class="kv"><span class="k">Estado</span>' + esc(s.status) + "</div>" +
+      (s.requested.length ? '<div class="kv"><span class="k">Objetivo solicitado</span>' + s.requested.filter(function (x) { return x.u; }).map(function (x) { return K.value(x); }).join("") + "</div>" : "") +
+      '<div class="kv"><span class="k">Medición real</span>' + (s.measured.length ? s.measured.map(function (m) { return m.missing ? '<div class="val"><b>' + esc(m.label) + ":</b> " + K.missing(m.missing, m.note) + "</div>" : '<div class="val"><b>' + esc(m.label) + ":</b> " + K.value(m) + '<span class="note">' + esc(m.config || "") + "</span></div>"; }).join("") : K.missing("PEND", s.measuredNote)) + "</div>" +
+      '<p><a class="btn small" href="#muestras--' + esc(s.id) + '">Ver ficha completa</a> <button class="btn small primary" data-action="add-compare" data-id="' + esc(s.id) + '">Agregar al comparador</button></p>' +
+      "</div>";
+  };
+
+  V.devMini = function (d) {
+    var st = K.getStatus(d.id);
+    return '<div class="card">' +
+      '<h3><span class="prio" title="Prioridad">P' + d.priority + "</span> " + esc(d.change) + "</h3>" +
+      '<div class="kv"><span class="k">Beneficio esperado</span>' + esc(d.benefit) + " " + K.ev("PR", "hipótesis") + "</div>" +
+      '<div class="kv"><span class="k">Prueba que decide</span>' + esc(d.test) + "</div>" +
+      '<div class="kv"><span class="k">Estado</span><span class="status-pill">' + esc(K.statusLabel(st)) + "</span>" + (st !== "pendiente" ? ' <span class="status-local">(editado localmente)</span>' : "") + "</div>" +
+      '<p><a class="btn small" href="#desarrollo--' + esc(d.id) + '">Ver en Desarrollo y pruebas</a></p></div>';
+  };
+
+  /* ---------- MAPA ---------- */
+  V.mapa = {
+    html: function () {
+      return '<h1 class="sr-only">Mapa conceptual</h1><div class="map-layout"><div class="map-wrap" id="map"></div><aside class="panel" id="panel" aria-live="polite"></aside></div>';
+    },
+    mount: function (sub) {
+      var panel = document.getElementById("panel");
+      var map = new window.KMap.MapView(document.getElementById("map"), function (path) {
+        panel.innerHTML = V.mapPanel(path);
+        var hl = path.aspect && panel.querySelector("#aspect-" + path.aspect);
+        if (path.item) panel.scrollTop = 0;
+        else if (hl) panel.scrollTop = hl.offsetTop - panel.offsetTop - 8;
+        else panel.scrollTop = 0;
+        var h = "#mapa" + (path.branch ? "--" + path.branch : "") + (path.aspect ? "--" + path.aspect : "") + (path.item ? "--" + path.item : "");
+        if (location.hash !== h) { try { history.replaceState(null, "", h); } catch (err) {} }
+      });
+      var parts = (sub || "").split(/--|\//).filter(Boolean), p = {};
+      if (parts[0] && K.branchById[parts[0]]) { p.branch = parts[0]; if (parts[1]) { p.aspect = parts[1]; if (parts[2]) p.item = parts[2]; } }
+      map.render(); map.focus(false); map.select(p);
+      panel.addEventListener("click", function (e) {
+        var b = e.target.closest("[data-map-go]"); if (!b) return;
+        var t = b.getAttribute("data-map-go").split("/"), np = {};
+        if (t[0]) np.branch = t[0]; if (t[1]) np.aspect = t[1]; if (t[2]) np.item = t[2];
+        map.select(np);
+      });
+      return function () { map.destroy(); };
+    }
+  };
+
+  V.mapPanel = function (path) {
+    if (!path.branch) return V.rootPanel();
+    var b = K.branchById[path.branch];
+    var top = "";
+    if (path.item) top = V.itemPanel(b, path.aspect, path.item);
+    var asp = DATA.aspects.map(function (a) {
+      var c = b[a.id], hl = path.aspect === a.id;
+      var body = '<p>' + esc(c.summary) + "</p>";
+      var more = "";
+      if (a.id === "sample") more += c.sampleIds.map(function (sid) { return '<button class="btn small" data-map-go="' + b.id + '/sample/' + sid + '">Ver ' + esc(K.sampleById[sid].name) + "</button> "; }).join("");
+      if (a.id === "refs") more += '<ul class="clean">' + c.items.map(function (it, i) {
+        var label = it.refId ? K.refById[it.refId].name : it.name;
+        return "<li><b>" + esc(label) + "</b> <span class=\"chip\">" + esc(it.tier) + "</span> — " + esc(it.why) + " " +
+          (it.refId ? '<button class="btn small" data-map-go="' + b.id + '/refs/' + it.refId + '">Ficha</button>' : '<span class="miss">Sin ficha técnica en el informe</span>') + "</li>";
+      }).join("") + "</ul>";
+      if (a.id === "develop") more += '<ul class="clean">' + c.devIds.map(function (id) { var d = K.devById[id]; return '<li><span class="prio">P' + d.priority + "</span> " + esc(d.change) + ' — <span class="status-pill">' + esc(K.statusLabel(K.getStatus(id))) + "</span></li>"; }).join("") + "</ul>";
+      if (a.id === "tests") more += '<div class="kv"><span class="k">Métrica principal (criterio Etapa D)</span>' + esc(c.criterion.main) + " " + propBadge() + '</div><div class="kv"><span class="k">También debe cumplir</span>' + esc(c.criterion.also) + '</div><p class="small">Todas las pruebas figuran como <b>pendientes</b>. <a href="#desarrollo">Ver plan y estados</a></p>';
+      var det = c.details && c.details.length ? "<details" + (hl ? " open" : "") + "><summary>Más detalle</summary>" + list(c.details) + "</details>" : "";
+      return '<section class="aspect' + (hl ? " highlight" : "") + '" id="aspect-' + a.id + '"><h3>' + esc(a.label) +
+        ' <button class="btn small" data-map-go="' + b.id + "/" + a.id + '" aria-label="Seleccionar ' + esc(a.label) + ' en el mapa">◎</button></h3>' + body + more + det + "</section>";
+    }).join("");
+    var w = b.window;
+    return top +
+      "<h2>" + esc(b.name) + ' <span class="muted small">' + esc(b.tagline) + "</span></h2>" +
+      '<div class="banner"><b>Ventana exploratoria</b> ' + propBadge() + "<br>Masa " + esc(w.mass) + " · Balance " + esc(w.balance) +
+      '<br><span class="small">Decisión pendiente: ' + esc(w.pending) + '</span><br><span class="small muted">' + esc(DATA.windowNote) + "</span></div>" +
+      asp + K.noteField("branch-" + b.id, "Notas locales sobre " + b.name);
+  };
+
+  V.itemPanel = function (b, aspectId, itemId) {
+    var head = '<p class="small"><button class="btn small" data-map-go="' + b.id + "/" + aspectId + '">← Volver a ' + esc(b.name) + "</button></p>";
+    if (aspectId === "refs") {
+      if (K.refById[itemId]) {
+        var it = b.refs.items.filter(function (x) { return x.refId === itemId; })[0];
+        return head + '<div class="banner neutral small">Por qué es referencia para ' + esc(b.name) + ": " + esc(it.why) + " " + K.ev("A") + "</div>" + V.refCard(K.refById[itemId]);
+      }
+      var idx = +String(itemId).replace("noref-", ""), nr = b.refs.items[idx];
+      if (nr) return head + '<div class="card"><h3>' + esc(nr.name) + '</h3><p>' + esc(nr.why) + " " + K.ev("A") + '</p><p>' + K.missing("NI", "El informe no publica una ficha técnica de este modelo. No se genera una ficha.") + "</p></div>";
+    }
+    if (aspectId === "sample" && K.sampleById[itemId]) return head + V.sampleMini(K.sampleById[itemId]);
+    if (aspectId === "develop" && K.devById[itemId]) return head + V.devMini(K.devById[itemId]);
+    return "";
+  };
+
+  V.rootPanel = function () {
+    var m = DATA.meta;
+    return "<h2>Cómo usar el mapa</h2>" +
+      '<ul class="clean help">' +
+      "<li><b>Seleccioná</b> POWER, HYBRID o CONTROL (clic, toque o Enter) para ver sus siete aspectos.</li>" +
+      "<li>Seleccioná un aspecto para resaltarlo; <b>Muestra</b>, <b>Referencias</b> y <b>Desarrollar</b> despliegan un tercer nivel.</li>" +
+      "<li><b>+ / −</b> acercan y alejan (también rueda o pellizco), <b>◎</b> centra la selección, <b>↩</b> o <b>Esc</b> vuelven al nivel anterior. Arrastrá para desplazarte.</li>" +
+      "<li>Cada dato lleva una etiqueta de evidencia con texto, por ejemplo " + K.ev("D") + " o " + K.ev("KM") + ".</li>" +
+      "</ul>" +
+      '<div class="banner small">' + esc(m.status) + " La cercanía en el mapa no indica equivalencia técnica.</div>" +
+      "<h2>Conclusión del informe</h2><p>" + esc(m.conclusion) + "</p>" +
+      "<details><summary>Por qué no hay ranking</summary><p>" + esc(m.noBest) + "</p></details>" +
+      "<h3>Recomendación " + K.ev("A") + "</h3><p>" + esc(m.recommendation) + "</p>" +
+      '<div class="grid">' + DATA.branches.map(function (b) {
+        return '<button class="btn" data-map-go="' + b.id + '"><b>' + esc(b.name) + "</b> — " + esc(b.tagline) + "</button>";
+      }).join("") + "</div>" +
+      "<h3>Decisiones recomendadas ahora " + K.ev("PR") + "</h3>" + list(DATA.recommendedDecisions) +
+      "<details><summary>Tendencias que sí importan</summary>" + DATA.trends.map(function (t) { return "<h4>" + esc(t.title) + "</h4><p class=\"small\">" + esc(t.summary) + " " + esc(t.detail) + "</p>"; }).join("") + "</details>";
+  };
+
+  /* ---------- EXPLORADOR DEL MERCADO ---------- */
+  var F = { q: "", brand: "", family: "", season: "", coverage: "", features: [], onlyRefs: false };
+  function norm(s) { return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
+  function seasonKey(s) { return s || "sin"; }
+  function brandRefs(b) { return DATA.references.filter(function (r) { return r.brandId === b.id; }); }
+
+  V.mercado = {
+    html: function () {
+      var seasons = ["2027", "2026", "2025", "Ambigua", "sin"];
+      var seasonLabel = { "2027": "2027", "2026": "2026", "2025": "2025", "Ambigua": "Ambigua (2027/2026)", "sin": "Sin temporada indicada" };
+      return "<h1>Explorador del mercado</h1>" +
+        '<p class="lead">' + esc(DATA.brands.length) + " marcas revisadas al " + esc(DATA.meta.cutoff) + ". Las familias son <b>modelos enumerados</b> en la fuente; solo los modelos de la comparativa técnica tienen ficha. Un material no publicado no equivale a material ausente.</p>" +
+        '<form class="filters" id="filters" onsubmit="return false">' +
+        '<label>Buscar<input type="search" id="f-q" placeholder="Marca, familia, variante…" value="' + esc(F.q) + '"></label>' +
+        '<label>Marca<select id="f-brand"><option value="">Todas</option>' + DATA.brands.slice().sort(function (a, b) { return a.name.localeCompare(b.name); }).map(function (b) { return '<option value="' + b.id + '"' + (F.brand === b.id ? " selected" : "") + ">" + esc(b.name) + "</option>"; }).join("") + "</select></label>" +
+        '<label>Familia<select id="f-family"></select></label>' +
+        '<label>Temporada<select id="f-season"><option value="">Todas</option>' + seasons.map(function (s) { return '<option value="' + s + '"' + (F.season === s ? " selected" : "") + ">" + seasonLabel[s] + "</option>"; }).join("") + "</select></label>" +
+        '<label>Cobertura<select id="f-coverage"><option value="">Todas</option><option value="completa"' + (F.coverage === "completa" ? " selected" : "") + '>Completa de la página revisada</option><option value="parcial"' + (F.coverage === "parcial" ? " selected" : "") + ">Parcial</option></select></label>" +
+        '<label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="f-refs"' + (F.onlyRefs ? " checked" : "") + "> Solo con ficha técnica en el informe</label>" +
+        '<div class="feature-filter"><fieldset><legend>Características documentadas en el informe (se combinan con “y”)</legend>' +
+        Object.keys(DATA.featureTags).map(function (k) { return '<label><input type="checkbox" name="feat" value="' + k + '"' + (F.features.indexOf(k) >= 0 ? " checked" : "") + "> " + esc(DATA.featureTags[k]) + "</label>"; }).join("") +
+        '</fieldset></div><div><button type="button" class="btn small" id="f-clear">Limpiar filtros</button></div></form>' +
+        '<p class="small muted">Temporada = año de colección o nombre comercial indicado en la fuente; no demuestra fecha de venta. Las familias sin año en el informe figuran como “sin temporada indicada”.</p>' +
+        '<div class="result-count" id="count" aria-live="polite"></div><div class="grid grid-2" id="results"></div>' +
+        '<h2>Huecos explícitos</h2><div class="card small"><p>' + DATA.gaps.brands.map(function (x) { return '<span class="chip">' + esc(x) + "</span>"; }).join("") + "</p><p>" + esc(DATA.gaps.text) + "</p></div>";
+    },
+    mount: function () {
+      var $ = function (id) { return document.getElementById(id); };
+      function fillFamilies() {
+        var opts = ['<option value="">Todas</option>'];
+        DATA.brands.forEach(function (b) {
+          if (F.brand && b.id !== F.brand) return;
+          b.families.forEach(function (f) {
+            var key = b.id + "|" + f.name;
+            opts.push('<option value="' + esc(key) + '"' + (F.family === key ? " selected" : "") + ">" + (F.brand ? "" : esc(b.name) + " — ") + esc(f.name) + "</option>");
+          });
+        });
+        $("f-family").innerHTML = opts.join("");
+        if (F.family && F.family.split("|")[0] !== F.brand && F.brand) { F.family = ""; }
+      }
+      function update() {
+        var q = norm(F.q), out = [], shown = 0;
+        DATA.brands.forEach(function (b) {
+          if (F.brand && b.id !== F.brand) return;
+          if (F.coverage && b.coverage !== F.coverage) return;
+          if (F.features.some(function (f) { return b.features.indexOf(f) < 0; })) return;
+          var refs = brandRefs(b);
+          if (F.onlyRefs && !refs.length) return;
+          var brandHit = !q || norm(b.name + " " + b.note + " " + b.coverageBasis).indexOf(q) >= 0;
+          var famFiltersActive = !!(F.family || F.season || q);
+          var famMatches = b.families.map(function (f) {
+            if (F.family && F.family !== b.id + "|" + f.name) return false;
+            if (F.season && seasonKey(f.season) !== F.season) return false;
+            if (q && !brandHit && norm(f.name + " " + f.detail).indexOf(q) < 0) return false;
+            return true;
+          });
+          var refMatches = refs.filter(function (r) {
+            if (F.family) return false;
+            if (F.season && seasonKey(r.season) !== F.season) return false;
+            if (q && !brandHit && norm(r.name).indexOf(q) < 0) return false;
+            return true;
+          });
+          var anyFam = famMatches.some(Boolean);
+          if (famFiltersActive && !anyFam && !refMatches.length) return;
+          shown++;
+          out.push(V.brandCard(b, famFiltersActive ? famMatches : null, refs, F.family ? [] : (famFiltersActive ? refMatches : refs)));
+        });
+        $("count").innerHTML = "<b>" + shown + "</b> de " + DATA.brands.length + " marcas";
+        $("results").innerHTML = out.length ? out.join("") : '<div class="empty" style="grid-column:1/-1"><p><b>Sin resultados</b> para estos filtros.</p><p class="small">Que una marca no aparezca no significa que no tenga esa característica: solo se filtra lo documentado en el informe.</p><button class="btn small" id="f-clear-2">Limpiar filtros</button></div>';
+        var c2 = $("f-clear-2"); if (c2) c2.onclick = clear;
+      }
+      function clear() { F = { q: "", brand: "", family: "", season: "", coverage: "", features: [], onlyRefs: false }; $("app").innerHTML = V.mercado.html(); V.mercado.mount(); }
+      $("f-q").addEventListener("input", function (e) { F.q = e.target.value; update(); });
+      $("f-brand").addEventListener("change", function (e) { F.brand = e.target.value; F.family = ""; fillFamilies(); update(); });
+      $("f-family").addEventListener("change", function (e) { F.family = e.target.value; update(); });
+      $("f-season").addEventListener("change", function (e) { F.season = e.target.value; update(); });
+      $("f-coverage").addEventListener("change", function (e) { F.coverage = e.target.value; update(); });
+      $("f-refs").addEventListener("change", function (e) { F.onlyRefs = e.target.checked; update(); });
+      $("filters").addEventListener("change", function (e) {
+        if (e.target.name === "feat") { F.features = [].slice.call(document.querySelectorAll('input[name="feat"]:checked')).map(function (x) { return x.value; }); update(); }
+      });
+      $("f-clear").addEventListener("click", clear);
+      fillFamilies(); update();
+    }
+  };
+
+  V.brandCard = function (b, famMatches, allRefs, refsToShow) {
+    var fams = b.families.map(function (f, i) { return { f: f, hit: famMatches ? famMatches[i] : true }; });
+    var hits = fams.filter(function (x) { return x.hit; }), rest = fams.filter(function (x) { return !x.hit; });
+    function famRow(x) {
+      return '<div class="fam' + (famMatches && x.hit ? " match" : "") + '"><b>' + esc(x.f.name) + "</b><span>" + esc(x.f.detail) + '</span><span class="enum-tag">' + (x.f.season ? esc(x.f.season) : "sin temporada") + " · enumerado</span></div>";
+    }
+    var covLabel = b.coverage === "completa" ? "Cobertura completa de la página revisada" : "Cobertura parcial";
+    return '<article class="card brand-card">' +
+      "<h3>" + esc(b.name) + ' <span class="cov cov-' + b.coverage + '">' + covLabel + "</span></h3>" +
+      '<p class="small muted">' + esc(b.coverageBasis) + "</p>" +
+      hits.map(famRow).join("") +
+      (rest.length ? "<details><summary>Ver " + rest.length + " familia(s) que no coinciden con el filtro</summary>" + rest.map(famRow).join("") + "</details>" : "") +
+      '<p class="small"><b>Qué aporta a KORVE / límite:</b> ' + esc(b.note) + " " + K.ev("A") + "</p>" +
+      (b.features.length ? '<p class="small">' + b.features.map(function (f) { return '<span class="chip">' + esc(DATA.featureTags[f]) + "</span>"; }).join("") + "</p>" : "") +
+      (allRefs.length ? '<div class="refs-list small"><b>Con ficha técnica en el informe' + (refsToShow.length < allRefs.length ? " (" + refsToShow.length + " de " + allRefs.length + " coinciden)" : "") + ":</b> " +
+        (refsToShow.length ? refsToShow.map(function (r) { return '<button class="btn small" data-action="add-compare" data-id="' + esc(r.id) + '">+ ' + esc(r.name) + "</button>"; }).join(" ") : '<span class="muted">ninguna con este filtro</span>') + "</div>"
+        : '<p class="small muted">Sin ficha técnica en el informe: solo modelos enumerados.</p>') +
+      '<p class="small">Fuente: ' + K.link(b.url, "catálogo / página oficial") + " · consultada " + esc(DATA.meta.cutoff) + "</p>" +
+      "</article>";
+  };
+
+  /* ---------- COMPARADOR ---------- */
+  var ROWS = [
+    { k: "origin", label: "Tipo de ítem" },
+    { k: "season", label: "Temporada" },
+    { k: "mass", label: "Masa (g)" },
+    { k: "balance", label: "Balance (mm)" },
+    { k: "face", label: "Cara" },
+    { k: "core", label: "Núcleo" },
+    { k: "hardness", label: "Dureza declarada y escala" },
+    { k: "finish", label: "Acabado" },
+    { k: "other", label: "Otros datos declarados" },
+    { k: "config", label: "Configuración de medición" },
+    { k: "friction", label: "Fricción estática (L)" },
+    { k: "pending", label: "Datos pendientes" },
+    { k: "use", label: "Uso como referencia" },
+    { k: "source", label: "Fuente" }
+  ];
+  function cmpItem(id) {
+    var r = K.refById[id];
+    if (r) return { id: id, name: r.name, isSample: false, season: r.season, mass: r.mass, balance: r.balance, face: r.face, core: r.core, hardness: r.hardness, finish: r.finish, other: r.other, config: r.config, friction: r.friction, pending: r.pending, use: r.use, url: r.url, brand: K.brandById[r.brandId].name };
+    var s = K.sampleById[id];
+    if (s) { var c = s.compare; return { id: id, name: "KORVE " + s.name, isSample: true, season: null, mass: c.mass, balance: c.balance, face: c.face, core: c.core, hardness: c.hardness, finish: c.finish, other: c.other, config: c.config, friction: c.friction, pending: c.pending, use: s.role + " — " + s.roleStatus, factory: s.factory, local: (K.state().measurements[id] || []) }; }
+    return null;
+  }
+  function cell(it, k) {
+    if (k === "origin") return it.isSample ? K.ev("KP", "muestra " + it.factory) + '<div class="small muted">Objetivo, declaración de proveedor y medición interna se muestran por separado.</div>' : K.ev("D") + '<div class="small muted">Ficha comercial de ' + esc(it.brand) + "; no es medición de nuestras unidades.</div>";
+    if (k === "season") return it.isSample ? '<span class="miss">No aplica (muestra)</span>' : (it.season ? esc(it.season) + ' <span class="small muted">(nombre comercial)</span>' : K.missing("NP"));
+    if (k === "hardness") return K.value(it.hardness || { missing: "NP", note: "Sin dureza con escala en la ficha." });
+    if (k === "config") return esc(it.config);
+    if (k === "pending") return it.pending && it.pending.length ? it.pending.map(function (p) { return '<span class="chip">' + esc(p) + "</span>"; }).join("") : '<span class="muted">—</span>';
+    if (k === "use") return esc(it.use) + " " + K.ev("A");
+    if (k === "source") return it.isSample ? esc(DATA.internalSource) : K.link(it.url, "Ficha oficial") + '<div class="small muted">Consultada ' + esc(DATA.meta.cutoff) + "</div>";
+    var html = K.value(it[k]);
+    if ((k === "mass" || k === "balance") && it.isSample && it.local.length) {
+      html += it.local.map(function (m) {
+        var v = k === "mass" ? m.mass : m.balance;
+        if (!v) return "";
+        return '<div class="val"><span class="num">' + esc(v) + " " + (k === "mass" ? "g" : "mm") + "</span> " + K.ev("KM", "registro local") + '<span class="note">' + esc(m.date) + " · " + esc(m.config) + "</span></div>";
+      }).join("");
+    }
+    return html;
+  }
+  function warnings(items) {
+    var w = [];
+    if (items.length < 2) return w;
+    w.push("Las fichas no especifican simultáneamente grip, overgrip, protector, correa, incertidumbre ni tamaño de muestra: no permiten comparar diferencias pequeñas con rigor.");
+    var evs = {};
+    items.forEach(function (it) { [].concat(it.mass || []).forEach(function (v) { if (v && v.ev) evs[v.ev] = 1; }); });
+    if (Object.keys(evs).length > 1) w.push("Se mezclan clases de evidencia en masa (" + Object.keys(evs).map(function (e) { return DATA.evidence[e].label; }).join(", ") + "): un objetivo o una declaración no es una medición.");
+    if (items.some(function (it) { return /overgrip/i.test(it.config) && /dos overgrips/i.test(it.config); })) w.push("Hay mediciones internas con dos overgrips: no compararlas con pesos de catálogo sin overgrip.");
+    if (items.some(function (it) { return /sin correa/i.test(it.config); })) w.push("Gamma Sterling declara peso sin correa: habría que sumar accesorios para comparar.");
+    var seasons = {}; items.forEach(function (it) { if (it.season) seasons[it.season] = 1; });
+    if (Object.keys(seasons).length > 1) w.push("Temporadas distintas (" + Object.keys(seasons).join(", ") + "): no trasladar datos de una temporada a otra.");
+    if (items.filter(function (it) { return it.hardness && !it.hardness.missing; }).length > 1) w.push("Durezas con escalas distintas o no identificadas (Shore C, “5/10” comercial, “Hard/Medium+”): no equipararlas.");
+    if (items.some(function (it) { return [].concat(it.balance || []).some(function (b) { return b && b.qual; }); })) w.push("Hay balances cualitativos: no se convierten en milímetros.");
+    var faces = items.map(function (it) { return JSON.stringify(it.face || ""); }).join(" ");
+    if (/\d+K/.test(faces) || /T700/.test(faces)) w.push("12K/16K/18K describen haces de filamentos, no calidad: 18K no es mejor que 12K. T700 no equivale a un número K.");
+    return w;
+  }
+
+  V.comparador = {
+    html: function () {
+      var sel = K.state().compare.filter(function (id) { return cmpItem(id); });
+      var opts = function (cur) {
+        return '<option value="">— Elegir —</option><optgroup label="Muestras KORVE">' + DATA.samples.map(function (s) { return '<option value="' + s.id + '"' + (cur === s.id ? " selected" : "") + ">" + esc(K.itemName(s.id)) + "</option>"; }).join("") + "</optgroup>" +
+          '<optgroup label="Referencias con ficha (sección 4)">' + DATA.references.map(function (r) { return '<option value="' + r.id + '"' + (cur === r.id ? " selected" : "") + ">" + esc(r.name) + "</option>"; }).join("") + "</optgroup>";
+      };
+      var pickers = [0, 1, 2].map(function (i) {
+        return '<label>Pala ' + (i + 1) + '<select data-slot="' + i + '">' + opts(sel[i] || "") + "</select></label>";
+      }).join("");
+      var items = sel.map(cmpItem);
+      var table;
+      if (!items.length) table = '<div class="empty"><p><b>No hay palas seleccionadas.</b></p><p class="small">Elegí hasta tres arriba, o usá “Agregar al comparador” desde el mapa, el explorador o las muestras.</p></div>';
+      else {
+        var ws = warnings(items);
+        table = (ws.length ? '<div class="banner"><b>Antes de comparar</b>' + list(ws) + "</div>" : "") +
+          '<div class="table-scroll"><table class="cmp"><thead><tr><th scope="col">Dato</th>' +
+          items.map(function (it) { return '<th scope="col">' + esc(it.name) + ' <button class="btn small" data-action="remove-compare" data-id="' + esc(it.id) + '" aria-label="Quitar ' + esc(it.name) + '">Quitar</button></th>'; }).join("") +
+          "</tr></thead><tbody>" +
+          ROWS.map(function (r) { return '<tr><th scope="row">' + esc(r.label) + "</th>" + items.map(function (it) { return "<td>" + cell(it, r.k) + "</td>"; }).join("") + "</tr>"; }).join("") +
+          "</tbody></table></div>";
+      }
+      return "<h1>Comparador</h1>" +
+        '<p class="lead">Hasta tres palas lado a lado. Masa en g y balance en mm. Los balances cualitativos no se convierten en números. Esta tabla no es un ranking.</p>' +
+        '<div class="card cmp-picker">' + pickers + '<button class="btn small" data-action="clear-compare">Vaciar</button></div><div style="height:12px"></div>' + table +
+        '<p class="small muted">Los valores “K · Medición interna · registro local” provienen de lo que cargues en “Nuestras muestras”.</p>';
+    },
+    mount: function () {
+      document.querySelectorAll("select[data-slot]").forEach(function (s) {
+        s.addEventListener("change", function () {
+          var vals = [].slice.call(document.querySelectorAll("select[data-slot]")).map(function (x) { return x.value; }).filter(Boolean);
+          var uniq = vals.filter(function (v, i) { return vals.indexOf(v) === i; });
+          K.state().compare = uniq.slice(0, 3); K.save(); window.KApp.rerender();
+        });
+      });
+    }
+  };
+
+  /* ---------- MUESTRAS ---------- */
+  V.muestras = {
+    html: function (sub) {
+      return "<h1>Nuestras muestras</h1>" +
+        '<p class="lead">Fuente interna: ' + esc(DATA.internalSource) + " Se separan cuatro tipos de dato: objetivo solicitado, construcción declarada por el proveedor, medición real y opinión de tester.</p>" +
+        '<div class="banner small">MC-005 es referencia de comportamiento HYBRID. W3 y AMP22 son candidatas POWER y CONTROL, todavía sin validación definitiva. KS-01 no se asigna a CONTROL solo para completar la línea.</div>' +
+        K.storageBar() +
+        '<div style="height:10px"></div><div class="sample-grid">' + DATA.samples.map(V.sampleCard).join("") + "</div>" +
+        '<h2>Unidad comercial de Tomás Sánchez</h2><div class="card"><b>' + esc(DATA.tomiReference.name) + "</b><p>" + esc(DATA.tomiReference.text) + "</p></div>";
+    },
+    mount: function (sub) {
+      if (sub) { var e = document.getElementById("sample-" + sub); if (e) { e.scrollIntoView({ block: "start" }); e.classList.add("highlight"); } }
+    }
+  };
+
+  V.sampleCard = function (s) {
+    var local = K.state().measurements[s.id] || [];
+    function rows(arr) {
+      return arr.map(function (x) {
+        if (x.missing) return '<div class="kv"><span class="k">' + esc(x.label) + "</span>" + K.missing(x.missing, x.note) + "</div>";
+        return '<div class="kv"><span class="k">' + esc(x.label) + (x.who ? " · " + esc(x.who) : "") + "</span>" + K.value(x) + (x.config ? '<span class="small">Configuración: ' + esc(x.config) + "</span>" : "") + "</div>";
+      }).join("");
+    }
+    return '<article class="card aspect" id="sample-' + esc(s.id) + '">' +
+      "<h2 style=\"margin-top:0\">" + esc(s.name) + ' <span class="role">' + esc(s.role) + "</span></h2>" +
+      '<p class="small muted">Fábrica: <b>' + esc(s.factory) + "</b> · " + esc(s.roleStatus) + "</p>" +
+      '<div class="quad">' +
+      "<div><h4>Objetivo solicitado</h4>" + (s.requested.length ? rows(s.requested) : K.missing("NI", s.requestedNote)) + "</div>" +
+      "<div><h4>Construcción declarada</h4>" + rows(s.declared) + "</div>" +
+      "<div><h4>Medición real</h4>" + (s.measured.length ? rows(s.measured) : K.missing("PEND", s.measuredNote)) +
+        (local.length ? '<div class="kv"><span class="k">Registros locales</span>' + local.map(function (m, i) {
+          return '<div class="val">' + (m.mass ? '<span class="num">' + esc(m.mass) + " g</span>" : "") + (m.balance ? ' <span class="num">' + esc(m.balance) + " mm</span>" : "") + " " + K.ev("KM", "registro local") +
+            '<span class="note">' + esc(m.date) + " · " + esc(m.who || "sin responsable") + " · " + esc(m.config) + (m.note ? " · " + esc(m.note) : "") +
+            ' <button class="btn small" data-action="del-measure" data-sample="' + esc(s.id) + '" data-idx="' + i + '">Borrar</button></span></div>';
+        }).join("") + "</div>" : "") + "</div>" +
+      "<div><h4>Opinión de tester</h4>" + (s.tester.length ? s.tester.map(function (t) { return '<div class="kv"><span class="k">' + esc(t.who) + "</span>" + esc(t.text) + " " + K.ev("KT") + (t.note ? '<div class="small muted">' + esc(t.note) + "</div>" : "") + "</div>"; }).join("") : K.missing("PEND", s.testerNote)) +
+        (s.tester.length && s.testerNote ? '<p class="small muted">' + esc(s.testerNote) + "</p>" : "") + "</div>" +
+      "</div>" +
+      '<div class="kv"><span class="k">Estado real</span>' + esc(s.status) + "</div>" +
+      (s.warnings.length ? '<div class="banner small">' + list(s.warnings) + "</div>" : "") +
+      "<details><summary>Registrar medición local</summary>" +
+      '<form class="measure-form" data-sample="' + esc(s.id) + '">' +
+      '<div class="form-row"><label>Fecha<input type="date" name="date" required></label><label>Masa (g)<input name="mass" inputmode="decimal" placeholder="ej. 364,1"></label><label>Balance (mm)<input name="balance" inputmode="decimal" placeholder="ej. 258"></label><label>Responsable<input name="who"></label></div>' +
+      '<div class="form-row"><label>Configuración (obligatoria)<input name="config" required placeholder="grip, correa, overgrips, protector, film"></label><label>Nota<input name="note" placeholder="lecturas, incertidumbre…"></label></div>' +
+      '<button class="btn small primary" type="submit">Guardar medición</button> <span class="small muted">Se guarda como “K · Medición interna” en este navegador.</span></form></details>' +
+      K.noteField("sample-" + s.id, "Notas y opiniones locales") +
+      '<p><button class="btn small primary" data-action="add-compare" data-id="' + esc(s.id) + '">Agregar al comparador</button></p>' +
+      "</article>";
+  };
+
+  /* ---------- DESARROLLO Y PRUEBAS ---------- */
+  var LOAN_STATUS = [{ id: "pendiente", label: "Pendiente de conseguir" }, { id: "solicitada", label: "Solicitada" }, { id: "conseguida", label: "Conseguida" }, { id: "descartada", label: "Descartada" }];
+  function statusSelect(id, opts) {
+    var cur = K.getStatus(id);
+    return '<select data-status="' + esc(id) + '" aria-label="Estado">' + opts.map(function (o) { return '<option value="' + o.id + '"' + (cur === o.id ? " selected" : "") + ">" + esc(o.label) + "</option>"; }).join("") + "</select>" +
+      (cur !== "pendiente" ? ' <span class="status-local">Editado localmente</span>' : "");
+  }
+
+  V.desarrollo = {
+    html: function () {
+      var dev = DATA.devItems.map(function (d) {
+        var res = (d.results || []);
+        return '<article class="card aspect" id="dev-' + esc(d.id) + '"><div class="dev-card"><div><span class="prio" title="Prioridad ' + d.priority + '">P' + d.priority + "</span></div><div>" +
+          "<h3>" + esc(d.change) + "</h3>" +
+          '<p class="small">' + d.models.map(function (m) { return '<span class="chip">' + esc(m) + "</span>"; }).join("") + "</p>" +
+          '<div class="kv"><span class="k">Beneficio esperado</span>' + esc(d.benefit) + " " + K.ev("PR", "hipótesis") + "</div>" +
+          '<div class="kv"><span class="k">Prueba que decide</span>' + esc(d.test) + " " + K.ev("PR") + "</div>" +
+          '<div class="kv"><span class="k">Estado</span>' + statusSelect(d.id, DATA.statusOptions) + "</div>" +
+          '<div class="kv"><span class="k">Resultados en los datos</span>' + (res.length ? res.map(function (r) { return K.value(r); }).join("") : K.missing("PEND", "Sin resultados registrados. El ensayo no se realizó según el informe.")) + "</div>" +
+          K.noteField("dev-" + d.id, "Resultado o notas locales") + "</div></div></article>";
+      }).join("");
+      var stages = DATA.stages.map(function (s) {
+        return '<article class="card aspect"><h3>' + esc(s.name) + "</h3><p>" + esc(s.summary) + " " + K.ev("PR") + "</p>" +
+          '<div class="kv"><span class="k">Estado</span>' + statusSelect(s.id, DATA.statusOptions) + "</div>" +
+          "<details><summary>Pasos propuestos</summary>" + list(s.steps) + "</details>" +
+          (s.id === "etapa-d" ? '<table class="simple"><thead><tr><th>Modelo</th><th>Métrica principal</th><th>También debe cumplir</th></tr></thead><tbody>' + DATA.branches.map(function (b) { return "<tr><td><b>" + esc(b.name) + "</b></td><td>" + esc(b.tests.criterion.main) + "</td><td>" + esc(b.tests.criterion.also) + "</td></tr>"; }).join("") + "</tbody></table>" : "") +
+          K.noteField("stage-" + s.id, "Notas locales") + "</article>";
+      }).join("");
+      var loans = '<table class="simple"><thead><tr><th>#</th><th>Referencia</th><th>Para qué</th><th>Estado</th></tr></thead><tbody>' +
+        DATA.loanRefs.map(function (l) {
+          return "<tr><td>" + l.order + "</td><td><b>" + esc(l.name) + "</b>" + (l.refId ? ' <button class="btn small" data-action="add-compare" data-id="' + esc(l.refId) + '">+ comparar</button>' : ' <span class="miss">Sin ficha en el informe</span>') + "</td><td>" + esc(l.why) + "</td><td>" + statusSelect(l.id, LOAN_STATUS) + "</td></tr>";
+        }).join("") + "</tbody></table>";
+      return "<h1>Desarrollo y pruebas</h1>" +
+        '<p class="lead">Mejoras propuestas por orden de prioridad. Todos los beneficios son hipótesis y todos los ensayos figuran como <b>pendientes</b> hasta que registres un resultado.</p>' +
+        K.storageBar() + '<div class="banner small">' + esc(DATA.devNote) + "</div>" +
+        "<h2>Mejoras a probar</h2>" + dev +
+        "<h2>Plan de validación</h2>" + stages +
+        '<h2>Referencias a conseguir prestadas</h2><div class="card">' + loans + '<p class="small muted">' + esc(DATA.loanSecondRound) + "</p></div>";
+    },
+    mount: function (sub) {
+      if (sub) { var e = document.getElementById("dev-" + sub); if (e) { e.scrollIntoView({ block: "start" }); e.classList.add("highlight"); } }
+    }
+  };
+
+  /* ---------- DECISIÓN DE FÁBRICA ---------- */
+  V.fabrica = {
+    html: function () {
+      var cols = DATA.factories.map(function (f) {
+        return '<article class="card"><h2 style="margin-top:0">' + esc(f.name) + "</h2>" +
+          '<div class="kv"><span class="k">Muestras propias</span>' + f.samples.map(function (id) { var s = K.sampleById[id]; return '<a class="chip" href="#muestras--' + id + '">' + esc(s.name) + " · " + esc(s.role) + "</a>"; }).join(" ") + "</div>" +
+          "<h3>Qué podría aportar a la línea</h3>" +
+          '<table class="simple"><thead><tr><th>Perfil</th><th>Escenario si se elige</th><th>Estado</th></tr></thead><tbody>' +
+          f.contributes.map(function (c) { return "<tr><td><b>" + esc(c.profile) + "</b></td><td>" + esc(c.text) + " " + K.ev("PR") + '</td><td><span class="status-pill">' + esc(c.status) + "</span></td></tr>"; }).join("") + "</tbody></table>" +
+          "<h3>Declarado por la fábrica " + K.ev("KP") + "</h3>" + list(f.declared) +
+          "<h3>Qué falta validar</h3>" + '<ul class="clean">' + f.toValidate.map(function (t) { return "<li>" + esc(t) + ' <span class="status-pill">Pendiente</span></li>'; }).join("") + "</ul>" +
+          K.noteField("factory-" + f.id, "Notas locales sobre " + f.name) + "</article>";
+      }).join("");
+      var fn = K.state().factoryNotes;
+      var matrix = '<div class="table-scroll"><table class="cmp"><thead><tr><th>Criterio</th><th>Peso propuesto</th>' + DATA.factories.map(function (f) { return "<th>Evidencia " + esc(f.name) + " (nota local)</th>"; }).join("") + "</tr></thead><tbody>" +
+        DATA.factoryMatrix.map(function (m) {
+          return '<tr><th scope="row">' + esc(m.criterion) + "</th><td>" + esc(m.weight) + "<br>" + K.ev("PR") + "</td>" +
+            DATA.factories.map(function (f) { var key = m.id + "|" + f.id; return '<td><textarea data-fnote="' + esc(key) + '" aria-label="' + esc(m.criterion + " — " + f.name) + '" placeholder="Sin evidencia registrada">' + esc(fn[key] || "") + "</textarea></td>"; }).join("") + "</tr>";
+        }).join("") + "</tbody></table></div>";
+      return "<h1>Decisión de fábrica</h1>" +
+        '<p class="lead">Elegir una sola fábrica por su capacidad para conseguir los tres perfiles y repetirlos en serie, no por la suma de nombres de tecnologías.</p>' +
+        '<div class="banner"><b>Sin ganador declarado.</b> La app no suma puntajes ni elige proveedor: la matriz es una propuesta y la decisión depende de pruebas pendientes.</div>' +
+        K.storageBar() + '<div style="height:10px"></div><div class="fact-grid">' + cols + "</div>" +
+        "<h2>Requisitos antes de sumar</h2>" + '<div class="card">' + list(DATA.factoryGates) + "</div>" +
+        "<h2>Matriz propuesta de proveedor</h2>" + '<p class="small muted">Pesos propuestos, no aprobados. Las celdas son notas locales de evidencia, no puntuaciones.</p>' + matrix;
+    }
+  };
+
+  /* ---------- FUENTES Y MÉTODO ---------- */
+  V.fuentes = {
+    html: function () {
+      var m = DATA.meta, f = DATA.frictionData;
+      return "<h1>Fuentes y método</h1>" +
+        '<div class="banner"><b>Fecha de corte:</b> ' + esc(m.cutoff) + ". " + esc(m.cutoffNote) + "</div>" +
+        "<p>" + esc(m.scope) + "</p>" +
+        "<h2>Clases de evidencia</h2>" + '<div class="card"><table class="simple"><tbody>' + Object.keys(DATA.evidence).map(function (k) { return "<tr><td>" + K.ev(k) + "</td><td>" + esc(DATA.evidence[k].desc) + "</td></tr>"; }).join("") +
+        Object.keys(DATA.missingStates).map(function (k) { return "<tr><td>" + K.missing(k) + "</td><td>Dato ausente. Un dato no publicado no equivale a dato inexistente.</td></tr>"; }).join("") + "</tbody></table></div>" +
+        '<h2>Reglas de lectura</h2><div class="card">' + list(DATA.rules) + "</div>" +
+        "<h2>Mediciones externas disponibles " + K.ev("L") + "</h2>" +
+        '<div class="card"><p class="small">Coeficiente de fricción estática, sin unidad. Fuente: ' + esc(f.source) + " " + K.link(f.sourceUrl) + "</p>" +
+        '<table class="simple"><thead><tr><th>Unidad medida</th><th>Valor</th><th>Nota</th></tr></thead><tbody>' + f.rows.map(function (r) { return "<tr><td>" + esc(r.model) + "</td><td>" + esc(r.value) + "</td><td class=\"small\">" + esc(r.note || "") + "</td></tr>"; }).join("") + "</tbody></table>" +
+        '<p class="small muted">' + esc(f.caveat) + " El orden de la tabla no es un ranking.</p></div>" +
+        '<h2>Bases para el protocolo propio</h2><div class="grid grid-2">' + DATA.measurementSources.map(function (s) { return '<div class="card"><h3>' + K.link(s.url, s.name) + '</h3><p class="small"><b>Documenta:</b> ' + esc(s.documents) + '</p><p class="small"><b>Uso y límites:</b> ' + esc(s.limits) + "</p></div>"; }).join("") + "</div>" +
+        '<h2>Inconsistencias que no conviene tapar</h2><div class="card">' + list(DATA.inconsistencies) + "</div>" +
+        "<h2>Tendencias que sí importan</h2>" + DATA.trends.map(function (t) { return "<details><summary>" + esc(t.title) + "</summary><p>" + esc(t.summary) + "</p><p class=\"small\">" + esc(t.detail) + "</p></details>"; }).join("") +
+        '<h2>Fuentes de marcas (41)</h2><div class="card small"><ul class="clean" style="columns:2 260px">' + DATA.brands.map(function (b) { return "<li>" + K.link(b.url, b.name) + "</li>"; }).join("") + "</ul></div>" +
+        '<h2>Fichas técnicas citadas (' + DATA.references.length + ')</h2><div class="card small"><ul class="clean" style="columns:2 260px">' + DATA.references.map(function (r) { return "<li>" + K.link(r.url, r.name) + "</li>"; }).join("") + "</ul></div>" +
+        '<h2>Fuente interna</h2><div class="card small">' + esc(DATA.internalSource) + "</div>" +
+        "<h2>Datos locales</h2>" + K.storageBar() + '<p><button class="btn small" data-action="clear-local">Borrar notas y estados locales</button></p>' +
+        '<p class="small muted">' + esc(m.finalResult) + "</p>";
+    }
+  };
+})();
+
+</script>
+  <script>
+/* KORVE Explorador — enrutador por hash y eventos globales. */
+(function () {
+  var DATA = window.KORVE_DATA, K = window.K, V = window.KViews;
+  var app = document.getElementById("app");
+  var cleanup = null, current = null;
+  var VIEWS = ["mapa", "mercado", "comparador", "muestras", "desarrollo", "fabrica", "fuentes"];
+
+  document.getElementById("cutoff").textContent = "Corte de la investigación: " + DATA.meta.cutoff + " · Propuestas, no especificaciones aprobadas";
+  document.getElementById("footer").innerHTML = "Fuente inicial: informe “" + K.esc(DATA.meta.title) + "”, corte " + K.esc(DATA.meta.cutoff) +
+    ". Aplicación local, sin cuentas ni servidor. Los datos están en la carpeta <code>data/</code>.";
+
+  function parse() {
+    /* Rutas: #vista o #vista--sub--sub (también acepta "/" de versiones anteriores). */
+    var h = decodeURIComponent((location.hash || "#mapa").slice(1)), m = h.match(/--|\//);
+    var view = m ? h.slice(0, m.index) : h, sub = m ? h.slice(m.index + m[0].length) : "";
+    if (VIEWS.indexOf(view) < 0) view = "mapa";
+    return { view: view, sub: sub };
+  }
+
+  function render(keepScroll) {
+    var r = parse();
+    var y = window.scrollY;
+    if (cleanup) { try { cleanup(); } catch (e) {} cleanup = null; }
+    var v = V[r.view];
+    app.innerHTML = v.html(r.sub);
+    if (v.mount) cleanup = v.mount(r.sub) || null;
+    document.querySelectorAll("nav.tabs a").forEach(function (a) {
+      if (a.getAttribute("data-view") === r.view) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+    });
+    var act = document.querySelector('nav.tabs a[aria-current="page"]'), ul = document.querySelector("nav.tabs ul");
+    if (act && ul) ul.scrollLeft = act.parentNode.offsetLeft - (ul.clientWidth - act.offsetWidth) / 2;
+    document.title = "KORVE · " + document.querySelector('nav.tabs a[data-view="' + r.view + '"]').textContent;
+    if (keepScroll) window.scrollTo(0, y);
+    else if (r.view !== current) { window.scrollTo(0, 0); }
+    current = r.view;
+  }
+
+  window.KApp = { rerender: function () { render(true); } };
+
+  window.addEventListener("hashchange", function () {
+    /* El mapa actualiza su hash con replaceState (no dispara hashchange): todo hashchange es navegación. */
+    render(false);
+  });
+
+  function toast(msg) {
+    var t = document.createElement("div");
+    t.setAttribute("role", "status");
+    t.style.cssText = "position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#0d0d0d;color:#fff;padding:10px 14px;border-radius:8px;z-index:50;font-size:14px;max-width:90vw;border-left:4px solid #9c2a3d";
+    t.textContent = msg; document.body.appendChild(t);
+    setTimeout(function () { t.remove(); }, 2600);
+  }
+  K.toast = toast;
+
+  /* Diálogo propio (el visor de artifacts no muestra confirm()). */
+  function dialog(inner, onMount) {
+    var prev = document.activeElement;
+    var o = document.createElement("div");
+    o.className = "overlay";
+    o.innerHTML = '<div class="dialog" role="dialog" aria-modal="true">' + inner + "</div>";
+    document.body.appendChild(o);
+    function close() { o.remove(); if (prev && prev.focus) prev.focus(); }
+    o.addEventListener("click", function (e) { if (e.target === o || e.target.closest("[data-close]")) close(); });
+    o.addEventListener("keydown", function (e) { if (e.key === "Escape") { e.stopPropagation(); close(); } });
+    onMount(o.querySelector(".dialog"), close);
+    var f = o.querySelector("[data-autofocus]") || o.querySelector("button"); if (f) f.focus();
+  }
+  K.ask = function (msg, okLabel, onYes) {
+    dialog("<p>" + K.esc(msg) + '</p><div class="dialog-actions"><button class="btn" data-close data-autofocus>Cancelar</button><button class="btn primary" data-ok>' + K.esc(okLabel) + "</button></div>",
+      function (d, close) { d.querySelector("[data-ok]").addEventListener("click", function () { close(); onYes(); }); });
+  };
+  K.confirmImport = function (text) {
+    K.ask("Importar reemplaza las notas, estados y mediciones locales actuales. ¿Continuar?", "Importar", function () {
+      K.importText(text, function (err) {
+        if (err) toast("No se pudo importar: " + err.message); else { render(true); toast("Datos importados."); }
+      });
+    });
+  };
+  /* Dentro del visor del chat la página corre en un marco que no permite descargas: solo se ofrece copiar. */
+  var inFrame = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
+  K.showExport = function () {
+    var json = K.exportText();
+    dialog('<h2>Exportar notas y estados</h2><p class="small">Guardá este JSON para no perder tus datos. Si la descarga no funciona (por ejemplo dentro del chat), copialo y pegalo en una nota o un archivo.</p>' +
+      '<textarea id="export-json" readonly rows="10" aria-label="JSON exportado">' + K.esc(json) + "</textarea>" +
+      '<div class="dialog-actions"><button class="btn" data-close>Cerrar</button>' + (inFrame ? "" : '<button class="btn" data-dl>Descargar archivo</button>') + '<button class="btn primary" data-copy data-autofocus>Copiar JSON</button></div>',
+      function (d) {
+        var ta = d.querySelector("textarea");
+        d.querySelector("[data-copy]").addEventListener("click", function () {
+          var done = function () { toast("JSON copiado."); };
+          var fallback = function () { ta.focus(); ta.select(); toast("Seleccioné el texto: copialo con el menú del teléfono o Ctrl+C."); };
+          try { navigator.clipboard.writeText(json).then(done, fallback); } catch (e) { fallback(); }
+        });
+        if (!inFrame) d.querySelector("[data-dl]").addEventListener("click", function () { K.downloadJSON(json); toast("Si no se descargó, usá Copiar JSON."); });
+      });
+  };
+  K.showPasteImport = function () {
+    dialog('<h2>Importar pegando el JSON</h2><textarea id="import-json" rows="10" data-autofocus aria-label="JSON a importar" placeholder="Pegá aquí el JSON exportado"></textarea>' +
+      '<div class="dialog-actions"><button class="btn" data-close>Cancelar</button><button class="btn primary" data-imp>Importar</button></div>',
+      function (d, close) {
+        d.querySelector("[data-imp]").addEventListener("click", function () {
+          var t = d.querySelector("textarea").value.trim();
+          if (!t) { toast("Pegá primero el JSON exportado."); return; }
+          close(); K.confirmImport(t);
+        });
+      });
+  };
+
+  /* ----- Delegación de eventos ----- */
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-action]"); if (!b || b.tagName === "INPUT") return;
+    var a = b.getAttribute("data-action"), s = K.state();
+    if (a === "add-compare") {
+      var id = b.getAttribute("data-id");
+      if (s.compare.indexOf(id) >= 0) { toast("Ya está en el comparador."); return; }
+      if (s.compare.length >= 3) { toast("El comparador admite hasta tres palas. Quitá una primero."); return; }
+      s.compare.push(id); K.save();
+      toast("Agregada al comparador (" + s.compare.length + "/3): " + K.itemName(id));
+    } else if (a === "remove-compare") {
+      s.compare = s.compare.filter(function (x) { return x !== b.getAttribute("data-id"); }); K.save(); render(true);
+    } else if (a === "clear-compare") {
+      s.compare = []; K.save(); render(true);
+    } else if (a === "export") {
+      K.showExport();
+    } else if (a === "del-measure") {
+      var sid = b.getAttribute("data-sample"), idx = +b.getAttribute("data-idx");
+      K.ask("¿Borrar este registro local de medición?", "Borrar", function () { (s.measurements[sid] || []).splice(idx, 1); K.save(); render(true); });
+    } else if (a === "clear-local") {
+      K.ask("¿Borrar todas las notas, estados y mediciones locales? Exportá antes si querés conservarlas.", "Borrar todo", function () { K.clearData(); render(true); toast("Datos locales borrados."); });
+    } else if (a === "paste-import") {
+      K.showPasteImport();
+    }
+  });
+
+  document.addEventListener("change", function (e) {
+    var t = e.target;
+    if (t.matches('input[type=file][data-action="import"]')) {
+      var f = t.files && t.files[0]; if (!f) return;
+      t.value = "";
+      var reader = new FileReader();
+      reader.onload = function () { K.confirmImport(String(reader.result)); };
+      reader.onerror = function () { toast("No se pudo leer el archivo."); };
+      reader.readAsText(f);
+    } else if (t.matches("select[data-status]")) {
+      K.setStatus(t.getAttribute("data-status"), t.value); render(true);
+      toast("Estado guardado localmente: " + t.options[t.selectedIndex].text);
+    }
+  });
+
+  var timers = {};
+  document.addEventListener("input", function (e) {
+    var t = e.target;
+    if (t.matches("textarea[data-note]")) {
+      var id = t.getAttribute("data-note");
+      clearTimeout(timers[id]); timers[id] = setTimeout(function () { K.setNote(id, t.value.trim() ? t.value : ""); }, 300);
+    } else if (t.matches("textarea[data-fnote]")) {
+      var key = t.getAttribute("data-fnote");
+      clearTimeout(timers[key]); timers[key] = setTimeout(function () {
+        var s = K.state(); if (t.value.trim()) s.factoryNotes[key] = t.value; else delete s.factoryNotes[key]; K.save();
+      }, 300);
+    }
+  });
+
+  document.addEventListener("submit", function (e) {
+    var f = e.target;
+    if (!f.matches(".measure-form")) return;
+    e.preventDefault();
+    var fd = new FormData(f), sid = f.getAttribute("data-sample");
+    var rec = { date: fd.get("date"), mass: String(fd.get("mass") || "").trim(), balance: String(fd.get("balance") || "").trim(), who: String(fd.get("who") || "").trim(), config: String(fd.get("config") || "").trim(), note: String(fd.get("note") || "").trim() };
+    var num = /^\d{2,4}([.,]\d{1,2})?$/;
+    if (!rec.mass && !rec.balance) { toast("Ingresá al menos masa (g) o balance (mm)."); return; }
+    if ((rec.mass && !num.test(rec.mass)) || (rec.balance && !num.test(rec.balance))) { toast("Usá números en g y mm, por ejemplo 364,1."); return; }
+    if (!rec.config) { toast("La configuración de medición es obligatoria."); return; }
+    var s = K.state(); (s.measurements[sid] = s.measurements[sid] || []).push(rec); K.save();
+    render(true); toast("Medición guardada localmente.");
+  });
+
+  render(false);
+})();
+
+</script>

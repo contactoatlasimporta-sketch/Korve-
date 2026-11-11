@@ -1,7 +1,7 @@
 /*
  * Información interna KORVE (secciones 7 a 12 del informe).
  * Fuente interna: save maestro KORVE del 11/11/2026, ficha NEX consolidada y
- * evaluación de Tomás. Las cifras de proveedor no se transforman en mediciones.
+ * evaluación de Tomás Sánchez. Las cifras de proveedor no se transforman en mediciones.
  *
  * Para agregar resultados reales: completar "measurements" / "testerOpinion" de
  * cada muestra o "results" de cada ensayo, con su clase de evidencia y fecha.
@@ -11,7 +11,7 @@ window.KORVE_DATA = window.KORVE_DATA || {};
 (function () {
   function M(k, note) { return { missing: k, note: note || "" }; }
 
-  window.KORVE_DATA.internalSource = "Save maestro KORVE del 11/11/2026, ficha NEX consolidada y evaluación de Tomás.";
+  window.KORVE_DATA.internalSource = "Save maestro KORVE del 11/11/2026, ficha NEX consolidada y evaluación de Tomás Sánchez.";
 
   /* ---------- Muestras ---------- */
   window.KORVE_DATA.samples = [
@@ -95,14 +95,14 @@ window.KORVE_DATA = window.KORVE_DATA || {};
         { label: "Balance de referencia del proveedor", v: "255 ±7 mm", ev: "KP", note: "Grip + correa, sin overgrip." }
       ],
       measured: [
-        { label: "Masa", v: "364,1", u: "g", ev: "KM", who: "Tomás", config: "Con DOS overgrips, sin protector", note: "No comparable directamente con la referencia del proveedor (sin overgrip)." },
-        { label: "Balance", missing: "BLANK", who: "Tomás", note: "Balance en blanco. No atribuirle un balance medido de 250 mm." }
+        { label: "Masa", v: "364,1", u: "g", ev: "KM", who: "Tomás Sánchez", config: "Con DOS overgrips, sin protector", note: "No comparable directamente con la referencia del proveedor (sin overgrip)." },
+        { label: "Balance", missing: "BLANK", who: "Tomás Sánchez", note: "Balance en blanco. No atribuirle un balance medido de 250 mm." }
       ],
       tester: [
-        { who: "Tomi", text: "Preferencia por MC frente a otras opciones probadas.", ev: "KT" },
-        { who: "Tomi", text: "Pidió conservar movilidad y tacto seco y añadir peso.", ev: "KT", note: "Merece una variante controlada, no bajar peso automáticamente." }
+        { who: "Tomás Sánchez", text: "Preferencia por MC frente a otras opciones probadas.", ev: "KT" },
+        { who: "Tomás Sánchez", text: "Pidió conservar movilidad y tacto seco y añadir peso.", ev: "KT", note: "Merece una variante controlada, no bajar peso automáticamente." }
       ],
-      testerNote: "Evidencia de usuario útil, pero procede de una persona.",
+      testerNote: "Evidencia de usuario útil, pero procede de una sola persona: mediciones y opiniones de MC-005 y KS-01 son de Tomás Sánchez.",
       status: "Referencia HYBRID por uso, no ficha de laboratorio.",
       warnings: [
         "No atribuirle balance medido de 250 mm por Tomás.",
@@ -137,11 +137,11 @@ window.KORVE_DATA = window.KORVE_DATA || {};
         { label: "Valores históricos de proveedor", missing: "NI", note: "Mencionados en el informe sin cifras; requieren normalizar configuración." }
       ],
       measured: [
-        { label: "Masa", v: "366,6", u: "g", ev: "KM", who: "Tomás", config: "Con DOS overgrips, sin protector" },
-        { label: "Balance", missing: "BLANK", who: "Tomás", note: "Balance en blanco." }
+        { label: "Masa", v: "366,6", u: "g", ev: "KM", who: "Tomás Sánchez", config: "Con DOS overgrips, sin protector" },
+        { label: "Balance", missing: "BLANK", who: "Tomás Sánchez", note: "Balance en blanco." }
       ],
       tester: [
-        { who: "Tomás", text: "Menor preferencia ofensiva.", ev: "KT" }
+        { who: "Tomás Sánchez", text: "Menor preferencia ofensiva.", ev: "KT" }
       ],
       testerNote: "",
       status: "Menor preferencia ofensiva de Tomás. Rol a determinar por pruebas.",
@@ -162,7 +162,7 @@ window.KORVE_DATA = window.KORVE_DATA || {};
 
   window.KORVE_DATA.tomiReference = {
     name: "NOX AT10 Luxury Genius 12K Alum XTREM 2026 (blanca/dorada)",
-    text: "Referencia comercial exacta de Tomi. Es la referencia más accesible y vinculada al feedback de MC. El informe no incluye su ficha técnica.",
+    text: "Pala de uso de Tomás Sánchez, la misma persona que midió y evaluó MC-005 y KS-01. Es la referencia más accesible y vinculada al feedback de MC. El informe no incluye su ficha técnica.",
     ev: "KT"
   };
 
@@ -219,7 +219,7 @@ window.KORVE_DATA = window.KORVE_DATA || {};
   /* ---------- Plan de validación (sección 10) ---------- */
   window.KORVE_DATA.stages = [
     { id: "etapa-a", name: "Etapa A — Registrar las unidades que ya tenemos",
-      summary: "Ficha normalizada de KS, MC, W3, AMP22 y la NOX de Tomi.",
+      summary: "Ficha normalizada de KS, MC, W3, AMP22 y la NOX de Tomás.",
       steps: [
         "Identificar las unidades con códigos, fotografiar y quitar film.",
         "Anotar masa con resolución de 0,1 g, balance en mm, dimensiones, grip/correa y accesorios.",
@@ -255,7 +255,7 @@ window.KORVE_DATA = window.KORVE_DATA || {};
 
   /* ---------- Referencias a conseguir prestadas (sección 11) ---------- */
   window.KORVE_DATA.loanRefs = [
-    { id: "loan-at10", order: 1, name: "NOX AT10 Luxury Genius 12K Alum XTREM 2026 (de Tomi)", why: "Referencia más accesible y vinculada al feedback de MC.", refId: null },
+    { id: "loan-at10", order: 1, name: "NOX AT10 Luxury Genius 12K Alum XTREM 2026 (de Tomás)", why: "Referencia más accesible y vinculada al feedback de MC.", refId: null },
     { id: "loan-viper", order: 2, name: "Babolat Technical Viper 3.0", why: "Ataque firme como contraste de W3.", refId: "bb-technical-viper-30" },
     { id: "loan-bomba", order: 3, name: "Tecnifibre Bomba Max", why: "Ataque multicapa distinto; no porque 18K sea mejor que 12K.", refId: "tf-bomba-max" },
     { id: "loan-endure", order: 4, name: "Wilson Endure Pro V1", why: "Referencia de control para AMP22.", refId: null },

@@ -10,10 +10,11 @@
     ". Aplicación local, sin cuentas ni servidor. Los datos están en la carpeta <code>data/</code>.";
 
   function parse() {
-    var h = (location.hash || "#mapa").slice(1), i = h.indexOf("/");
-    var view = i < 0 ? h : h.slice(0, i), sub = i < 0 ? "" : h.slice(i + 1);
+    /* Rutas: #vista o #vista--sub--sub (también acepta "/" de versiones anteriores). */
+    var h = decodeURIComponent((location.hash || "#mapa").slice(1)), m = h.match(/--|\//);
+    var view = m ? h.slice(0, m.index) : h, sub = m ? h.slice(m.index + m[0].length) : "";
     if (VIEWS.indexOf(view) < 0) view = "mapa";
-    return { view: view, sub: decodeURIComponent(sub) };
+    return { view: view, sub: sub };
   }
 
   function render(keepScroll) {
@@ -50,6 +51,59 @@
   }
   K.toast = toast;
 
+  /* Diálogo propio (el visor de artifacts no muestra confirm()). */
+  function dialog(inner, onMount) {
+    var prev = document.activeElement;
+    var o = document.createElement("div");
+    o.className = "overlay";
+    o.innerHTML = '<div class="dialog" role="dialog" aria-modal="true">' + inner + "</div>";
+    document.body.appendChild(o);
+    function close() { o.remove(); if (prev && prev.focus) prev.focus(); }
+    o.addEventListener("click", function (e) { if (e.target === o || e.target.closest("[data-close]")) close(); });
+    o.addEventListener("keydown", function (e) { if (e.key === "Escape") { e.stopPropagation(); close(); } });
+    onMount(o.querySelector(".dialog"), close);
+    var f = o.querySelector("[data-autofocus]") || o.querySelector("button"); if (f) f.focus();
+  }
+  K.ask = function (msg, okLabel, onYes) {
+    dialog("<p>" + K.esc(msg) + '</p><div class="dialog-actions"><button class="btn" data-close data-autofocus>Cancelar</button><button class="btn primary" data-ok>' + K.esc(okLabel) + "</button></div>",
+      function (d, close) { d.querySelector("[data-ok]").addEventListener("click", function () { close(); onYes(); }); });
+  };
+  K.confirmImport = function (text) {
+    K.ask("Importar reemplaza las notas, estados y mediciones locales actuales. ¿Continuar?", "Importar", function () {
+      K.importText(text, function (err) {
+        if (err) toast("No se pudo importar: " + err.message); else { render(true); toast("Datos importados."); }
+      });
+    });
+  };
+  /* Dentro del visor del chat la página corre en un marco que no permite descargas: solo se ofrece copiar. */
+  var inFrame = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
+  K.showExport = function () {
+    var json = K.exportText();
+    dialog('<h2>Exportar notas y estados</h2><p class="small">Guardá este JSON para no perder tus datos. Si la descarga no funciona (por ejemplo dentro del chat), copialo y pegalo en una nota o un archivo.</p>' +
+      '<textarea id="export-json" readonly rows="10" aria-label="JSON exportado">' + K.esc(json) + "</textarea>" +
+      '<div class="dialog-actions"><button class="btn" data-close>Cerrar</button>' + (inFrame ? "" : '<button class="btn" data-dl>Descargar archivo</button>') + '<button class="btn primary" data-copy data-autofocus>Copiar JSON</button></div>',
+      function (d) {
+        var ta = d.querySelector("textarea");
+        d.querySelector("[data-copy]").addEventListener("click", function () {
+          var done = function () { toast("JSON copiado."); };
+          var fallback = function () { ta.focus(); ta.select(); toast("Seleccioné el texto: copialo con el menú del teléfono o Ctrl+C."); };
+          try { navigator.clipboard.writeText(json).then(done, fallback); } catch (e) { fallback(); }
+        });
+        if (!inFrame) d.querySelector("[data-dl]").addEventListener("click", function () { K.downloadJSON(json); toast("Si no se descargó, usá Copiar JSON."); });
+      });
+  };
+  K.showPasteImport = function () {
+    dialog('<h2>Importar pegando el JSON</h2><textarea id="import-json" rows="10" data-autofocus aria-label="JSON a importar" placeholder="Pegá aquí el JSON exportado"></textarea>' +
+      '<div class="dialog-actions"><button class="btn" data-close>Cancelar</button><button class="btn primary" data-imp>Importar</button></div>',
+      function (d, close) {
+        d.querySelector("[data-imp]").addEventListener("click", function () {
+          var t = d.querySelector("textarea").value.trim();
+          if (!t) { toast("Pegá primero el JSON exportado."); return; }
+          close(); K.confirmImport(t);
+        });
+      });
+  };
+
   /* ----- Delegación de eventos ----- */
   document.addEventListener("click", function (e) {
     var b = e.target.closest("[data-action]"); if (!b || b.tagName === "INPUT") return;
@@ -65,14 +119,14 @@
     } else if (a === "clear-compare") {
       s.compare = []; K.save(); render(true);
     } else if (a === "export") {
-      K.exportData(); toast("Exportación descargada.");
+      K.showExport();
     } else if (a === "del-measure") {
       var sid = b.getAttribute("data-sample"), idx = +b.getAttribute("data-idx");
-      if (!confirm("¿Borrar este registro local de medición?")) return;
-      (s.measurements[sid] || []).splice(idx, 1); K.save(); render(true);
+      K.ask("¿Borrar este registro local de medición?", "Borrar", function () { (s.measurements[sid] || []).splice(idx, 1); K.save(); render(true); });
     } else if (a === "clear-local") {
-      if (!confirm("¿Borrar todas las notas, estados y mediciones locales? Exportá antes si querés conservarlas.")) return;
-      K.clearData(); render(true); toast("Datos locales borrados.");
+      K.ask("¿Borrar todas las notas, estados y mediciones locales? Exportá antes si querés conservarlas.", "Borrar todo", function () { K.clearData(); render(true); toast("Datos locales borrados."); });
+    } else if (a === "paste-import") {
+      K.showPasteImport();
     }
   });
 
@@ -80,10 +134,11 @@
     var t = e.target;
     if (t.matches('input[type=file][data-action="import"]')) {
       var f = t.files && t.files[0]; if (!f) return;
-      if (!confirm("Importar reemplaza las notas, estados y mediciones locales actuales. ¿Continuar?")) { t.value = ""; return; }
-      K.importData(f, function (err) {
-        if (err) toast("No se pudo importar: " + err.message); else { render(true); toast("Datos importados."); }
-      });
+      t.value = "";
+      var reader = new FileReader();
+      reader.onload = function () { K.confirmImport(String(reader.result)); };
+      reader.onerror = function () { toast("No se pudo leer el archivo."); };
+      reader.readAsText(f);
     } else if (t.matches("select[data-status]")) {
       K.setStatus(t.getAttribute("data-status"), t.value); render(true);
       toast("Estado guardado localmente: " + t.options[t.selectedIndex].text);

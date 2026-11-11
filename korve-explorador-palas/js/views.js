@@ -38,7 +38,7 @@
       '<div class="kv"><span class="k">Estado</span>' + esc(s.status) + "</div>" +
       (s.requested.length ? '<div class="kv"><span class="k">Objetivo solicitado</span>' + s.requested.filter(function (x) { return x.u; }).map(function (x) { return K.value(x); }).join("") + "</div>" : "") +
       '<div class="kv"><span class="k">Medición real</span>' + (s.measured.length ? s.measured.map(function (m) { return m.missing ? '<div class="val"><b>' + esc(m.label) + ":</b> " + K.missing(m.missing, m.note) + "</div>" : '<div class="val"><b>' + esc(m.label) + ":</b> " + K.value(m) + '<span class="note">' + esc(m.config || "") + "</span></div>"; }).join("") : K.missing("PEND", s.measuredNote)) + "</div>" +
-      '<p><a class="btn small" href="#muestras/' + esc(s.id) + '">Ver ficha completa</a> <button class="btn small primary" data-action="add-compare" data-id="' + esc(s.id) + '">Agregar al comparador</button></p>' +
+      '<p><a class="btn small" href="#muestras--' + esc(s.id) + '">Ver ficha completa</a> <button class="btn small primary" data-action="add-compare" data-id="' + esc(s.id) + '">Agregar al comparador</button></p>' +
       "</div>";
   };
 
@@ -49,7 +49,7 @@
       '<div class="kv"><span class="k">Beneficio esperado</span>' + esc(d.benefit) + " " + K.ev("PR", "hipótesis") + "</div>" +
       '<div class="kv"><span class="k">Prueba que decide</span>' + esc(d.test) + "</div>" +
       '<div class="kv"><span class="k">Estado</span><span class="status-pill">' + esc(K.statusLabel(st)) + "</span>" + (st !== "pendiente" ? ' <span class="status-local">(editado localmente)</span>' : "") + "</div>" +
-      '<p><a class="btn small" href="#desarrollo/' + esc(d.id) + '">Ver en Desarrollo y pruebas</a></p></div>';
+      '<p><a class="btn small" href="#desarrollo--' + esc(d.id) + '">Ver en Desarrollo y pruebas</a></p></div>';
   };
 
   /* ---------- MAPA ---------- */
@@ -65,10 +65,10 @@
         if (path.item) panel.scrollTop = 0;
         else if (hl) panel.scrollTop = hl.offsetTop - panel.offsetTop - 8;
         else panel.scrollTop = 0;
-        var h = "#mapa" + (path.branch ? "/" + path.branch : "") + (path.aspect ? "/" + path.aspect : "") + (path.item ? "/" + path.item : "");
-        if (location.hash !== h) history.replaceState(null, "", h);
+        var h = "#mapa" + (path.branch ? "--" + path.branch : "") + (path.aspect ? "--" + path.aspect : "") + (path.item ? "--" + path.item : "");
+        if (location.hash !== h) { try { history.replaceState(null, "", h); } catch (err) {} }
       });
-      var parts = (sub || "").split("/").filter(Boolean), p = {};
+      var parts = (sub || "").split(/--|\//).filter(Boolean), p = {};
       if (parts[0] && K.branchById[parts[0]]) { p.branch = parts[0]; if (parts[1]) { p.aspect = parts[1]; if (parts[2]) p.item = parts[2]; } }
       map.render(); map.focus(false); map.select(p);
       panel.addEventListener("click", function (e) {
@@ -358,7 +358,7 @@
         '<div class="banner small">MC-005 es referencia de comportamiento HYBRID. W3 y AMP22 son candidatas POWER y CONTROL, todavía sin validación definitiva. KS-01 no se asigna a CONTROL solo para completar la línea.</div>' +
         K.storageBar() +
         '<div style="height:10px"></div><div class="sample-grid">' + DATA.samples.map(V.sampleCard).join("") + "</div>" +
-        '<h2>Unidad comercial de Tomi</h2><div class="card"><b>' + esc(DATA.tomiReference.name) + "</b><p>" + esc(DATA.tomiReference.text) + "</p></div>";
+        '<h2>Unidad comercial de Tomás Sánchez</h2><div class="card"><b>' + esc(DATA.tomiReference.name) + "</b><p>" + esc(DATA.tomiReference.text) + "</p></div>";
     },
     mount: function (sub) {
       if (sub) { var e = document.getElementById("sample-" + sub); if (e) { e.scrollIntoView({ block: "start" }); e.classList.add("highlight"); } }
@@ -449,7 +449,7 @@
     html: function () {
       var cols = DATA.factories.map(function (f) {
         return '<article class="card"><h2 style="margin-top:0">' + esc(f.name) + "</h2>" +
-          '<div class="kv"><span class="k">Muestras propias</span>' + f.samples.map(function (id) { var s = K.sampleById[id]; return '<a class="chip" href="#muestras/' + id + '">' + esc(s.name) + " · " + esc(s.role) + "</a>"; }).join(" ") + "</div>" +
+          '<div class="kv"><span class="k">Muestras propias</span>' + f.samples.map(function (id) { var s = K.sampleById[id]; return '<a class="chip" href="#muestras--' + id + '">' + esc(s.name) + " · " + esc(s.role) + "</a>"; }).join(" ") + "</div>" +
           "<h3>Qué podría aportar a la línea</h3>" +
           '<table class="simple"><thead><tr><th>Perfil</th><th>Escenario si se elige</th><th>Estado</th></tr></thead><tbody>' +
           f.contributes.map(function (c) { return "<tr><td><b>" + esc(c.profile) + "</b></td><td>" + esc(c.text) + " " + K.ev("PR") + '</td><td><span class="status-pill">' + esc(c.status) + "</span></td></tr>"; }).join("") + "</tbody></table>" +

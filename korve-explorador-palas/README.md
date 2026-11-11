@@ -17,6 +17,12 @@ python3 -m http.server 8000
 
 y abrí `http://localhost:8000`.
 
+### En el celular
+
+Usá `dist/korve-explorador.html`: es la app completa en un solo archivo. Descomprimí el ZIP en Archivos (iPhone) o en Files de Google (Android) y abrí ese archivo con el navegador.
+
+Para regenerarlo después de editar los datos: `node tools/build-single.js`. Ese comando también genera `dist/artifact.html`, la variante que se publica como vista previa en el chat de Claude.
+
 ## Vistas
 
 - **Mapa**: KORVE en el centro y tres ramas. Tocá una rama para ver sus siete aspectos: comportamiento, jugador, muestra candidata, referencias, qué desarrollar, pruebas que deciden e información faltante. Muestra, Referencias y Desarrollar abren un tercer nivel. Con `+` y `−` acercás y alejás (también con la rueda o pellizcando), `◎` centra la selección y `↩` o `Esc` vuelve al nivel anterior. También podés arrastrar el mapa.
@@ -29,7 +35,9 @@ y abrí `http://localhost:8000`.
 
 ## Notas y estados
 
-Las notas, los estados y las mediciones que cargues se guardan **solo en ese navegador** (localStorage). Usá **Exportar JSON** para hacer una copia de seguridad o pasarlos a otra computadora, e **Importar JSON** para recuperarlos. Al importar se reemplazan los datos locales actuales.
+Las notas, los estados y las mediciones que cargues se guardan **solo en ese navegador** (localStorage). Usá **Exportar JSON** para hacer una copia de seguridad o pasarlos a otro dispositivo: podés copiar el JSON o descargarlo como archivo (la descarga no funciona dentro del chat; ahí usá Copiar). Para recuperarlos, usá **Importar archivo** o **Importar pegando JSON**. Al importar se reemplazan los datos locales actuales; la app pide confirmación antes de hacerlo.
+
+Cada copia de la app guarda sus propios datos: la vista previa del chat, el archivo abierto en el celular y el abierto en la computadora no comparten notas. Para pasar notas de una a otra, exportalas e importalas.
 
 ## Actualizar la investigación
 
@@ -54,4 +62,4 @@ node tests/check-data.js
 ## Pruebas
 
 - `node tests/check-data.js` controla la integridad de los datos y las reglas de rigor. Por ejemplo, que haya 41 marcas, que cada dato tenga clase de evidencia y que ningún ensayo figure como realizado.
-- `node tests/e2e.js [carpeta-capturas]` prueba con Playwright la navegación del mapa, los filtros, el comparador, las fuentes, los estados vacíos, la exportación e importación y la vista móvil de 390 px.
+- `node tests/e2e.js [carpeta-capturas]` (con `KORVE_FILE=dist/korve-explorador.html` prueba la versión de un solo archivo) prueba con Playwright la navegación del mapa, los filtros, el comparador, las fuentes, los estados vacíos, la exportación e importación y la vista móvil de 390 px.

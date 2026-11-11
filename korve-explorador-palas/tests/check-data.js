@@ -52,6 +52,8 @@ D.branches.forEach((b) => {
   b.sample.sampleIds.forEach((id) => ok(D.samples.some((s) => s.id === id), b.id + ": muestra inexistente " + id));
   D.aspects.forEach((a) => ok(b[a.id] && b[a.id].summary, b.id + ": falta aspecto " + a.id));
 });
+ok(/^https:\/\//.test(D.frictionData.sourceUrl), "Falta enlace de Padel University");
+ok(!/\bTomi\b/.test(JSON.stringify(D)), "Usar el nombre Tomás Sánchez, no Tomi");
 // Ningún texto declara ganador ni "mejor".
 const all = JSON.stringify(D);
 ok(!/ganador:/i.test(all), "No debe haber ganador declarado");

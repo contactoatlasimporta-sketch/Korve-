@@ -74,34 +74,32 @@
     return o ? o.label : id;
   };
 
-  K.exportData = function () {
-    var s = K.load();
-    var payload = { app: "korve-explorador", exportedAt: new Date().toISOString(), researchCutoff: DATA.meta.cutoff, data: s };
-    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    var a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "korve-notas-" + new Date().toISOString().slice(0, 10) + ".json";
-    document.body.appendChild(a); a.click();
-    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  K.exportText = function () {
+    return JSON.stringify({ app: "korve-explorador", exportedAt: new Date().toISOString(), researchCutoff: DATA.meta.cutoff, data: K.load() }, null, 2);
   };
-  K.importData = function (file, cb) {
-    var reader = new FileReader();
-    reader.onload = function () {
-      try {
-        var obj = JSON.parse(reader.result);
-        var d = obj && obj.app === "korve-explorador" ? obj.data : null;
-        if (!d || typeof d !== "object") throw new Error("El archivo no es una exportación del Explorador KORVE.");
-        var fresh = blank();
-        ["notes", "status", "measurements", "results", "factoryNotes"].forEach(function (k) {
-          if (d[k] && typeof d[k] === "object" && !Array.isArray(d[k])) fresh[k] = d[k];
-        });
-        if (Array.isArray(d.compare)) fresh.compare = d.compare.filter(function (id) { return typeof id === "string"; }).slice(0, 3);
-        mem = fresh; K.save();
-        cb(null);
-      } catch (e) { cb(e); }
-    };
-    reader.onerror = function () { cb(new Error("No se pudo leer el archivo.")); };
-    reader.readAsText(file);
+  K.downloadJSON = function (json) {
+    try {
+      var blob = new Blob([json], { type: "application/json" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "korve-notas-" + new Date().toISOString().slice(0, 10) + ".json";
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    } catch (e) {}
+  };
+  K.importText = function (text, cb) {
+    try {
+      var obj = JSON.parse(text);
+      var d = obj && obj.app === "korve-explorador" ? obj.data : null;
+      if (!d || typeof d !== "object") throw new Error("el texto no es una exportación del Explorador KORVE.");
+      var fresh = blank();
+      ["notes", "status", "measurements", "results", "factoryNotes"].forEach(function (k) {
+        if (d[k] && typeof d[k] === "object" && !Array.isArray(d[k])) fresh[k] = d[k];
+      });
+      if (Array.isArray(d.compare)) fresh.compare = d.compare.filter(function (id) { return typeof id === "string"; }).slice(0, 3);
+      mem = fresh; K.save();
+      cb(null);
+    } catch (e) { cb(e instanceof SyntaxError ? new Error("el JSON no es válido.") : e); }
   };
   K.clearData = function () { mem = blank(); K.save(); };
 
@@ -110,7 +108,8 @@
     return '<div class="storage-bar card small">' +
       "<span><b>Notas y estados locales.</b> Se guardan solo en este navegador" + (K.storageOk ? "" : " (almacenamiento no disponible: se perderán al cerrar)") + ".</span>" +
       '<button class="btn small" data-action="export">Exportar JSON</button>' +
-      '<label class="btn small">Importar JSON<input type="file" accept="application/json,.json" data-action="import" class="sr-only"></label>' +
+      '<label class="btn small">Importar archivo<input type="file" accept="application/json,.json" data-action="import" class="sr-only"></label>' +
+      '<button class="btn small" data-action="paste-import">Importar pegando JSON</button>' +
       "</div>";
   };
 

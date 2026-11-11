@@ -37,7 +37,7 @@ window.KORVE_DATA.brands = [
       { name: "ML10 Pro Cup", detail: "COORP / Rough / Silver", season: "2027" },
       { name: "Equation", detail: "Hard / Soft", season: "2027" }
     ],
-    note: "Diferenciación por núcleo, geometría y masa; Genius como referencia HYBRID. No confundir con AT10 2026 de Tomi.",
+    note: "Diferenciación por núcleo, geometría y masa; Genius como referencia HYBRID. No confundir con AT10 2026 de Tomás.",
     features: ["nucleo", "geometria", "masa-ajustable", "distribucion-masa"] },
 
   { id: "bullpadel", name: "Bullpadel", url: "https://www.bullpadel.com/es/39-pro-line",
@@ -58,7 +58,7 @@ window.KORVE_DATA.brands = [
     features: ["distribucion-masa", "masa-ajustable"] },
 
   { id: "adidas", name: "adidas", url: "https://allforpadel.com/es/54-palas-padel",
-    coverage: "completa", coverageBasis: "Página revisada (alojada en la tienda allforpadel, no en el sitio de la marca). Conviven temporadas y ediciones.",
+    coverage: "completa", coverageBasis: "Página revisada en allforpadel.com, sitio de All For Padel (AFP), que se presenta como licenciatario oficial de adidas para pádel: diseña, gestiona y comercializa la línea. Se trata como fuente oficial de adidas pádel. Conviven temporadas y ediciones.",
     families: [
       { name: "Arrow", detail: "Hit / CTRL", season: null },
       { name: "Metalbone", detail: "Metalbone / HRD+ / CTRL / Carbon / Carbon CTRL / Team / Team Light / Superlight / Reserve", season: null },
