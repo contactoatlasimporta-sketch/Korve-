@@ -19,6 +19,8 @@ y abrí `http://localhost:8000`.
 
 ### En el celular
 
+En pantallas angostas el mapa pasa a una disposición vertical: KORVE arriba, las tres ramas en fila y, debajo, los aspectos y sus ítems como un árbol, en tamaño de lectura. El botón **Detalle ↓** lleva al panel con la información de lo seleccionado y **↑ Volver al mapa** regresa.
+
 Usá `dist/korve-explorador.html`: es la app completa en un solo archivo. Descomprimí el ZIP en Archivos (iPhone) o en Files de Google (Android) y abrí ese archivo con el navegador.
 
 Para regenerarlo después de editar los datos: `node tools/build-single.js`. Ese comando también genera `dist/artifact.html`, la variante que se publica como vista previa en el chat de Claude.
@@ -67,4 +69,5 @@ node tests/check-data.js
 
 - `node tests/check-data.js` controla la integridad de los datos y las reglas de rigor. Por ejemplo, que haya 41 marcas, que cada dato tenga clase de evidencia y que ningún ensayo figure como realizado.
 - `node tests/robustness.js` prueba casos específicos: 31 archivos de importación inválidos rechazados sin alterar el estado, notas pendientes al exportar o cambiar de vista, escalas de dureza (W3 y AMP22 comparten Shore C) y mediciones locales en las advertencias del comparador.
+- `node tests/mobile.js [carpeta-capturas]` revisa celulares de 375, 390 y 430 px en vertical, con la fuente del sistema y con una de métricas tipo Helvetica (como iOS). Comprueba que el texto quede dentro de cada nodo del mapa, que no haya nodos superpuestos, letras de menos de 10,5 px, controles tapados, destinos ocultos bajo el encabezado, campos de menos de 16 px (Safari hace zoom al tocarlos) ni contenido que ensanche la página.
 - `node tests/e2e.js [carpeta-capturas]` (con `KORVE_FILE=` y la ruta completa de `dist/korve-explorador.html` o `dist/artifact.html` prueba esas versiones; vale también para `robustness.js`) prueba con Playwright la navegación del mapa, los filtros, el comparador, las fuentes, los estados vacíos, la exportación e importación y la vista móvil de 390 px.

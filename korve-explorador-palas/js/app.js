@@ -5,7 +5,13 @@
   var cleanup = null, current = null;
   var VIEWS = ["mapa", "mercado", "comparador", "muestras", "desarrollo", "fabrica", "fuentes"];
 
-  document.getElementById("cutoff").textContent = "Corte de la investigación: " + DATA.meta.cutoff + " · Propuestas, no especificaciones aprobadas";
+  document.getElementById("cutoff").innerHTML = '<span class="long">Corte de la investigación: </span><span class="short">Corte </span>' + K.esc(DATA.meta.cutoff) + '<span class="long"> · Propuestas, no especificaciones aprobadas</span>';
+
+  /* Alto real del encabezado fijo: lo usan los desplazamientos y el alto del mapa (no hay valores fijos). */
+  var header = document.querySelector(".top");
+  function setHeaderH() { document.documentElement.style.setProperty("--header-h", Math.ceil(header.getBoundingClientRect().height) + "px"); }
+  setHeaderH();
+  if (window.ResizeObserver) new ResizeObserver(setHeaderH).observe(header); else window.addEventListener("resize", setHeaderH);
   document.getElementById("footer").innerHTML = "Fuente inicial: informe “" + K.esc(DATA.meta.title) + "”, corte " + K.esc(DATA.meta.cutoff) +
     ". Aplicación local, sin cuentas ni servidor. Los datos están en la carpeta <code>data/</code>.";
 
@@ -25,6 +31,7 @@
     var v = V[r.view];
     app.innerHTML = v.html(r.sub);
     if (v.mount) cleanup = v.mount(r.sub) || null;
+    labelTables(app);
     document.querySelectorAll("nav.tabs a").forEach(function (a) {
       if (a.getAttribute("data-view") === r.view) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
     });
@@ -34,6 +41,18 @@
     if (keepScroll) window.scrollTo(0, y);
     else if (r.view !== current) { window.scrollTo(0, 0); }
     current = r.view;
+  }
+
+  /* Tablas con encabezado: cada celda recibe el nombre de su columna, para mostrarlas apiladas en celulares. */
+  function labelTables(root) {
+    root.querySelectorAll("table.simple").forEach(function (t) {
+      var heads = [].map.call(t.querySelectorAll("thead th"), function (th) { return th.textContent.trim(); });
+      if (!heads.length) return;
+      t.classList.add("stack");
+      t.querySelectorAll("tbody tr").forEach(function (tr) {
+        [].forEach.call(tr.children, function (td, i) { if (heads[i]) td.setAttribute("data-label", heads[i]); });
+      });
+    });
   }
 
   window.KApp = { rerender: function () { render(true); } };
@@ -46,7 +65,7 @@
   function toast(msg) {
     var t = document.createElement("div");
     t.setAttribute("role", "status");
-    t.style.cssText = "position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#0d0d0d;color:#fff;padding:10px 14px;border-radius:8px;z-index:50;font-size:14px;max-width:90vw;border-left:4px solid #9c2a3d";
+    t.style.cssText = "position:fixed;bottom:calc(16px + env(safe-area-inset-bottom, 0px));left:50%;transform:translateX(-50%);background:#0d0d0d;color:#fff;padding:10px 14px;border-radius:8px;z-index:50;font-size:14px;max-width:90vw;border-left:4px solid #9c2a3d";
     t.textContent = msg; document.body.appendChild(t);
     setTimeout(function () { t.remove(); }, 2600);
   }

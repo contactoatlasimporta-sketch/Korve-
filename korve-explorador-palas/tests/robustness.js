@@ -3,7 +3,7 @@
  * Uso: node tests/robustness.js   (KORVE_FILE=ruta.html para probar otra versión) */
 const { chromium } = require("playwright");
 const path = require("path"), assert = require("assert");
-const URL = "file://" + (process.env.KORVE_FILE || path.join(__dirname, "..", "index.html"));
+const URL = require("./target");
 const KEY = "korve-explorador-v1";
 
 (async () => {

@@ -37,7 +37,7 @@
       '<div class="small muted">Fábrica: ' + esc(s.factory) + " · " + esc(s.roleStatus) + "</div>" +
       '<div class="kv"><span class="k">Estado</span>' + esc(s.status) + "</div>" +
       (s.requested.length ? '<div class="kv"><span class="k">Objetivo solicitado</span>' + s.requested.filter(function (x) { return x.u; }).map(function (x) { return K.value(x); }).join("") + "</div>" : "") +
-      '<div class="kv"><span class="k">Medición real</span>' + (s.measured.length ? s.measured.map(function (m) { return m.missing ? '<div class="val"><b>' + esc(m.label) + ":</b> " + K.missing(m.missing, m.note) + "</div>" : '<div class="val"><b>' + esc(m.label) + ":</b> " + K.value(m) + '<span class="note">' + esc(m.config || "") + "</span></div>"; }).join("") : K.missing("PEND", s.measuredNote)) + "</div>" +
+      '<div class="kv"><span class="k">Medición real</span>' + (s.measured.length ? s.measured.map(function (m) { return '<div class="kv"><span class="k">' + esc(m.label) + (m.who ? " · " + esc(m.who) : "") + "</span>" + (m.missing ? K.missing(m.missing, m.note) : K.value(m) + (m.config ? '<span class="small muted">Configuración: ' + esc(m.config) + "</span>" : "")) + "</div>"; }).join("") : K.missing("PEND", s.measuredNote)) + "</div>" +
       '<p><a class="btn small" href="#muestras--' + esc(s.id) + '">Ver ficha completa</a> <button class="btn small primary" data-action="add-compare" data-id="' + esc(s.id) + '">Agregar al comparador</button></p>' +
       "</div>";
   };
@@ -73,6 +73,7 @@
       if (parts[0] && K.branchById[parts[0]]) { p.branch = parts[0]; if (parts[1]) { p.aspect = parts[1]; if (parts[2]) p.item = parts[2]; } }
       map.render(); map.focus(false); map.select(p);
       panel.addEventListener("click", function (e) {
+        if (e.target.closest("[data-to-map]")) { document.getElementById("map").scrollIntoView({ block: "start" }); return; }
         var b = e.target.closest("[data-map-go]"); if (!b) return;
         var t = b.getAttribute("data-map-go").split("/"), np = {};
         if (t[0]) np.branch = t[0]; if (t[1]) np.aspect = t[1]; if (t[2]) np.item = t[2];
@@ -83,6 +84,9 @@
   };
 
   V.mapPanel = function (path) {
+    return '<p class="to-map"><button class="btn small" data-to-map>↑ Volver al mapa</button></p>' + mapPanelBody(path);
+  };
+  function mapPanelBody(path) {
     if (!path.branch) return V.rootPanel();
     var b = K.branchById[path.branch];
     var top = "";
@@ -109,7 +113,7 @@
       '<div class="banner"><b>Ventana exploratoria</b> ' + propBadge() + "<br>Masa " + esc(w.mass) + " · Balance " + esc(w.balance) +
       '<br><span class="small">Decisión pendiente: ' + esc(w.pending) + '</span><br><span class="small muted">' + esc(DATA.windowNote) + "</span></div>" +
       asp + K.noteField("branch-" + b.id, "Notas locales sobre " + b.name);
-  };
+  }
 
   V.itemPanel = function (b, aspectId, itemId) {
     var head = '<p class="small"><button class="btn small" data-map-go="' + b.id + "/" + aspectId + '">← Volver a ' + esc(b.name) + "</button></p>";
@@ -150,6 +154,7 @@
   var F = { q: "", brand: "", family: "", season: "", coverage: "", features: [], onlyRefs: false };
   function norm(s) { return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
   function seasonKey(s) { return s || "sin"; }
+  function featCount() { return F.features.length ? "(" + F.features.length + " seleccionada" + (F.features.length > 1 ? "s" : "") + ")" : "(ninguna seleccionada)"; }
   function brandRefs(b) { return DATA.references.filter(function (r) { return r.brandId === b.id; }); }
 
   V.mercado = {
@@ -165,9 +170,11 @@
         '<label>Temporada<select id="f-season"><option value="">Todas</option>' + seasons.map(function (s) { return '<option value="' + s + '"' + (F.season === s ? " selected" : "") + ">" + seasonLabel[s] + "</option>"; }).join("") + "</select></label>" +
         '<label>Cobertura<select id="f-coverage"><option value="">Todas</option><option value="completa"' + (F.coverage === "completa" ? " selected" : "") + '>Completa de la página revisada</option><option value="parcial"' + (F.coverage === "parcial" ? " selected" : "") + ">Parcial</option></select></label>" +
         '<label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="f-refs"' + (F.onlyRefs ? " checked" : "") + "> Solo con ficha técnica en el informe</label>" +
-        '<div class="feature-filter"><fieldset><legend>Características documentadas en el informe (se combinan con “y”)</legend>' +
+        /* En celulares el grupo arranca plegado para que los resultados queden cerca; en pantallas anchas, abierto. */
+        '<details class="feature-filter" id="feat-details"' + (F.features.length || !(window.matchMedia && window.matchMedia("(max-width: 640px)").matches) ? " open" : "") + '>' +
+        '<summary>Características documentadas <span id="feat-count">' + featCount() + '</span></summary><fieldset><legend class="sr-only">Características documentadas en el informe</legend><p class="small muted">Se combinan con “y”.</p>' +
         Object.keys(DATA.featureTags).map(function (k) { return '<label><input type="checkbox" name="feat" value="' + k + '"' + (F.features.indexOf(k) >= 0 ? " checked" : "") + "> " + esc(DATA.featureTags[k]) + "</label>"; }).join("") +
-        '</fieldset></div><div><button type="button" class="btn small" id="f-clear">Limpiar filtros</button></div></form>' +
+        '</fieldset></details><div><button type="button" class="btn small" id="f-clear">Limpiar filtros</button></div></form>' +
         '<p class="small muted">Temporada = año de colección o nombre comercial indicado en la fuente; no demuestra fecha de venta. Las familias sin año en el informe figuran como “sin temporada indicada”.</p>' +
         '<div class="result-count" id="count" aria-live="polite"></div><div class="grid grid-2" id="results"></div>' +
         '<h2>Huecos explícitos</h2><div class="card small"><p>' + DATA.gaps.brands.map(function (x) { return '<span class="chip">' + esc(x) + "</span>"; }).join("") + "</p><p>" + esc(DATA.gaps.text) + "</p></div>";
@@ -225,7 +232,7 @@
       $("f-coverage").addEventListener("change", function (e) { F.coverage = e.target.value; update(); });
       $("f-refs").addEventListener("change", function (e) { F.onlyRefs = e.target.checked; update(); });
       $("filters").addEventListener("change", function (e) {
-        if (e.target.name === "feat") { F.features = [].slice.call(document.querySelectorAll('input[name="feat"]:checked')).map(function (x) { return x.value; }); update(); }
+        if (e.target.name === "feat") { F.features = [].slice.call(document.querySelectorAll('input[name="feat"]:checked')).map(function (x) { return x.value; }); $("feat-count").textContent = featCount(); update(); }
       });
       $("f-clear").addEventListener("click", clear);
       fillFamilies(); update();
@@ -382,7 +389,7 @@
           '<div class="table-scroll"><table class="cmp"><thead><tr><th scope="col">Dato</th>' +
           items.map(function (it) { return '<th scope="col">' + esc(it.name) + ' <button class="btn small" data-action="remove-compare" data-id="' + esc(it.id) + '" aria-label="Quitar ' + esc(it.name) + '">Quitar</button></th>'; }).join("") +
           "</tr></thead><tbody>" +
-          ROWS.map(function (r) { return '<tr><th scope="row">' + esc(r.label) + "</th>" + items.map(function (it) { return "<td>" + cell(it, r.k) + "</td>"; }).join("") + "</tr>"; }).join("") +
+          ROWS.map(function (r) { return '<tr><th scope="row">' + esc(r.label) + "</th>" + items.map(function (it) { return '<td data-pala="' + esc(it.name) + '">' + cell(it, r.k) + "</td>"; }).join("") + "</tr>"; }).join("") +
           "</tbody></table></div>";
       }
       return "<h1>Comparador</h1>" +
@@ -434,7 +441,7 @@
         (local.length ? '<div class="kv"><span class="k">Registros locales</span>' + local.map(function (m, i) {
           return '<div class="val">' + (m.mass ? '<span class="num">' + esc(m.mass) + " g</span>" : "") + (m.balance ? ' <span class="num">' + esc(m.balance) + " mm</span>" : "") + " " + K.ev("KM", "registro local") +
             '<span class="note">' + esc(m.date) + " · " + esc(m.who || "sin responsable") + " · " + esc(K.configSummary(m)) + " · " + esc(m.config) + (m.note ? " · " + esc(m.note) : "") +
-            ' <button class="btn small" data-action="del-measure" data-sample="' + esc(s.id) + '" data-idx="' + i + '">Borrar</button></span></div>';
+            '</span><button class="btn small" data-action="del-measure" data-sample="' + esc(s.id) + '" data-idx="' + i + '">Borrar registro</button></div>';
         }).join("") + "</div>" : "") + "</div>" +
       "<div><h4>Opinión de tester</h4>" + (s.tester.length ? s.tester.map(function (t) { return '<div class="kv"><span class="k">' + esc(t.who) + "</span>" + esc(t.text) + " " + K.ev("KT") + (t.note ? '<div class="small muted">' + esc(t.note) + "</div>" : "") + "</div>"; }).join("") : K.missing("PEND", s.testerNote)) +
         (s.tester.length && s.testerNote ? '<p class="small muted">' + esc(s.testerNote) + "</p>" : "") + "</div>" +
@@ -447,8 +454,8 @@
       '<div class="form-row"><label>Overgrips<select name="overgrips"><option value="">Sin dato</option><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label>' +
       '<label>Correa<select name="strap"><option value="">Sin dato</option><option value="si">Con correa</option><option value="no">Sin correa</option></select></label>' +
       '<label>Protector<select name="protector"><option value="">Sin dato</option><option value="si">Con protector</option><option value="no">Sin protector</option></select></label></div>' +
-      '<div class="form-row"><label>Configuración (obligatoria)<input name="config" required placeholder="grip, film, accesorios, cómo se apoyó"></label><label>Nota<input name="note" placeholder="lecturas, incertidumbre…"></label></div>' +
-      '<button class="btn small primary" type="submit">Guardar medición</button> <span class="small muted">Se guarda como “K · Medición interna” en este navegador.</span></form></details>' +
+      '<div class="form-row wide"><label>Configuración (obligatoria)<input name="config" required placeholder="grip, film, accesorios, cómo se apoyó"></label><label>Nota<input name="note" placeholder="lecturas, incertidumbre…"></label></div>' +
+      '<button class="btn small primary" type="submit">Guardar medición</button><p class="small muted form-help">Se guarda como “K · Medición interna” en este navegador.</p></form></details>' +
       K.noteField("sample-" + s.id, "Notas y opiniones locales") +
       '<p><button class="btn small primary" data-action="add-compare" data-id="' + esc(s.id) + '">Agregar al comparador</button></p>' +
       "</article>";
@@ -482,7 +489,7 @@
           (s.id === "etapa-d" ? '<table class="simple"><thead><tr><th>Modelo</th><th>Métrica principal</th><th>También debe cumplir</th></tr></thead><tbody>' + DATA.branches.map(function (b) { return "<tr><td><b>" + esc(b.name) + "</b></td><td>" + esc(b.tests.criterion.main) + "</td><td>" + esc(b.tests.criterion.also) + "</td></tr>"; }).join("") + "</tbody></table>" : "") +
           K.noteField("stage-" + s.id, "Notas locales") + "</article>";
       }).join("");
-      var loans = '<table class="simple"><thead><tr><th>#</th><th>Referencia</th><th>Para qué</th><th>Estado</th></tr></thead><tbody>' +
+      var loans = '<table class="simple"><thead><tr><th>Orden</th><th>Referencia</th><th>Para qué</th><th>Estado</th></tr></thead><tbody>' +
         DATA.loanRefs.map(function (l) {
           return "<tr><td>" + l.order + "</td><td><b>" + esc(l.name) + "</b>" + (l.refId ? ' <button class="btn small" data-action="add-compare" data-id="' + esc(l.refId) + '">+ comparar</button>' : ' <span class="miss">Sin ficha en el informe</span>') + "</td><td>" + esc(l.why) + "</td><td>" + statusSelect(l.id, LOAN_STATUS) + "</td></tr>";
         }).join("") + "</tbody></table>";

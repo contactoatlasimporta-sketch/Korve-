@@ -1,7 +1,7 @@
 /* Prueba de punta a punta con Playwright. Uso: node tests/e2e.js [carpeta-capturas] */
 const { chromium } = require("playwright");
 const path = require("path"), fs = require("fs"), assert = require("assert");
-const URL = "file://" + (process.env.KORVE_FILE || path.join(__dirname, "..", "index.html"));
+const URL = require("./target");
 const shots = process.argv[2];
 if (shots) fs.mkdirSync(shots, { recursive: true });
 
@@ -208,7 +208,7 @@ if (shots) fs.mkdirSync(shots, { recursive: true });
   mp.on("pageerror", (e) => errors.push("mobile pageerror: " + e.message));
   for (const v of ["mapa--CONTROL", "mercado", "comparador", "muestras", "desarrollo", "fabrica", "fuentes"]) {
     await mp.goto(URL + "#" + v); await mp.waitForTimeout(450);
-    const over = await mp.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    const over = await mp.evaluate(() => Math.max(document.documentElement.scrollWidth, window.innerWidth) - 390); /* innerWidth crece si algo desborda */
     assert.ok(over <= 1, v + ": desborde horizontal de " + over + "px");
     if (shots) await mp.screenshot({ path: path.join(shots, "m-" + v.replace("--", "-") + ".png") });
   }
