@@ -8,7 +8,9 @@
  *
  * El texto se mide con la fuente real del dispositivo (canvas.measureText) y se centra con
  * dominant-baseline="central"; las cajas se dimensionan a partir de esa medida. Así el resultado
- * no depende de las métricas de una fuente concreta (Helvetica en iOS, otra en Android/Linux).
+ * no depende de las métricas de una fuente concreta. Sora (títulos) e Inter (texto) se miden con
+ * la misma pila de fuentes del CSS y el mapa se vuelve a medir cuando terminan de cargar.
+ * El nodo central usa el logo de KORVE como imagen (la misma del encabezado).
  */
 (function () {
   var DATA = window.KORVE_DATA, K = window.K, esc = K.esc;
@@ -18,47 +20,60 @@
 
   var BRANCH_ANGLE = { HYBRID: -90, POWER: 150, CONTROL: 30 };
   var BR_DIST = 250;
-  var C = { root: "#ffffff", rootText: "#0d0d0d", accent: "#7a1f2e", accent2: "#9c2a3d", dark: "#1e1e1e", dark2: "#2a2a2a", item: "#141414", soft: "#e7d9db", white: "#ffffff" };
+  /* Paleta del mapa: misma base que el CSS (negros y grises); el verde del logo solo marca la rama activa. */
+  var C = { text: "#f2f4f1", muted: "#9aa29b", icon: "#c4cac4", accent: "#a8dd46",
+    node: "#161917", nodeActive: "#1f2320", aspect: "#141715", item: "#121513",
+    line: "#2c312d", line2: "#3a413b", strong: "#7d877e", noref: "#59605a" };
+  var LOGO_RATIO = 998 / 160; /* proporción del archivo del logo */
 
   function rad(a) { return a * Math.PI / 180; }
   function polar(cx, cy, r, a) { return { x: cx + r * Math.cos(rad(a)), y: cy + r * Math.sin(rad(a)) }; }
 
   /* ---------- Medición de texto ---------- */
-  var ctx = null, family = null;
-  function fontFamily(host) {
-    if (!family) {
-      var f = host ? getComputedStyle(host).fontFamily : "";
-      family = f || "Helvetica Neue, Helvetica, Arial, sans-serif";
+  var ctx = null, FAM = null;
+  function families() {
+    if (!FAM) {
+      var cs = getComputedStyle(document.documentElement);
+      FAM = { display: cs.getPropertyValue("--font-display").trim() || "Sora, sans-serif", body: cs.getPropertyValue("--font").trim() || "Inter, sans-serif" };
     }
-    return family;
+    return FAM;
   }
-  function measure(text, size, weight) {
+  function measure(text, size, weight, font) {
     if (!ctx) ctx = document.createElement("canvas").getContext("2d");
-    ctx.font = (weight || 400) + " " + size + "px " + family;
+    ctx.font = (weight || 400) + " " + size + "px " + families()[font || "body"];
     return ctx.measureText(text).width;
   }
   /* Corta en líneas según el ancho medido. Una palabra más larga que el máximo ocupa su propia línea. */
-  function wrap(text, size, weight, maxW) {
+  function wrap(text, size, weight, maxW, font) {
     var words = String(text).split(/\s+/).filter(Boolean), lines = [], cur = "";
     words.forEach(function (w) {
       var test = cur ? cur + " " + w : w;
-      if (cur && measure(test, size, weight) > maxW) { lines.push(cur); cur = w; } else cur = test;
+      if (cur && measure(test, size, weight, font) > maxW) { lines.push(cur); cur = w; } else cur = test;
     });
     if (cur) lines.push(cur);
     return lines;
   }
-  /* Bloque de texto: líneas con estilo. Devuelve { lines:[{t,size,weight,fill}], w, h }. */
+  /* Bloque de contenido de un nodo: líneas de texto, símbolo de perfil o logo.
+   * Devuelve { lines:[...], w, h } con las medidas reales. */
   function block(parts, maxW) {
     var lines = [], w = 0, h = 0;
     parts.forEach(function (p) {
+      if (p.logo) { var lh = p.logo / LOGO_RATIO; lines.push({ logo: true, w: p.logo, lh: lh, gap: 10 }); w = Math.max(w, p.logo); h += lh + 10; return; }
+      if (p.icon) { lines.push({ icon: p.icon, size: p.size, fill: p.fill, gap: 6 }); w = Math.max(w, p.size); h += p.size + 6; return; }
       if (!p.text) return;
-      wrap(p.text, p.size, p.weight, maxW).forEach(function (t) {
-        var lw = measure(t, p.size, p.weight);
+      wrap(p.text, p.size, p.weight, maxW, p.font).forEach(function (t) {
+        var lw = measure(t, p.size, p.weight, p.font);
         w = Math.max(w, lw); h += p.size * 1.28;
-        lines.push({ t: t, size: p.size, weight: p.weight || 400, fill: p.fill, w: lw });
+        lines.push({ t: t, size: p.size, weight: p.weight || 400, fill: p.fill, font: p.font || "body", w: lw });
       });
     });
+    var last = lines[lines.length - 1];
+    if (last && last.gap) h -= last.gap;
     return { lines: lines, w: w, h: h };
+  }
+  function logoSrc() {
+    var img = document.querySelector(".brand-logo");
+    return img ? (img.currentSrc || img.src) : "";
   }
 
   /* Ítems de tercer nivel según aspecto. */
@@ -82,14 +97,13 @@
   }
   function layoutRadial(path) {
     var nodes = [], edges = [];
-    var rb = block([{ text: "KORVE", size: 22, weight: 800, fill: C.rootText }, { text: "POWER · HYBRID · CONTROL", size: 11, weight: 400, fill: C.accent }], 120);
-    var rr = Math.max(62, Math.hypot(rb.w / 2, rb.h / 2) + 12);
-    nodes.push({ key: "root", level: 0, kind: "root", x: 0, y: 0, shape: "circle", r: rr, w: 2 * rr, h: 2 * rr, text: rb, label: "KORVE", sub: "3 palas" });
+    var rb = block([{ logo: 168 }, { text: "POWER · HYBRID · CONTROL", size: 11, weight: 500, fill: C.muted }], 200);
+    nodes.push({ key: "root", level: 0, kind: "root", x: 0, y: 0, shape: "rect", w: rb.w + 48, h: rb.h + 34, text: rb, label: "KORVE", sub: "3 palas" });
     /* Las tres ramas comparten radio (el que necesite la más larga): el tamaño no sugiere jerarquía. */
     var bText = {}, bR = 56;
     DATA.branches.forEach(function (b) {
-      var tb = block([{ text: b.name, size: 17, weight: 800, fill: C.white }, { text: b.tagline, size: 11, weight: 400, fill: C.soft }], 92);
-      bText[b.id] = tb; bR = Math.max(bR, Math.hypot(tb.w / 2, tb.h / 2) + 10);
+      var tb = block([{ icon: b.id, size: 20, fill: path.branch === b.id ? C.accent : C.icon }, { text: b.name, size: 16, weight: 600, font: "display", fill: C.text }, { text: b.tagline, size: 11.5, weight: 400, fill: C.muted }], 96);
+      bText[b.id] = tb; bR = Math.max(bR, Math.hypot(tb.w / 2, tb.h / 2) + 12);
     });
     DATA.branches.forEach(function (b) {
       var p = polar(0, 0, BR_DIST, BRANCH_ANGLE[b.id]);
@@ -104,7 +118,7 @@
       var base = BRANCH_ANGLE[b.id], n = DATA.aspects.length, spread = 230;
       var asp = DATA.aspects.map(function (as, i) {
         var items = itemsFor(b, as.id);
-        var t = block([{ text: as.label, size: 14, weight: 600, fill: C.white }, { text: items.length ? subLabel(items.length) : "", size: 11, weight: 400, fill: C.soft }], 124);
+        var t = block([{ text: as.label, size: 14, weight: 600, fill: C.text }, { text: items.length ? subLabel(items.length) : "", size: 11.5, weight: 400, fill: C.muted }], 124);
         return { as: as, items: items, text: t, w: Math.max(96, t.w + 26), h: t.h + 16, ang: base - spread / 2 + (spread * i) / (n - 1) };
       });
       var obstacles = nodes.slice(); /* raíz y ramas */
@@ -128,18 +142,31 @@
         var cosA = Math.cos(rad(a.ang));
         var side = Math.abs(cosA) > 0.2 ? (cosA > 0 ? 1 : -1) : (a.x >= 0 ? 1 : -1);
         var its = a.items.map(function (it) {
-          var t = block([{ text: it.label, size: 12.5, weight: 500, fill: C.white }], 176);
+          var t = block([{ text: it.label, size: 12.5, weight: 500, fill: C.text }], 176);
           return { it: it, text: t, w: Math.max(150, t.w + 24), h: t.h + 14 };
         });
         var colW = Math.max.apply(null, its.map(function (x) { return x.w; }));
         var total = its.reduce(function (s, x) { return s + x.h; }, 0) + 10 * (its.length - 1);
-        var y = a.y - total / 2, cx = a.x + side * (a.w / 2 + 56 + colW / 2);
+        /* La columna se aleja hacia afuera hasta no tocar ningún otro nodo (raíz, ramas ni aspectos). */
+        var others = nodes.concat(asp.filter(function (o) { return o !== a; }).map(function (o) { return { x: o.x, y: o.y, w: o.w, h: o.h }; }));
+        var off = 56, colBox;
+        for (var g2 = 0; g2 < 60; g2++) {
+          colBox = { x: a.x + side * (a.w / 2 + off + colW / 2), y: a.y, w: colW, h: total };
+          if (!others.some(function (o) { return overlap(colBox, o, 12); })) break;
+          off += 16;
+        }
+        var y = a.y - total / 2, cx = colBox.x;
+        /* Conexión en corchete: tronco horizontal, columna vertical y un tramo corto a cada ficha. */
+        var spineX = cx - side * (colW / 2 + 22), ys = [];
         its.forEach(function (x) {
           var cy = y + x.h / 2; y += x.h + 10;
           var isSel = path.item === x.it.id;
+          ys.push(cy);
           nodes.push({ key: "i:" + x.it.id, level: 3, kind: "item", itemKind: x.it.kind, branch: b.id, aspect: a.as.id, item: x.it.id, x: cx, y: cy, shape: "rect", w: colW, h: x.h, text: x.text, label: x.it.label, selected: isSel });
-          edges.push({ a: { x: a.x + side * a.w / 2, y: a.y }, b: { x: cx - side * colW / 2, y: cy }, strong: isSel });
+          edges.push({ d: "M" + spineX + "," + cy + " H" + (cx - side * colW / 2), strong: isSel });
         });
+        edges.push({ d: "M" + (a.x + side * a.w / 2) + "," + a.y + " H" + spineX, strong: true });
+        edges.push({ d: "M" + spineX + "," + Math.min(ys[0], a.y) + " V" + Math.max(ys[ys.length - 1], a.y), strong: true });
       });
     });
     return { nodes: nodes, edges: edges };
@@ -148,8 +175,8 @@
   /* ---------- Disposición vertical (celulares) ---------- */
   function layoutVertical(path, W) {
     var nodes = [], edges = [], pad = 12, gap = 8;
-    var rb = block([{ text: "KORVE", size: 20, weight: 800, fill: C.rootText }, { text: "POWER · HYBRID · CONTROL", size: 11.5, weight: 400, fill: C.accent }], W - 2 * pad - 28);
-    var root = { key: "root", level: 0, kind: "root", shape: "rect", w: rb.w + 36, h: rb.h + 20, x: W / 2, text: rb, label: "KORVE", sub: "3 palas" };
+    var rb = block([{ logo: Math.min(150, W - 2 * pad - 60) }, { text: "POWER · HYBRID · CONTROL", size: 11, weight: 500, fill: C.muted }], W - 2 * pad - 28);
+    var root = { key: "root", level: 0, kind: "root", shape: "rect", w: Math.max(rb.w + 48, 210), h: rb.h + 30, x: W / 2, text: rb, label: "KORVE", sub: "3 palas" };
     root.y = 14 + root.h / 2;
     nodes.push(root);
 
@@ -157,13 +184,13 @@
     var order = ["POWER", "HYBRID", "CONTROL"];
     var bt = order.map(function (id) {
       var b = K.branchById[id];
-      return block([{ text: b.name, size: 15, weight: 800, fill: C.white }, { text: b.tagline, size: 11.5, weight: 400, fill: C.soft }], bw - 14);
+      return block([{ icon: id, size: 18, fill: path.branch === id ? C.accent : C.icon }, { text: b.name, size: 15, weight: 600, font: "display", fill: C.text }, { text: b.tagline, size: 11.5, weight: 400, fill: C.muted }], bw - 14);
     });
-    var bh = Math.max.apply(null, bt.map(function (t) { return t.h; })) + 18;
+    var bh = Math.max.apply(null, bt.map(function (t) { return t.h; })) + 24;
     var y = rowTop + bh;
     order.forEach(function (id, i) {
       var b = K.branchById[id], sel = path.branch === id;
-      var bn = { key: "b:" + id, level: 1, kind: "branch", branch: id, shape: "rect", w: bw, h: bh, x: pad + bw / 2 + i * (bw + gap), y: rowTop + bh / 2, text: bt[i], label: b.name, sub: b.tagline, selected: sel && !path.aspect, active: sel, dim: path.branch && !sel };
+      var bn = { key: "b:" + id, level: 1, kind: "branch", branch: id, shape: "rect", valign: "top", w: bw, h: bh, x: pad + bw / 2 + i * (bw + gap), y: rowTop + bh / 2, text: bt[i], label: b.name, sub: b.tagline, selected: sel && !path.aspect, active: sel, dim: path.branch && !sel };
       nodes.push(bn);
       edges.push({ d: "M" + root.x + "," + (root.y + root.h / 2) + " V" + (rowTop - 14) + " H" + bn.x + " V" + rowTop, strong: sel });
     });
@@ -173,7 +200,7 @@
       y = top;
       DATA.aspects.forEach(function (as) {
         var items = itemsFor(b, as.id), aSel = path.aspect === as.id;
-        var t = block([{ text: as.label, size: 15, weight: 600, fill: C.white }, { text: items.length ? subLabel(items.length) : "", size: 12, weight: 400, fill: C.soft }], aw - 28);
+        var t = block([{ text: as.label, size: 15, weight: 600, fill: C.text }, { text: items.length ? subLabel(items.length) : "", size: 12, weight: 400, fill: C.muted }], aw - 28);
         var h = t.h + 18;
         var an = { key: "a:" + b.id + ":" + as.id, level: 2, kind: "aspect", branch: b.id, aspect: as.id, shape: "rect", align: "start", w: aw, h: h, x: x0 + aw / 2, y: y + h / 2, text: t,
           label: as.label, sub: items.length ? subLabel(items.length) : "", selected: aSel && !path.item, active: aSel, dim: path.aspect && !aSel };
@@ -183,7 +210,7 @@
         if (aSel && items.length) {
           var ispine = x0 + 14, xi = x0 + 30, iw = W - pad - xi, iys = [], yStart = y - 10 + 0;
           items.forEach(function (it) {
-            var tt = block([{ text: it.label, size: 13.5, weight: 500, fill: C.white }], iw - 26);
+            var tt = block([{ text: it.label, size: 13.5, weight: 500, fill: C.text }], iw - 26);
             var ih = tt.h + 16, isSel = path.item === it.id;
             nodes.push({ key: "i:" + it.id, level: 3, kind: "item", itemKind: it.kind, branch: b.id, aspect: as.id, item: it.id, shape: "rect", align: "start", w: iw, h: ih, x: xi + iw / 2, y: y + ih / 2, text: tt, label: it.label, selected: isSel });
             iys.push(y + ih / 2);
@@ -206,13 +233,30 @@
     for (var k in attrs) if (attrs[k] !== undefined && attrs[k] !== null) e.setAttribute(k, attrs[k]);
     return e;
   }
-  /* Dibuja las líneas centradas verticalmente en la caja, sin depender de las métricas de la fuente. */
+  /* Dibuja el contenido centrado verticalmente en la caja, sin depender de las métricas de la fuente. */
   function drawText(g, n) {
-    var t = n.text, y = -t.h / 2, start = n.align === "start";
+    /* valign "top": las tres ramas en fila alinean símbolo y nombre a la misma altura aunque el lema ocupe más líneas. */
+    var t = n.text, y = n.valign === "top" ? -n.h / 2 + 12 : -t.h / 2, start = n.align === "start", fam = families();
     t.lines.forEach(function (ln) {
+      if (ln.logo) {
+        var im = el("image", { x: -ln.w / 2, y: y, width: ln.w, height: ln.lh, preserveAspectRatio: "xMidYMid meet" });
+        var src = logoSrc();
+        im.setAttribute("href", src); im.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", src);
+        g.appendChild(im);
+        y += ln.lh + ln.gap;
+        return;
+      }
+      if (ln.icon) {
+        var ic = el("g", { transform: "translate(" + ((start ? -n.w / 2 + 14 : -ln.size / 2)) + "," + y + ") scale(" + (ln.size / 24) + ")",
+          fill: "none", stroke: ln.fill, color: ln.fill, "stroke-width": 1.8, "stroke-linecap": "round", "stroke-linejoin": "round" });
+        ic.innerHTML = K.branchIconPaths(ln.icon);
+        g.appendChild(ic);
+        y += ln.size + ln.gap;
+        return;
+      }
       var lh = ln.size * 1.28;
       var tx = el("text", { x: start ? -n.w / 2 + 14 : 0, y: y + lh / 2, "text-anchor": start ? "start" : "middle", "dominant-baseline": "central",
-        "font-size": ln.size, "font-weight": ln.weight, fill: n.selected && n.kind === "item" ? C.rootText : ln.fill });
+        "font-family": fam[ln.font], "font-size": ln.size, "font-weight": ln.weight, fill: ln.fill });
       tx.textContent = ln.t;
       g.appendChild(tx);
       y += lh;
@@ -223,8 +267,13 @@
     this.host = host; this.onSelect = onSelect;
     this.path = {};
     this.cam = { x: 0, y: 0, s: 1 };
-    fontFamily(host);
     this.build();
+    /* Cuando Sora e Inter terminan de cargar, se vuelve a medir y dibujar con sus métricas reales. */
+    var self = this;
+    if (document.fonts && document.fonts.load) {
+      Promise.all(["600 16px Sora", "400 12px Inter", "500 12px Inter", "600 14px Inter"].map(function (f) { return document.fonts.load(f).catch(function () {}); }))
+        .then(function () { if (self.destroyed) return; FAM = null; self.render(); if (!self.flow) self.focus(false); });
+    }
   }
 
   MapView.prototype.isFlow = function () { return (this.host.clientWidth || 800) < FLOW_MAX; };
@@ -399,7 +448,7 @@
     rel.forEach(function (n) { x0 = Math.min(x0, n.x - n.w / 2); x1 = Math.max(x1, n.x + n.w / 2); y0 = Math.min(y0, n.y - n.h / 2); y1 = Math.max(y1, n.y + n.h / 2); });
     var w = this.canvas.clientWidth || 600, h = this.canvas.clientHeight || 500, pad = 20;
     var k = Math.min((w - 2 * pad) / (x1 - x0), (h - 2 * pad) / (y1 - y0));
-    var t = { x: (x0 + x1) / 2, y: (y0 + y1) / 2, s: this.clampS(Math.min(2.2, k / this.baseScale())) };
+    var t = { x: (x0 + x1) / 2, y: (y0 + y1) / 2, s: this.clampS(Math.min(1.5, k / this.baseScale())) };
     if (animate) this.animateTo(t); else { this.cam = t; this.apply(); }
   };
 
@@ -468,13 +517,15 @@
         "data-branch": n.branch, "data-aspect": n.aspect, "data-item": n.item });
       g.setAttribute("aria-label", n.label + (n.sub ? ", " + n.sub : "") + (n.selected ? ", seleccionado" : ""));
       var title = el("title", {}); title.textContent = n.label; g.appendChild(title);
-      var fill, stroke = C.accent2, sw = 1.5, dash = null;
-      if (n.kind === "root") { fill = C.root; stroke = C.accent; sw = 3; }
-      else if (n.kind === "branch") fill = n.active ? C.accent : C.dark;
-      else if (n.kind === "aspect") fill = n.active ? C.accent2 : C.dark2;
-      else { fill = n.selected ? C.white : C.item; stroke = n.itemKind === "noref" ? "#8a8a8a" : C.white; sw = 1.2; dash = n.itemKind === "noref" ? "4 3" : null; }
+      /* Jerarquía por forma y trazo, no por color: raíz con logo, ramas con símbolo, aspectos y fichas.
+       * La selección (CSS) usa el verde del logo; la ruta activa, un gris más claro. */
+      var fill, stroke, sw = 1.25, dash = null, rx = 10;
+      if (n.kind === "root") { fill = C.node; stroke = C.line2; rx = 14; }
+      else if (n.kind === "branch") { fill = n.active ? C.nodeActive : C.node; stroke = n.active ? C.strong : C.line2; }
+      else if (n.kind === "aspect") { fill = n.active ? C.nodeActive : C.aspect; stroke = n.active ? C.strong : C.line; }
+      else { fill = n.selected ? C.nodeActive : C.item; stroke = n.itemKind === "noref" ? C.noref : C.line2; dash = n.itemKind === "noref" ? "4 3" : null; rx = 8; }
       if (n.shape === "circle") g.appendChild(el("circle", { r: n.r, "class": "shape", fill: fill, stroke: stroke, "stroke-width": sw }));
-      else g.appendChild(el("rect", { x: -n.w / 2, y: -n.h / 2, width: n.w, height: n.h, rx: n.kind === "item" ? 7 : 10, "class": "shape", fill: fill, stroke: stroke, "stroke-width": sw, "stroke-dasharray": dash }));
+      else g.appendChild(el("rect", { x: -n.w / 2, y: -n.h / 2, width: n.w, height: n.h, rx: rx, "class": "shape", fill: fill, stroke: stroke, "stroke-width": sw, "stroke-dasharray": dash }));
       drawText(g, n);
       self.gNodes.appendChild(g);
     });
@@ -496,7 +547,7 @@
     return it ? it.label : p.item;
   }
 
-  MapView.prototype.destroy = function () { if (this.resizeObs) this.resizeObs.disconnect(); cancelAnimationFrame(this.raf); };
+  MapView.prototype.destroy = function () { this.destroyed = true; if (this.resizeObs) this.resizeObs.disconnect(); cancelAnimationFrame(this.raf); };
 
   window.KMap = { MapView: MapView, itemsFor: itemsFor, FLOW_MAX: FLOW_MAX };
 })();

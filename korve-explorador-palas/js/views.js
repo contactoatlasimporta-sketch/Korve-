@@ -45,7 +45,7 @@
   V.devMini = function (d) {
     var st = K.getStatus(d.id);
     return '<div class="card">' +
-      '<h3><span class="prio" title="Prioridad">P' + d.priority + "</span> " + esc(d.change) + "</h3>" +
+      '<h3><span class="prio p' + d.priority + '" title="Prioridad ' + d.priority + '">P' + d.priority + "</span> " + esc(d.change) + "</h3>" +
       '<div class="kv"><span class="k">Beneficio esperado</span>' + esc(d.benefit) + " " + K.ev("PR", "hipótesis") + "</div>" +
       '<div class="kv"><span class="k">Prueba que decide</span>' + esc(d.test) + "</div>" +
       '<div class="kv"><span class="k">Estado</span><span class="status-pill">' + esc(K.statusLabel(st)) + "</span>" + (st !== "pendiente" ? ' <span class="status-local">(editado localmente)</span>' : "") + "</div>" +
@@ -101,7 +101,7 @@
         return "<li><b>" + esc(label) + "</b> <span class=\"chip\">" + esc(it.tier) + "</span> — " + esc(it.why) + " " +
           (it.refId ? '<button class="btn small" data-map-go="' + b.id + '/refs/' + it.refId + '">Ficha</button>' : '<span class="miss">Sin ficha técnica en el informe</span>') + "</li>";
       }).join("") + "</ul>";
-      if (a.id === "develop") more += '<ul class="clean">' + c.devIds.map(function (id) { var d = K.devById[id]; return '<li><span class="prio">P' + d.priority + "</span> " + esc(d.change) + ' — <span class="status-pill">' + esc(K.statusLabel(K.getStatus(id))) + "</span></li>"; }).join("") + "</ul>";
+      if (a.id === "develop") more += '<ul class="clean">' + c.devIds.map(function (id) { var d = K.devById[id]; return '<li><span class="prio p' + d.priority + '">P' + d.priority + "</span> " + esc(d.change) + ' — <span class="status-pill">' + esc(K.statusLabel(K.getStatus(id))) + "</span></li>"; }).join("") + "</ul>";
       if (a.id === "tests") more += '<div class="kv"><span class="k">Métrica principal (criterio Etapa D)</span>' + esc(c.criterion.main) + " " + propBadge() + '</div><div class="kv"><span class="k">También debe cumplir</span>' + esc(c.criterion.also) + '</div><p class="small">Todas las pruebas figuran como <b>pendientes</b>. <a href="#desarrollo">Ver plan y estados</a></p>';
       var det = c.details && c.details.length ? "<details" + (hl ? " open" : "") + "><summary>Más detalle</summary>" + list(c.details) + "</details>" : "";
       return '<section class="aspect' + (hl ? " highlight" : "") + '" id="aspect-' + a.id + '"><h3>' + esc(a.label) +
@@ -109,9 +109,10 @@
     }).join("");
     var w = b.window;
     return top +
-      "<h2>" + esc(b.name) + ' <span class="muted small">' + esc(b.tagline) + "</span></h2>" +
-      '<div class="banner"><b>Ventana exploratoria</b> ' + propBadge() + "<br>Masa " + esc(w.mass) + " · Balance " + esc(w.balance) +
-      '<br><span class="small">Decisión pendiente: ' + esc(w.pending) + '</span><br><span class="small muted">' + esc(DATA.windowNote) + "</span></div>" +
+      '<h2 class="branch-title">' + K.branchIcon(b.id) + esc(b.name) + ' <span class="branch-tag">' + esc(b.tagline) + "</span></h2>" +
+      '<div class="banner neutral"><b>Ventana exploratoria</b> ' + propBadge() +
+      '<div class="window"><div><span class="k">Masa</span><span class="num">' + esc(w.mass) + '</span></div><div><span class="k">Balance</span><span class="num">' + esc(w.balance) + "</span></div></div>" +
+      '<span class="small">Decisión pendiente: ' + esc(w.pending) + '</span><br><span class="small muted">' + esc(DATA.windowNote) + "</span></div>" +
       asp + K.noteField("branch-" + b.id, "Notas locales sobre " + b.name);
   }
 
@@ -143,8 +144,9 @@
       "<h2>Conclusión del informe</h2><p>" + esc(m.conclusion) + "</p>" +
       "<details><summary>Por qué no hay ranking</summary><p>" + esc(m.noBest) + "</p></details>" +
       "<h3>Recomendación " + K.ev("A") + "</h3><p>" + esc(m.recommendation) + "</p>" +
-      '<div class="grid">' + DATA.branches.map(function (b) {
-        return '<button class="btn" data-map-go="' + b.id + '"><b>' + esc(b.name) + "</b> — " + esc(b.tagline) + "</button>";
+      '<div class="branch-links">' + ["POWER", "HYBRID", "CONTROL"].map(function (id) {
+        var b = K.branchById[id];
+        return '<button class="branch-link" type="button" data-map-go="' + b.id + '">' + K.branchIcon(b.id) + "<b>" + esc(b.name) + "</b><span>" + esc(b.tagline) + "</span></button>";
       }).join("") + "</div>" +
       "<h3>Decisiones recomendadas ahora " + K.ev("PR") + "</h3>" + list(DATA.recommendedDecisions) +
       "<details><summary>Tendencias que sí importan</summary>" + DATA.trends.map(function (t) { return "<h4>" + esc(t.title) + "</h4><p class=\"small\">" + esc(t.summary) + " " + esc(t.detail) + "</p>"; }).join("") + "</details>";
@@ -169,7 +171,7 @@
         '<label>Familia<select id="f-family"></select></label>' +
         '<label>Temporada<select id="f-season"><option value="">Todas</option>' + seasons.map(function (s) { return '<option value="' + s + '"' + (F.season === s ? " selected" : "") + ">" + seasonLabel[s] + "</option>"; }).join("") + "</select></label>" +
         '<label>Cobertura<select id="f-coverage"><option value="">Todas</option><option value="completa"' + (F.coverage === "completa" ? " selected" : "") + '>Completa de la página revisada</option><option value="parcial"' + (F.coverage === "parcial" ? " selected" : "") + ">Parcial</option></select></label>" +
-        '<label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="f-refs"' + (F.onlyRefs ? " checked" : "") + "> Solo con ficha técnica en el informe</label>" +
+        '<label class="check"><input type="checkbox" id="f-refs"' + (F.onlyRefs ? " checked" : "") + "> Solo con ficha técnica en el informe</label>" +
         /* En celulares el grupo arranca plegado para que los resultados queden cerca; en pantallas anchas, abierto. */
         '<details class="feature-filter" id="feat-details"' + (F.features.length || !(window.matchMedia && window.matchMedia("(max-width: 640px)").matches) ? " open" : "") + '>' +
         '<summary>Características documentadas <span id="feat-count">' + featCount() + '</span></summary><fieldset><legend class="sr-only">Características documentadas en el informe</legend><p class="small muted">Se combinan con “y”.</p>' +
@@ -473,7 +475,7 @@
     html: function () {
       var dev = DATA.devItems.map(function (d) {
         var res = (d.results || []);
-        return '<article class="card aspect" id="dev-' + esc(d.id) + '"><div class="dev-card"><div><span class="prio" title="Prioridad ' + d.priority + '">P' + d.priority + "</span></div><div>" +
+        return '<article class="card aspect" id="dev-' + esc(d.id) + '"><div class="dev-card"><div><span class="prio p' + d.priority + '" title="Prioridad ' + d.priority + '">P' + d.priority + "</span></div><div>" +
           "<h3>" + esc(d.change) + "</h3>" +
           '<p class="small">' + d.models.map(function (m) { return '<span class="chip">' + esc(m) + "</span>"; }).join("") + "</p>" +
           '<div class="kv"><span class="k">Beneficio esperado</span>' + esc(d.benefit) + " " + K.ev("PR", "hipótesis") + "</div>" +
@@ -486,7 +488,7 @@
         return '<article class="card aspect"><h3>' + esc(s.name) + "</h3><p>" + esc(s.summary) + " " + K.ev("PR") + "</p>" +
           '<div class="kv"><span class="k">Estado</span>' + statusSelect(s.id, DATA.statusOptions) + "</div>" +
           "<details><summary>Pasos propuestos</summary>" + list(s.steps) + "</details>" +
-          (s.id === "etapa-d" ? '<table class="simple"><thead><tr><th>Modelo</th><th>Métrica principal</th><th>También debe cumplir</th></tr></thead><tbody>' + DATA.branches.map(function (b) { return "<tr><td><b>" + esc(b.name) + "</b></td><td>" + esc(b.tests.criterion.main) + "</td><td>" + esc(b.tests.criterion.also) + "</td></tr>"; }).join("") + "</tbody></table>" : "") +
+          (s.id === "etapa-d" ? '<table class="simple"><thead><tr><th>Modelo</th><th>Métrica principal</th><th>También debe cumplir</th></tr></thead><tbody>' + DATA.branches.map(function (b) { return "<tr><td><b class=\"branch-title\">" + K.branchIcon(b.id) + esc(b.name) + "</b></td><td>" + esc(b.tests.criterion.main) + "</td><td>" + esc(b.tests.criterion.also) + "</td></tr>"; }).join("") + "</tbody></table>" : "") +
           K.noteField("stage-" + s.id, "Notas locales") + "</article>";
       }).join("");
       var loans = '<table class="simple"><thead><tr><th>Orden</th><th>Referencia</th><th>Para qué</th><th>Estado</th></tr></thead><tbody>' +
@@ -513,7 +515,7 @@
           '<div class="kv"><span class="k">Muestras propias</span>' + f.samples.map(function (id) { var s = K.sampleById[id]; return '<a class="chip" href="#muestras--' + id + '">' + esc(s.name) + " · " + esc(s.role) + "</a>"; }).join(" ") + "</div>" +
           "<h3>Qué podría aportar a la línea</h3>" +
           '<table class="simple"><thead><tr><th>Perfil</th><th>Escenario si se elige</th><th>Estado</th></tr></thead><tbody>' +
-          f.contributes.map(function (c) { return "<tr><td><b>" + esc(c.profile) + "</b></td><td>" + esc(c.text) + " " + K.ev("PR") + '</td><td><span class="status-pill">' + esc(c.status) + "</span></td></tr>"; }).join("") + "</tbody></table>" +
+          f.contributes.map(function (c) { return "<tr><td><b class=\"branch-title\">" + (K.branchById[c.profile] ? K.branchIcon(c.profile) : "") + esc(c.profile) + "</b></td><td>" + esc(c.text) + " " + K.ev("PR") + '</td><td><span class="status-pill">' + esc(c.status) + "</span></td></tr>"; }).join("") + "</tbody></table>" +
           "<h3>Declarado por la fábrica " + K.ev("KP") + "</h3>" + list(f.declared) +
           "<h3>Qué falta validar</h3>" + '<ul class="clean">' + f.toValidate.map(function (t) { return "<li>" + esc(t) + ' <span class="status-pill">Pendiente</span></li>'; }).join("") + "</ul>" +
           K.noteField("factory-" + f.id, "Notas locales sobre " + f.name) + "</article>";

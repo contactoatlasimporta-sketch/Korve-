@@ -247,6 +247,19 @@
     return [og, tri(c.strap, "con correa", "sin correa") || "correa: sin dato", tri(c.protector, "con protector", "sin protector") || "protector: sin dato"].join(" · ");
   };
 
+  /* Símbolos de perfil, en trazo fino sobre una grilla de 24: POWER (diagonal ascendente, como el
+   * corte del logo), HYBRID (mitad llena: equilibrio), CONTROL (mira: precisión). Son los mismos en
+   * el mapa y en las vistas; diferencian sin agregar colores. */
+  var ICONS = {
+    POWER: '<path d="M5 19L19 5"/><path d="M9.5 5H19v9.5"/>',
+    HYBRID: '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none"/>',
+    CONTROL: '<circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4"/>'
+  };
+  K.branchIconPaths = function (id) { return ICONS[id] || ""; };
+  K.branchIcon = function (id, cls) {
+    return '<svg class="ico-branch' + (cls ? " " + cls : "") + '" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[id] || "") + "</svg>";
+  };
+
   /* Etiqueta del item comparable (referencia o muestra). */
   K.itemName = function (id) {
     if (K.refById[id]) return K.refById[id].name;

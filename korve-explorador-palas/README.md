@@ -23,7 +23,15 @@ En pantallas angostas el mapa pasa a una disposición vertical: KORVE arriba, la
 
 Usá `dist/korve-explorador.html`: es la app completa en un solo archivo. Descomprimí el ZIP en Archivos (iPhone) o en Files de Google (Android) y abrí ese archivo con el navegador.
 
-Para regenerarlo después de editar los datos: `node tools/build-single.js`. Ese comando también genera `dist/artifact.html`, la variante que se publica como vista previa en el chat de Claude.
+Para regenerarlo después de editar los datos o el diseño: `node tools/build-single.js`. El logo y las fuentes quedan incrustados en el archivo, que no depende de ninguna otra ruta. Ese comando también genera `dist/artifact.html`, la variante que se publica como vista previa en el chat de Claude.
+
+## Identidad visual
+
+- **Logo:** `assets/korve-logo.png`, recortado del archivo original sin redibujar (solo se quitó el margen vacío; proporción 6,24 : 1). Tiene letras blancas, por eso va sobre negro: en el encabezado y en el nodo central del mapa.
+- **Color:** negro, grises y blanco. El verde `#A8DD46` se midió en el logo y marca solo estados: pestaña activa, foco del teclado, selección en el mapa y la rama elegida. Sobre fondo blanco se usa el mismo tono oscurecido (`#4C7C10`) para que se lea.
+- **Tipografía:** Sora en títulos e Inter en textos, incluidas en `fonts/` (licencia SIL OFL 1.1, ver `fonts/LICENSE-*.txt`), así que funcionan sin conexión. Si no cargan, el navegador usa las fuentes del sistema.
+- **Perfiles:** POWER, HYBRID y CONTROL comparten colores y se distinguen por un símbolo: diagonal ascendente, círculo a medio llenar y mira.
+- **Etiquetas de evidencia:** cada una lleva su texto; el trazo (lleno, contorno, discontinuo, punteado, doble) refuerza la diferencia sin depender del color.
 
 ## Vistas
 

@@ -65,7 +65,7 @@
   function toast(msg) {
     var t = document.createElement("div");
     t.setAttribute("role", "status");
-    t.style.cssText = "position:fixed;bottom:calc(16px + env(safe-area-inset-bottom, 0px));left:50%;transform:translateX(-50%);background:#0d0d0d;color:#fff;padding:10px 14px;border-radius:8px;z-index:50;font-size:14px;max-width:90vw;border-left:4px solid #9c2a3d";
+    t.className = "toast";
     t.textContent = msg; document.body.appendChild(t);
     setTimeout(function () { t.remove(); }, 2600);
   }
