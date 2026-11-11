@@ -262,6 +262,13 @@ window.KORVE_DATA.evidence = {
   A:  { code: "A",  label: "Análisis del informe", desc: "Interpretación o criterio de uso escrito en el informe a partir de las fuentes." }
 };
 
+/* Escalas de dureza. Solo se comparan valores de la misma escala identificada. */
+window.KORVE_DATA.hardnessScales = {
+  "shore-c": "Shore C",
+  "comercial-10": "Escala comercial 0–10 propia de la marca",
+  "sin-escala": "Denominación sin escala identificada"
+};
+
 /* Estados para datos ausentes. */
 window.KORVE_DATA.missingStates = {
   NP: "No publicado",
@@ -893,7 +900,7 @@ window.KORVE_DATA = window.KORVE_DATA || {};
       url: "https://www.babolat.com/es/padel/palas.html",
       mass: D("370 ±10", "g"), balance: Q("Alto"),
       face: D("3K"), core: D("Hard EVA"), finish: M("NP"),
-      hardness: { v: "“Hard” EVA (sin escala)", ev: "D", note: "Denominación comercial, sin escala." },
+      hardness: { v: "“Hard” EVA (sin escala)", scale: "sin-escala", ev: "D", note: "Denominación comercial, sin escala." },
       other: D("38 mm"),
       use: "Ataque firme; 38 mm.",
       config: NO_CONFIG,
@@ -950,7 +957,7 @@ window.KORVE_DATA = window.KORVE_DATA || {};
       url: "https://www.siuxpadel.com/products/obsidian-pro-2027-silver",
       mass: D("355–375", "g"), balance: Q("Bajo"),
       face: D("16K"), core: D("EVA Soft"), finish: D("Satinado + 3D"),
-      hardness: { v: "5/10 (escala comercial, no Shore)", ev: "D", note: "No equiparar con Shore C." },
+      hardness: { v: "5/10 (escala comercial, no Shore)", scale: "comercial-10", ev: "D", note: "No equiparar con Shore C." },
       other: D("Forma lágrima"),
       use: "Lágrima de control; dureza comercial 5/10, no Shore.",
       config: NO_CONFIG, friction: M("NP"),
@@ -961,7 +968,7 @@ window.KORVE_DATA = window.KORVE_DATA || {};
       mass: D("370", "g"), balance: M("NP", "Balance no publicado en mm."),
       face: { v: "HES Carbon", ev: "D", note: "HES es denominación comercial, no caracterización completa." },
       core: D("Hard"), finish: M("NP"),
-      hardness: { v: "“Hard” (sin escala)", ev: "D", note: "Denominación comercial sin escala." },
+      hardness: { v: "“Hard” (sin escala)", scale: "sin-escala", ev: "D", note: "Denominación comercial sin escala." },
       other: M("NP"),
       use: "Ataque; HES es denominación comercial, no caracterización completa.",
       config: NO_CONFIG, friction: M("NP", "El dato L 0,865 corresponde a Ultimate Pro Smash 2026, otro modelo."),
@@ -971,7 +978,7 @@ window.KORVE_DATA = window.KORVE_DATA || {};
       url: "https://www.oxdog.net/en/padel",
       mass: D("350", "g"), balance: M("NP", "Balance no publicado en mm."),
       face: D("HES Carbon"), core: D("Medium+"), finish: M("NP"),
-      hardness: { v: "“Medium+” (sin escala)", ev: "D", note: "Denominación comercial sin escala." },
+      hardness: { v: "“Medium+” (sin escala)", scale: "sin-escala", ev: "D", note: "Denominación comercial sin escala." },
       other: M("NP"),
       use: "Evaluar si conserva estabilidad con menor masa; no asumirlo.",
       config: NO_CONFIG, friction: M("NP"),
@@ -1023,6 +1030,7 @@ window.KORVE_DATA = window.KORVE_DATA || {};
       other: D("Cara orientada 45° (declarado)"),
       use: "Cara orientada 45° declarada; requiere sumar accesorios para comparar.",
       config: "Peso declarado sin correa. Resto de accesorios no especificado.",
+      configSpecs: [{ label: "Peso declarado", overgrips: null, strap: false, protector: null }],
       friction: M("NP"),
       pending: ["Balance en mm", "Peso de la correa", "Acabado"] },
 
@@ -1116,10 +1124,11 @@ window.KORVE_DATA = window.KORVE_DATA || {};
         balance: [{ v: "268 ±3", u: "mm", ev: "KO", note: "Objetivo solicitado, no medición." }, M("PEND", "Medición individual pendiente (Etapa A).")],
         face: { v: "Exterior 12K Twill; 2 carbono + 1 vidrio", ev: "KP" },
         core: { v: "H/S/H; EVA parcial de mango ≈10 g", ev: "KP" },
-        hardness: { v: "28/15/28 Shore C", ev: "KP", note: "Escala Shore C declarada por proveedor." },
+        hardness: { v: "28/15/28 Shore C", scale: "shore-c", ev: "KP", note: "Escala Shore C declarada por proveedor." },
         finish: { v: "Mate arenoso, sin 3D", ev: "KP" },
         other: { v: "Marco carbono 0/90/±45° (marco/puente)", ev: "KP" },
         config: "Objetivo con grip original + correa, sin overgrip ni protector.",
+        configSpecs: [{ label: "Objetivo solicitado", overgrips: 0, strap: true, protector: false }],
         friction: M("PEND", "No medida."),
         pending: ["Masa real (0,1 g)", "Balance real (mm)", "Inercia y torsión", "Resultado de cancha"]
       } },
@@ -1150,10 +1159,11 @@ window.KORVE_DATA = window.KORVE_DATA || {};
         balance: [{ v: "250 ±3", u: "mm", ev: "KO", note: "Objetivo solicitado, no medición." }, M("PEND", "Medición individual pendiente (Etapa A).")],
         face: { v: "Carbono, designación T700; 2 carbono + 1 vidrio", ev: "KP", note: "T700 no equivale a un número K." },
         core: { v: "H/S/H (mismo que W3)", ev: "KP" },
-        hardness: { v: "28/15/28 Shore C", ev: "KP" },
+        hardness: { v: "28/15/28 Shore C", scale: "shore-c", ev: "KP", note: "Escala Shore C declarada por proveedor." },
         finish: { v: "Mate arenoso, sin 3D", ev: "KP" },
         other: { v: "“Flat-laid” pendiente de precisión", ev: "KP" },
         config: "Objetivo con grip original + correa, sin overgrip ni protector.",
+        configSpecs: [{ label: "Objetivo solicitado", overgrips: 0, strap: true, protector: false }],
         friction: M("PEND", "No medida."),
         pending: ["Masa real (0,1 g)", "Balance real (mm)", "Precisión de “flat-laid”", "Masa periférica necesaria", "Resultado de cancha"]
       } },
@@ -1197,6 +1207,10 @@ window.KORVE_DATA = window.KORVE_DATA || {};
         finish: { v: "Mate arenoso + 3D", ev: "KP" },
         other: M("NI"),
         config: "Proveedor: grip + correa sin overgrip. Medición interna: dos overgrips, sin protector.",
+        configSpecs: [
+          { label: "Referencia de proveedor", overgrips: 0, strap: true, protector: null },
+          { label: "Medición interna (Tomás Sánchez)", overgrips: 2, strap: null, protector: false }
+        ],
         friction: M("PEND", "No medida."),
         pending: ["Balance medido", "Ficha normalizada (sin overgrips)", "Inercia y torsión"]
       } },
@@ -1225,10 +1239,11 @@ window.KORVE_DATA = window.KORVE_DATA || {};
         balance: [{ missing: "BLANK", note: "Medición de Tomás: balance en blanco." }],
         face: { v: "Carbono", ev: "KP" },
         core: { v: "EVA medio", ev: "KP" },
-        hardness: { v: "“Medio” (sin escala)", ev: "KP", note: "Sin escala identificada." },
+        hardness: { v: "“Medio” (sin escala)", scale: "sin-escala", ev: "KP", note: "Sin escala identificada." },
         finish: { v: "Liso / brillante", ev: "KP" },
         other: M("NI"),
         config: "Medición interna: dos overgrips, sin protector.",
+        configSpecs: [{ label: "Medición interna (Tomás Sánchez)", overgrips: 2, strap: null, protector: false }],
         friction: M("PEND", "No medida."),
         pending: ["Balance medido", "Ficha normalizada", "Rol por pruebas"]
       } }
@@ -1613,17 +1628,137 @@ window.KORVE_DATA.windowNote = "Ventanas exploratorias, no especificaciones fina
   var mem = null;
   function blank() { return { version: 1, notes: {}, status: {}, measurements: {}, results: {}, factoryNotes: {}, compare: [] }; }
   K.storageOk = true;
+  /* Si el almacenamiento ya no funcionaba al cargar, se trabaja en memoria. */
+  try { var probe = "korve-probe"; window.localStorage.setItem(probe, "1"); window.localStorage.removeItem(probe); K.storageWasOk = true; } catch (e) { K.storageWasOk = false; }
   K.load = function () {
     if (mem) return mem;
-    try {
-      var raw = window.localStorage.getItem(KEY);
-      mem = raw ? Object.assign(blank(), JSON.parse(raw)) : blank();
-    } catch (e) { K.storageOk = false; mem = blank(); }
+    var raw = null;
+    try { raw = window.localStorage.getItem(KEY); } catch (e) { K.storageOk = false; }
+    mem = blank();
+    if (raw) {
+      var parsed = null;
+      try { parsed = JSON.parse(raw); } catch (e) {}
+      var res = parsed ? K.validateState(parsed) : { ok: false };
+      if (res.ok) mem = res.state;
+      else {
+        /* Estado guardado incompatible: se conserva una copia y se arranca vacío, sin borrar el original. */
+        try { window.localStorage.setItem(KEY + "-respaldo-incompatible", raw); } catch (e) {}
+        K.loadWarning = "Los datos locales guardados no tenían un formato válido. Se guardó una copia de respaldo y se empezó vacío.";
+      }
+    }
     return mem;
   };
+  /* Guarda; devuelve false si el navegador no permite guardar. */
   K.save = function () {
-    try { window.localStorage.setItem(KEY, JSON.stringify(mem)); K.storageOk = true; }
-    catch (e) { K.storageOk = false; }
+    try { window.localStorage.setItem(KEY, JSON.stringify(mem)); K.storageOk = true; return true; }
+    catch (e) { K.storageOk = false; return false; }
+  };
+
+  /* ---------- Guardado diferido de notas ----------
+   * Las notas se guardan 300 ms después de escribir. flushPending() guarda todo lo
+   * pendiente: se llama al exportar, cambiar de vista, cerrar u ocultar la página. */
+  var pending = {};
+  K.queueSave = function (key, fn) {
+    if (pending[key]) clearTimeout(pending[key].t);
+    pending[key] = { fn: fn, t: setTimeout(function () { var p = pending[key]; delete pending[key]; if (p) p.fn(); }, 300) };
+  };
+  K.flushPending = function () {
+    Object.keys(pending).forEach(function (k) { var p = pending[k]; clearTimeout(p.t); delete pending[k]; p.fn(); });
+  };
+  K.hasPending = function () { return Object.keys(pending).length > 0; };
+
+  /* ---------- Validación de datos locales e importación ---------- */
+  K.loanStatusOptions = [{ id: "pendiente", label: "Pendiente de conseguir" }, { id: "solicitada", label: "Solicitada" }, { id: "conseguida", label: "Conseguida" }, { id: "descartada", label: "Descartada" }];
+  K.FORMAT_VERSION = 1;
+  K.NUM_RE = /^\d{2,4}([.,]\d{1,2})?$/;
+  var MEAS_FIELDS = ["date", "mass", "balance", "who", "config", "note", "overgrips", "strap", "protector"];
+
+  function knownIds() {
+    var ids = { notes: {}, status: {}, fnotes: {}, compare: {} };
+    DATA.branches.forEach(function (b) { ids.notes["branch-" + b.id] = 1; });
+    DATA.samples.forEach(function (s) { ids.notes["sample-" + s.id] = 1; ids.compare[s.id] = 1; });
+    DATA.devItems.forEach(function (d) { ids.notes["dev-" + d.id] = 1; ids.status[d.id] = DATA.statusOptions; });
+    DATA.stages.forEach(function (s) { ids.notes["stage-" + s.id] = 1; ids.status[s.id] = DATA.statusOptions; });
+    DATA.loanRefs.forEach(function (l) { ids.status[l.id] = K.loanStatusOptions; });
+    DATA.factories.forEach(function (f) { ids.notes["factory-" + f.id] = 1; DATA.factoryMatrix.forEach(function (m) { ids.fnotes[m.id + "|" + f.id] = 1; }); });
+    DATA.references.forEach(function (r) { ids.compare[r.id] = 1; });
+    return ids;
+  }
+  function isPlain(o) { return o !== null && typeof o === "object" && !Array.isArray(o) && Object.getPrototypeOf(o) === Object.prototype; }
+  function validDate(s) {
+    if (typeof s !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+    var d = new Date(s + "T00:00:00Z");
+    return !isNaN(d) && d.toISOString().slice(0, 10) === s;
+  }
+  /* Valida una medición local. Devuelve una lista de errores (vacía si es válida). */
+  K.measurementErrors = function (m) {
+    var e = [];
+    if (!isPlain(m)) return ["no es un objeto"];
+    Object.keys(m).forEach(function (k) { if (MEAS_FIELDS.indexOf(k) < 0) e.push("campo desconocido “" + k + "”"); });
+    if (!validDate(m.date)) e.push("fecha inválida (formato AAAA-MM-DD)");
+    ["mass", "balance", "who", "config", "note"].forEach(function (k) { if (m[k] !== undefined && typeof m[k] !== "string") e.push("“" + k + "” debe ser texto"); });
+    if (typeof m.mass === "string" && m.mass && !K.NUM_RE.test(m.mass)) e.push("masa no numérica en g");
+    if (typeof m.balance === "string" && m.balance && !K.NUM_RE.test(m.balance)) e.push("balance no numérico en mm");
+    if (!m.mass && !m.balance) e.push("falta masa o balance");
+    if (typeof m.config !== "string" || !m.config.trim()) e.push("falta la configuración de medición");
+    if (m.overgrips !== undefined && m.overgrips !== null && [0, 1, 2, 3].indexOf(m.overgrips) < 0) e.push("overgrips debe ser 0 a 3 o null");
+    ["strap", "protector"].forEach(function (k) { if (m[k] !== undefined && m[k] !== null && typeof m[k] !== "boolean") e.push("“" + k + "” debe ser true, false o null"); });
+    return e;
+  };
+  /* Valida el estado completo. No modifica nada: devuelve { ok, errors, state, summary }. */
+  K.validateState = function (d) {
+    var errors = [], ids = knownIds(), MAXTXT = 20000;
+    function err(m) { if (errors.length < 50) errors.push(m); }
+    if (!isPlain(d)) return { ok: false, errors: ["“data” debe ser un objeto"] };
+    if (d.version !== K.FORMAT_VERSION) err("versión de datos " + JSON.stringify(d.version) + " no compatible (se espera " + K.FORMAT_VERSION + ")");
+    var allowed = ["version", "notes", "status", "measurements", "results", "factoryNotes", "compare"];
+    Object.keys(d).forEach(function (k) { if (allowed.indexOf(k) < 0) err("sección desconocida “" + k + "”"); });
+    ["notes", "status", "measurements", "factoryNotes"].forEach(function (k) { if (!isPlain(d[k])) err("“" + k + "” debe ser un objeto"); });
+    if (d.results !== undefined && !(isPlain(d.results) && Object.keys(d.results).length === 0)) err("“results” no se admite en este formato (debe estar vacío)");
+    if (!Array.isArray(d.compare)) err("“compare” debe ser una lista");
+    if (errors.length) return { ok: false, errors: errors };
+    Object.keys(d.notes).forEach(function (k) {
+      if (!ids.notes[k]) err("nota con identificador desconocido “" + k + "”");
+      else if (typeof d.notes[k] !== "string") err("la nota “" + k + "” debe ser texto");
+      else if (d.notes[k].length > MAXTXT) err("la nota “" + k + "” es demasiado larga");
+    });
+    Object.keys(d.status).forEach(function (k) {
+      var opts = ids.status[k];
+      if (!opts) err("estado con identificador desconocido “" + k + "”");
+      else if (!opts.some(function (o) { return o.id === d.status[k]; })) err("estado inválido para “" + k + "”: " + JSON.stringify(d.status[k]));
+    });
+    Object.keys(d.factoryNotes).forEach(function (k) {
+      if (!ids.fnotes[k]) err("nota de fábrica con identificador desconocido “" + k + "”");
+      else if (typeof d.factoryNotes[k] !== "string" || d.factoryNotes[k].length > MAXTXT) err("la nota de fábrica “" + k + "” debe ser texto");
+    });
+    var nMeas = 0;
+    Object.keys(d.measurements).forEach(function (k) {
+      if (!K.sampleById[k]) { err("mediciones de una muestra desconocida “" + k + "”"); return; }
+      if (!Array.isArray(d.measurements[k])) { err("las mediciones de “" + k + "” deben ser una lista"); return; }
+      d.measurements[k].forEach(function (m, i) {
+        K.measurementErrors(m).forEach(function (x) { err("medición " + (i + 1) + " de " + K.sampleById[k].name + ": " + x); });
+        nMeas++;
+      });
+    });
+    if (d.compare.length > 3) err("el comparador admite hasta 3 palas");
+    d.compare.forEach(function (id, i) {
+      if (typeof id !== "string" || !ids.compare[id]) err("pala desconocida en el comparador: " + JSON.stringify(id));
+      else if (d.compare.indexOf(id) !== i) err("pala repetida en el comparador: " + id);
+    });
+    if (errors.length) return { ok: false, errors: errors };
+    var state = JSON.parse(JSON.stringify(d));
+    state.results = {};
+    return { ok: true, errors: [], state: state,
+      summary: Object.keys(d.notes).length + " notas, " + Object.keys(d.status).length + " estados, " + nMeas + " mediciones, " + Object.keys(d.factoryNotes).length + " notas de fábrica" };
+  };
+  /* Valida el texto de una exportación completa. */
+  K.validateImportText = function (text) {
+    var obj;
+    try { obj = JSON.parse(text); } catch (e) { return { ok: false, errors: ["el JSON no es válido"] }; }
+    if (!isPlain(obj)) return { ok: false, errors: ["el archivo no contiene un objeto JSON"] };
+    if (obj.app !== "korve-explorador") return { ok: false, errors: ["no es una exportación del Explorador KORVE"] };
+    if (obj.formatVersion !== undefined && obj.formatVersion !== K.FORMAT_VERSION) return { ok: false, errors: ["formato " + JSON.stringify(obj.formatVersion) + " no compatible"] };
+    return K.validateState(obj.data);
   };
   K.state = function () { return K.load(); };
   K.setNote = function (id, text) { var s = K.load(); if (text) s.notes[id] = text; else delete s.notes[id]; K.save(); };
@@ -1636,7 +1771,8 @@ window.KORVE_DATA.windowNote = "Ventanas exploratorias, no especificaciones fina
   };
 
   K.exportText = function () {
-    return JSON.stringify({ app: "korve-explorador", exportedAt: new Date().toISOString(), researchCutoff: DATA.meta.cutoff, data: K.load() }, null, 2);
+    K.flushPending();
+    return JSON.stringify({ app: "korve-explorador", formatVersion: K.FORMAT_VERSION, exportedAt: new Date().toISOString(), researchCutoff: DATA.meta.cutoff, data: K.load() }, null, 2);
   };
   K.downloadJSON = function (json) {
     try {
@@ -1648,26 +1784,26 @@ window.KORVE_DATA.windowNote = "Ventanas exploratorias, no especificaciones fina
       setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
     } catch (e) {}
   };
+  /* Importación atómica: valida todo primero; si algo falla, el estado actual queda intacto. */
   K.importText = function (text, cb) {
-    try {
-      var obj = JSON.parse(text);
-      var d = obj && obj.app === "korve-explorador" ? obj.data : null;
-      if (!d || typeof d !== "object") throw new Error("el texto no es una exportación del Explorador KORVE.");
-      var fresh = blank();
-      ["notes", "status", "measurements", "results", "factoryNotes"].forEach(function (k) {
-        if (d[k] && typeof d[k] === "object" && !Array.isArray(d[k])) fresh[k] = d[k];
-      });
-      if (Array.isArray(d.compare)) fresh.compare = d.compare.filter(function (id) { return typeof id === "string"; }).slice(0, 3);
-      mem = fresh; K.save();
-      cb(null);
-    } catch (e) { cb(e instanceof SyntaxError ? new Error("el JSON no es válido.") : e); }
+    var res = K.validateImportText(text);
+    if (!res.ok) return cb(new Error(res.errors.slice(0, 5).join("; ") + (res.errors.length > 5 ? " (y " + (res.errors.length - 5) + " más)" : "")));
+    K.flushPending();
+    var prev = mem;
+    mem = res.state;
+    if (!K.save() && K.storageWasOk !== false) {
+      mem = prev;
+      return cb(new Error("el navegador no permitió guardar; no se cambió nada"));
+    }
+    cb(null, res.summary);
   };
-  K.clearData = function () { mem = blank(); K.save(); };
+  K.clearData = function () { K.flushPending(); mem = blank(); K.save(); };
 
   /* Barra de exportación/importación reutilizable. */
   K.storageBar = function () {
     return '<div class="storage-bar card small">' +
       "<span><b>Notas y estados locales.</b> Se guardan solo en este navegador" + (K.storageOk ? "" : " (almacenamiento no disponible: se perderán al cerrar)") + ".</span>" +
+      (K.loadWarning ? '<span class="miss">' + esc(K.loadWarning) + "</span>" : "") +
       '<button class="btn small" data-action="export">Exportar JSON</button>' +
       '<label class="btn small">Importar archivo<input type="file" accept="application/json,.json" data-action="import" class="sr-only"></label>' +
       '<button class="btn small" data-action="paste-import">Importar pegando JSON</button>' +
@@ -1678,6 +1814,13 @@ window.KORVE_DATA.windowNote = "Ventanas exploratorias, no especificaciones fina
   K.noteField = function (id, label) {
     return '<details class="note-box"><summary>' + esc(label || "Notas locales") + (K.getNote(id) ? " (con contenido)" : "") + "</summary>" +
       '<textarea data-note="' + esc(id) + '" aria-label="' + esc(label || "Notas locales") + '" placeholder="Escribí una nota. Se guarda en este navegador.">' + esc(K.getNote(id)) + "</textarea></details>";
+  };
+
+  /* Resumen legible de una configuración estructurada (null = sin dato). */
+  K.configSummary = function (c) {
+    function tri(v, yes, no) { return v === true ? yes : v === false ? no : null; }
+    var og = c.overgrips === null || c.overgrips === undefined ? "overgrips: sin dato" : c.overgrips + (c.overgrips === 1 ? " overgrip" : " overgrips");
+    return [og, tri(c.strap, "con correa", "sin correa") || "correa: sin dato", tri(c.protector, "con protector", "sin protector") || "protector: sin dato"].join(" · ");
   };
 
   /* Etiqueta del item comparable (referencia o muestra). */
@@ -2074,6 +2217,7 @@ window.KORVE_DATA.windowNote = "Ventanas exploratorias, no especificaciones fina
     mount: function (sub) {
       var panel = document.getElementById("panel");
       var map = new window.KMap.MapView(document.getElementById("map"), function (path) {
+        K.flushPending();
         panel.innerHTML = V.mapPanel(path);
         var hl = path.aspect && panel.querySelector("#aspect-" + path.aspect);
         if (path.item) panel.scrollTop = 0;
@@ -2285,16 +2429,18 @@ window.KORVE_DATA.windowNote = "Ventanas exploratorias, no especificaciones fina
   ];
   function cmpItem(id) {
     var r = K.refById[id];
-    if (r) return { id: id, name: r.name, isSample: false, season: r.season, mass: r.mass, balance: r.balance, face: r.face, core: r.core, hardness: r.hardness, finish: r.finish, other: r.other, config: r.config, friction: r.friction, pending: r.pending, use: r.use, url: r.url, brand: K.brandById[r.brandId].name };
+    if (r) return { id: id, name: r.name, isSample: false, season: r.season, mass: r.mass, balance: r.balance, face: r.face, core: r.core, hardness: r.hardness, finish: r.finish, other: r.other, config: r.config, configSpecs: r.configSpecs || null, friction: r.friction, pending: r.pending, use: r.use, url: r.url, brand: K.brandById[r.brandId].name, local: [] };
     var s = K.sampleById[id];
-    if (s) { var c = s.compare; return { id: id, name: "KORVE " + s.name, isSample: true, season: null, mass: c.mass, balance: c.balance, face: c.face, core: c.core, hardness: c.hardness, finish: c.finish, other: c.other, config: c.config, friction: c.friction, pending: c.pending, use: s.role + " — " + s.roleStatus, factory: s.factory, local: (K.state().measurements[id] || []) }; }
+    if (s) { var c = s.compare; return { id: id, name: "KORVE " + s.name, isSample: true, season: null, mass: c.mass, balance: c.balance, face: c.face, core: c.core, hardness: c.hardness, finish: c.finish, other: c.other, config: c.config, configSpecs: c.configSpecs, friction: c.friction, pending: c.pending, use: s.role + " — " + s.roleStatus, factory: s.factory, local: (K.state().measurements[id] || []) }; }
     return null;
   }
   function cell(it, k) {
     if (k === "origin") return it.isSample ? K.ev("KP", "muestra " + it.factory) + '<div class="small muted">Objetivo, declaración de proveedor y medición interna se muestran por separado.</div>' : K.ev("D") + '<div class="small muted">Ficha comercial de ' + esc(it.brand) + "; no es medición de nuestras unidades.</div>";
     if (k === "season") return it.isSample ? '<span class="miss">No aplica (muestra)</span>' : (it.season ? esc(it.season) + ' <span class="small muted">(nombre comercial)</span>' : K.missing("NP"));
     if (k === "hardness") return K.value(it.hardness || { missing: "NP", note: "Sin dureza con escala en la ficha." });
-    if (k === "config") return esc(it.config);
+    if (k === "config") return esc(it.config) + '<ul class="clean small">' + configEntries(it).map(function (e) {
+      return "<li><b>" + esc(e.who.replace(it.name + " · ", "")) + ":</b> " + esc(K.configSummary(e)) + (e.text ? " — " + esc(e.text) : "") + "</li>";
+    }).join("") + "</ul>";
     if (k === "pending") return it.pending && it.pending.length ? it.pending.map(function (p) { return '<span class="chip">' + esc(p) + "</span>"; }).join("") : '<span class="muted">—</span>';
     if (k === "use") return esc(it.use) + " " + K.ev("A");
     if (k === "source") return it.isSample ? esc(DATA.internalSource) : K.link(it.url, "Ficha oficial") + '<div class="small muted">Consultada ' + esc(DATA.meta.cutoff) + "</div>";
@@ -2303,26 +2449,74 @@ window.KORVE_DATA.windowNote = "Ventanas exploratorias, no especificaciones fina
       html += it.local.map(function (m) {
         var v = k === "mass" ? m.mass : m.balance;
         if (!v) return "";
-        return '<div class="val"><span class="num">' + esc(v) + " " + (k === "mass" ? "g" : "mm") + "</span> " + K.ev("KM", "registro local") + '<span class="note">' + esc(m.date) + " · " + esc(m.config) + "</span></div>";
+        return '<div class="val"><span class="num">' + esc(v) + " " + (k === "mass" ? "g" : "mm") + "</span> " + K.ev("KM", "registro local") + '<span class="note">' + esc(m.date) + " · " + esc(K.configSummary(m)) + " · " + esc(m.config) + "</span></div>";
       }).join("");
     }
     return html;
   }
+  /* Configuraciones de medición de un ítem: las de los datos + cada registro local. */
+  function configEntries(it) {
+    var out = [];
+    var specs = it.configSpecs || [{ label: "ficha", overgrips: null, strap: null, protector: null }];
+    specs.forEach(function (c) { out.push({ who: it.name + " · " + c.label, overgrips: c.overgrips, strap: c.strap, protector: c.protector, local: false }); });
+    (it.local || []).forEach(function (m) {
+      out.push({ who: it.name + " · registro local " + m.date, overgrips: m.overgrips == null ? null : m.overgrips, strap: m.strap == null ? null : m.strap, protector: m.protector == null ? null : m.protector, local: true, text: m.config, sample: it.name });
+    });
+    return out;
+  }
+  var CFG_FIELDS = [
+    { k: "overgrips", label: "Overgrips", fmt: function (v) { return v + (v === 1 ? " overgrip" : " overgrips"); } },
+    { k: "strap", label: "Correa", fmt: function (v) { return v ? "con correa" : "sin correa"; } },
+    { k: "protector", label: "Protector", fmt: function (v) { return v ? "con protector" : "sin protector"; } }
+  ];
   function warnings(items) {
     var w = [];
-    if (items.length < 2) return w;
-    w.push("Las fichas no especifican simultáneamente grip, overgrip, protector, correa, incertidumbre ni tamaño de muestra: no permiten comparar diferencias pequeñas con rigor.");
+    if (!items.length) return w;
+    var multi = items.length > 1;
+    if (multi) w.push("Las fichas no especifican simultáneamente grip, overgrip, protector, correa, incertidumbre ni tamaño de muestra: no permiten comparar diferencias pequeñas con rigor.");
+
+    /* Clases de evidencia de masa, incluidas las mediciones locales. */
     var evs = {};
-    items.forEach(function (it) { [].concat(it.mass || []).forEach(function (v) { if (v && v.ev) evs[v.ev] = 1; }); });
-    if (Object.keys(evs).length > 1) w.push("Se mezclan clases de evidencia en masa (" + Object.keys(evs).map(function (e) { return DATA.evidence[e].label; }).join(", ") + "): un objetivo o una declaración no es una medición.");
-    if (items.some(function (it) { return /overgrip/i.test(it.config) && /dos overgrips/i.test(it.config); })) w.push("Hay mediciones internas con dos overgrips: no compararlas con pesos de catálogo sin overgrip.");
-    if (items.some(function (it) { return /sin correa/i.test(it.config); })) w.push("Gamma Sterling declara peso sin correa: habría que sumar accesorios para comparar.");
+    items.forEach(function (it) {
+      [].concat(it.mass || []).forEach(function (v) { if (v && v.ev) evs[v.ev] = 1; });
+      if ((it.local || []).some(function (m) { return m.mass; })) evs.KM = 1;
+    });
+    if (multi && Object.keys(evs).length > 1) w.push("Se mezclan clases de evidencia en masa (" + Object.keys(evs).map(function (e) { return DATA.evidence[e].label; }).join(", ") + "): un objetivo o una declaración no es una medición.");
+
+    /* Configuraciones: datos + registros locales, campo por campo. */
+    var entries = [].concat.apply([], items.map(configEntries));
+    CFG_FIELDS.forEach(function (f) {
+      var known = entries.filter(function (e) { return e[f.k] !== null; });
+      var vals = {}; known.forEach(function (e) { vals[String(e[f.k])] = 1; });
+      if (Object.keys(vals).length > 1) {
+        w.push(f.label + " distintos entre los valores mostrados: " + known.map(function (e) { return e.who + " = " + f.fmt(e[f.k]); }).join("; ") + ". No compares masa ni balance entre configuraciones distintas.");
+      }
+      var unknownLocal = entries.filter(function (e) { return e.local && e[f.k] === null; });
+      if (known.length && unknownLocal.length) w.push(f.label + ": sin dato en " + unknownLocal.map(function (e) { return e.who; }).join(", ") + ". Completalo para poder comparar esa medición.");
+    });
+    /* Registros locales de una misma muestra con textos de configuración distintos. */
+    items.forEach(function (it) {
+      var texts = {}; (it.local || []).forEach(function (m) { texts[norm(m.config).replace(/\s+/g, " ").trim()] = 1; });
+      if (Object.keys(texts).length > 1) w.push("Los registros locales de " + it.name + " tienen configuraciones distintas: no promediarlos ni compararlos entre sí sin normalizar.");
+    });
+
     var seasons = {}; items.forEach(function (it) { if (it.season) seasons[it.season] = 1; });
     if (Object.keys(seasons).length > 1) w.push("Temporadas distintas (" + Object.keys(seasons).join(", ") + "): no trasladar datos de una temporada a otra.");
-    if (items.filter(function (it) { return it.hardness && !it.hardness.missing; }).length > 1) w.push("Durezas con escalas distintas o no identificadas (Shore C, “5/10” comercial, “Hard/Medium+”): no equipararlas.");
+
+    /* Dureza: se compara la escala declarada de cada ítem. */
+    var hs = items.filter(function (it) { return it.hardness && !it.hardness.missing; });
+    if (hs.length > 1) {
+      var noScale = hs.filter(function (it) { return it.hardness.scale === "sin-escala"; });
+      var byScale = {};
+      hs.forEach(function (it) { if (it.hardness.scale !== "sin-escala") (byScale[it.hardness.scale] = byScale[it.hardness.scale] || []).push(it.name); });
+      var scales = Object.keys(byScale);
+      if (scales.length > 1) w.push("Escalas de dureza distintas (" + scales.map(function (sc) { return DATA.hardnessScales[sc] + ": " + byScale[sc].join(", "); }).join("; ") + "): no equipararlas.");
+      if (noScale.length) w.push("Dureza sin escala identificada en " + noScale.map(function (it) { return it.name; }).join(", ") + ": no se puede equiparar con otras durezas.");
+      if (scales.length === 1 && !noScale.length) w.push("Misma escala de dureza (" + DATA.hardnessScales[scales[0]] + ") en " + byScale[scales[0]].join(" y ") + ": comparable como declaración, no como medición propia.");
+    }
     if (items.some(function (it) { return [].concat(it.balance || []).some(function (b) { return b && b.qual; }); })) w.push("Hay balances cualitativos: no se convierten en milímetros.");
     var faces = items.map(function (it) { return JSON.stringify(it.face || ""); }).join(" ");
-    if (/\d+K/.test(faces) || /T700/.test(faces)) w.push("12K/16K/18K describen haces de filamentos, no calidad: 18K no es mejor que 12K. T700 no equivale a un número K.");
+    if (multi && (/\d+K/.test(faces) || /T700/.test(faces))) w.push("12K/16K/18K describen haces de filamentos, no calidad: 18K no es mejor que 12K. T700 no equivale a un número K.");
     return w;
   }
 
@@ -2396,7 +2590,7 @@ window.KORVE_DATA.windowNote = "Ventanas exploratorias, no especificaciones fina
       "<div><h4>Medición real</h4>" + (s.measured.length ? rows(s.measured) : K.missing("PEND", s.measuredNote)) +
         (local.length ? '<div class="kv"><span class="k">Registros locales</span>' + local.map(function (m, i) {
           return '<div class="val">' + (m.mass ? '<span class="num">' + esc(m.mass) + " g</span>" : "") + (m.balance ? ' <span class="num">' + esc(m.balance) + " mm</span>" : "") + " " + K.ev("KM", "registro local") +
-            '<span class="note">' + esc(m.date) + " · " + esc(m.who || "sin responsable") + " · " + esc(m.config) + (m.note ? " · " + esc(m.note) : "") +
+            '<span class="note">' + esc(m.date) + " · " + esc(m.who || "sin responsable") + " · " + esc(K.configSummary(m)) + " · " + esc(m.config) + (m.note ? " · " + esc(m.note) : "") +
             ' <button class="btn small" data-action="del-measure" data-sample="' + esc(s.id) + '" data-idx="' + i + '">Borrar</button></span></div>';
         }).join("") + "</div>" : "") + "</div>" +
       "<div><h4>Opinión de tester</h4>" + (s.tester.length ? s.tester.map(function (t) { return '<div class="kv"><span class="k">' + esc(t.who) + "</span>" + esc(t.text) + " " + K.ev("KT") + (t.note ? '<div class="small muted">' + esc(t.note) + "</div>" : "") + "</div>"; }).join("") : K.missing("PEND", s.testerNote)) +
@@ -2407,7 +2601,10 @@ window.KORVE_DATA.windowNote = "Ventanas exploratorias, no especificaciones fina
       "<details><summary>Registrar medición local</summary>" +
       '<form class="measure-form" data-sample="' + esc(s.id) + '">' +
       '<div class="form-row"><label>Fecha<input type="date" name="date" required></label><label>Masa (g)<input name="mass" inputmode="decimal" placeholder="ej. 364,1"></label><label>Balance (mm)<input name="balance" inputmode="decimal" placeholder="ej. 258"></label><label>Responsable<input name="who"></label></div>' +
-      '<div class="form-row"><label>Configuración (obligatoria)<input name="config" required placeholder="grip, correa, overgrips, protector, film"></label><label>Nota<input name="note" placeholder="lecturas, incertidumbre…"></label></div>' +
+      '<div class="form-row"><label>Overgrips<select name="overgrips"><option value="">Sin dato</option><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label>' +
+      '<label>Correa<select name="strap"><option value="">Sin dato</option><option value="si">Con correa</option><option value="no">Sin correa</option></select></label>' +
+      '<label>Protector<select name="protector"><option value="">Sin dato</option><option value="si">Con protector</option><option value="no">Sin protector</option></select></label></div>' +
+      '<div class="form-row"><label>Configuración (obligatoria)<input name="config" required placeholder="grip, film, accesorios, cómo se apoyó"></label><label>Nota<input name="note" placeholder="lecturas, incertidumbre…"></label></div>' +
       '<button class="btn small primary" type="submit">Guardar medición</button> <span class="small muted">Se guarda como “K · Medición interna” en este navegador.</span></form></details>' +
       K.noteField("sample-" + s.id, "Notas y opiniones locales") +
       '<p><button class="btn small primary" data-action="add-compare" data-id="' + esc(s.id) + '">Agregar al comparador</button></p>' +
@@ -2415,7 +2612,7 @@ window.KORVE_DATA.windowNote = "Ventanas exploratorias, no especificaciones fina
   };
 
   /* ---------- DESARROLLO Y PRUEBAS ---------- */
-  var LOAN_STATUS = [{ id: "pendiente", label: "Pendiente de conseguir" }, { id: "solicitada", label: "Solicitada" }, { id: "conseguida", label: "Conseguida" }, { id: "descartada", label: "Descartada" }];
+  var LOAN_STATUS = K.loanStatusOptions;
   function statusSelect(id, opts) {
     var cur = K.getStatus(id);
     return '<select data-status="' + esc(id) + '" aria-label="Estado">' + opts.map(function (o) { return '<option value="' + o.id + '"' + (cur === o.id ? " selected" : "") + ">" + esc(o.label) + "</option>"; }).join("") + "</select>" +
@@ -2534,6 +2731,7 @@ window.KORVE_DATA.windowNote = "Ventanas exploratorias, no especificaciones fina
   }
 
   function render(keepScroll) {
+    K.flushPending();
     var r = parse();
     var y = window.scrollY;
     if (cleanup) { try { cleanup(); } catch (e) {} cleanup = null; }
@@ -2584,8 +2782,16 @@ window.KORVE_DATA.windowNote = "Ventanas exploratorias, no especificaciones fina
     dialog("<p>" + K.esc(msg) + '</p><div class="dialog-actions"><button class="btn" data-close data-autofocus>Cancelar</button><button class="btn primary" data-ok>' + K.esc(okLabel) + "</button></div>",
       function (d, close) { d.querySelector("[data-ok]").addEventListener("click", function () { close(); onYes(); }); });
   };
+  /* Primero valida; solo si el archivo es compatible pide confirmación y reemplaza. */
   K.confirmImport = function (text) {
-    K.ask("Importar reemplaza las notas, estados y mediciones locales actuales. ¿Continuar?", "Importar", function () {
+    var res = K.validateImportText(text);
+    if (!res.ok) {
+      dialog('<h2>No se importó nada</h2><p class="small">El archivo no es compatible. Tus datos actuales no cambiaron.</p><ul class="clean small" id="import-errors">' +
+        res.errors.slice(0, 8).map(function (x) { return "<li>" + K.esc(x) + "</li>"; }).join("") + (res.errors.length > 8 ? "<li>y " + (res.errors.length - 8) + " problemas más</li>" : "") +
+        '</ul><div class="dialog-actions"><button class="btn primary" data-close data-autofocus>Entendido</button></div>', function () {});
+      return;
+    }
+    K.ask("El archivo es válido (" + res.summary + "). Importar reemplaza las notas, estados y mediciones locales actuales. ¿Continuar?", "Importar", function () {
       K.importText(text, function (err) {
         if (err) toast("No se pudo importar: " + err.message); else { render(true); toast("Datos importados."); }
       });
@@ -2661,34 +2867,41 @@ window.KORVE_DATA.windowNote = "Ventanas exploratorias, no especificaciones fina
     }
   });
 
-  var timers = {};
-  document.addEventListener("input", function (e) {
-    var t = e.target;
+  /* Notas: guardado diferido + guardado inmediato al salir del campo, cambiar de vista u ocultar la página. */
+  function queueNote(t) {
     if (t.matches("textarea[data-note]")) {
-      var id = t.getAttribute("data-note");
-      clearTimeout(timers[id]); timers[id] = setTimeout(function () { K.setNote(id, t.value.trim() ? t.value : ""); }, 300);
+      var id = t.getAttribute("data-note"), v1 = t.value;
+      K.queueSave("note:" + id, function () { K.setNote(id, v1.trim() ? v1 : ""); });
     } else if (t.matches("textarea[data-fnote]")) {
-      var key = t.getAttribute("data-fnote");
-      clearTimeout(timers[key]); timers[key] = setTimeout(function () {
-        var s = K.state(); if (t.value.trim()) s.factoryNotes[key] = t.value; else delete s.factoryNotes[key]; K.save();
-      }, 300);
+      var key = t.getAttribute("data-fnote"), v2 = t.value;
+      K.queueSave("fnote:" + key, function () { var s = K.state(); if (v2.trim()) s.factoryNotes[key] = v2; else delete s.factoryNotes[key]; K.save(); });
     }
-  });
+  }
+  document.addEventListener("input", function (e) { queueNote(e.target); });
+  document.addEventListener("focusout", function (e) { if (e.target.matches && e.target.matches("textarea[data-note],textarea[data-fnote]")) K.flushPending(); });
+  window.addEventListener("pagehide", function () { K.flushPending(); });
+  window.addEventListener("beforeunload", function () { K.flushPending(); });
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") K.flushPending(); });
 
   document.addEventListener("submit", function (e) {
     var f = e.target;
     if (!f.matches(".measure-form")) return;
     e.preventDefault();
     var fd = new FormData(f), sid = f.getAttribute("data-sample");
-    var rec = { date: fd.get("date"), mass: String(fd.get("mass") || "").trim(), balance: String(fd.get("balance") || "").trim(), who: String(fd.get("who") || "").trim(), config: String(fd.get("config") || "").trim(), note: String(fd.get("note") || "").trim() };
-    var num = /^\d{2,4}([.,]\d{1,2})?$/;
+    function tri(v) { return v === "si" ? true : v === "no" ? false : null; }
+    var og = String(fd.get("overgrips") || "");
+    var rec = { date: String(fd.get("date") || ""), mass: String(fd.get("mass") || "").trim(), balance: String(fd.get("balance") || "").trim(), who: String(fd.get("who") || "").trim(), config: String(fd.get("config") || "").trim(), note: String(fd.get("note") || "").trim(),
+      overgrips: og === "" ? null : +og, strap: tri(fd.get("strap")), protector: tri(fd.get("protector")) };
     if (!rec.mass && !rec.balance) { toast("Ingresá al menos masa (g) o balance (mm)."); return; }
-    if ((rec.mass && !num.test(rec.mass)) || (rec.balance && !num.test(rec.balance))) { toast("Usá números en g y mm, por ejemplo 364,1."); return; }
+    if ((rec.mass && !K.NUM_RE.test(rec.mass)) || (rec.balance && !K.NUM_RE.test(rec.balance))) { toast("Usá números en g y mm, por ejemplo 364,1."); return; }
     if (!rec.config) { toast("La configuración de medición es obligatoria."); return; }
+    var errs = K.measurementErrors(rec);
+    if (errs.length) { toast("Medición no válida: " + errs[0] + "."); return; }
     var s = K.state(); (s.measurements[sid] = s.measurements[sid] || []).push(rec); K.save();
     render(true); toast("Medición guardada localmente.");
   });
 
+  K.load(); /* carga y valida los datos locales antes de dibujar cualquier vista */
   render(false);
 })();
 

@@ -43,6 +43,13 @@ window.KORVE_DATA.evidence = {
   A:  { code: "A",  label: "Análisis del informe", desc: "Interpretación o criterio de uso escrito en el informe a partir de las fuentes." }
 };
 
+/* Escalas de dureza. Solo se comparan valores de la misma escala identificada. */
+window.KORVE_DATA.hardnessScales = {
+  "shore-c": "Shore C",
+  "comercial-10": "Escala comercial 0–10 propia de la marca",
+  "sin-escala": "Denominación sin escala identificada"
+};
+
 /* Estados para datos ausentes. */
 window.KORVE_DATA.missingStates = {
   NP: "No publicado",

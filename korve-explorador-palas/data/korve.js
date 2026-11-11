@@ -42,10 +42,11 @@ window.KORVE_DATA = window.KORVE_DATA || {};
         balance: [{ v: "268 ±3", u: "mm", ev: "KO", note: "Objetivo solicitado, no medición." }, M("PEND", "Medición individual pendiente (Etapa A).")],
         face: { v: "Exterior 12K Twill; 2 carbono + 1 vidrio", ev: "KP" },
         core: { v: "H/S/H; EVA parcial de mango ≈10 g", ev: "KP" },
-        hardness: { v: "28/15/28 Shore C", ev: "KP", note: "Escala Shore C declarada por proveedor." },
+        hardness: { v: "28/15/28 Shore C", scale: "shore-c", ev: "KP", note: "Escala Shore C declarada por proveedor." },
         finish: { v: "Mate arenoso, sin 3D", ev: "KP" },
         other: { v: "Marco carbono 0/90/±45° (marco/puente)", ev: "KP" },
         config: "Objetivo con grip original + correa, sin overgrip ni protector.",
+        configSpecs: [{ label: "Objetivo solicitado", overgrips: 0, strap: true, protector: false }],
         friction: M("PEND", "No medida."),
         pending: ["Masa real (0,1 g)", "Balance real (mm)", "Inercia y torsión", "Resultado de cancha"]
       } },
@@ -76,10 +77,11 @@ window.KORVE_DATA = window.KORVE_DATA || {};
         balance: [{ v: "250 ±3", u: "mm", ev: "KO", note: "Objetivo solicitado, no medición." }, M("PEND", "Medición individual pendiente (Etapa A).")],
         face: { v: "Carbono, designación T700; 2 carbono + 1 vidrio", ev: "KP", note: "T700 no equivale a un número K." },
         core: { v: "H/S/H (mismo que W3)", ev: "KP" },
-        hardness: { v: "28/15/28 Shore C", ev: "KP" },
+        hardness: { v: "28/15/28 Shore C", scale: "shore-c", ev: "KP", note: "Escala Shore C declarada por proveedor." },
         finish: { v: "Mate arenoso, sin 3D", ev: "KP" },
         other: { v: "“Flat-laid” pendiente de precisión", ev: "KP" },
         config: "Objetivo con grip original + correa, sin overgrip ni protector.",
+        configSpecs: [{ label: "Objetivo solicitado", overgrips: 0, strap: true, protector: false }],
         friction: M("PEND", "No medida."),
         pending: ["Masa real (0,1 g)", "Balance real (mm)", "Precisión de “flat-laid”", "Masa periférica necesaria", "Resultado de cancha"]
       } },
@@ -123,6 +125,10 @@ window.KORVE_DATA = window.KORVE_DATA || {};
         finish: { v: "Mate arenoso + 3D", ev: "KP" },
         other: M("NI"),
         config: "Proveedor: grip + correa sin overgrip. Medición interna: dos overgrips, sin protector.",
+        configSpecs: [
+          { label: "Referencia de proveedor", overgrips: 0, strap: true, protector: null },
+          { label: "Medición interna (Tomás Sánchez)", overgrips: 2, strap: null, protector: false }
+        ],
         friction: M("PEND", "No medida."),
         pending: ["Balance medido", "Ficha normalizada (sin overgrips)", "Inercia y torsión"]
       } },
@@ -151,10 +157,11 @@ window.KORVE_DATA = window.KORVE_DATA || {};
         balance: [{ missing: "BLANK", note: "Medición de Tomás: balance en blanco." }],
         face: { v: "Carbono", ev: "KP" },
         core: { v: "EVA medio", ev: "KP" },
-        hardness: { v: "“Medio” (sin escala)", ev: "KP", note: "Sin escala identificada." },
+        hardness: { v: "“Medio” (sin escala)", scale: "sin-escala", ev: "KP", note: "Sin escala identificada." },
         finish: { v: "Liso / brillante", ev: "KP" },
         other: M("NI"),
         config: "Medición interna: dos overgrips, sin protector.",
+        configSpecs: [{ label: "Medición interna (Tomás Sánchez)", overgrips: 2, strap: null, protector: false }],
         friction: M("PEND", "No medida."),
         pending: ["Balance medido", "Ficha normalizada", "Rol por pruebas"]
       } }

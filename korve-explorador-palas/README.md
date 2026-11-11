@@ -35,7 +35,11 @@ Para regenerarlo después de editar los datos: `node tools/build-single.js`. Ese
 
 ## Notas y estados
 
-Las notas, los estados y las mediciones que cargues se guardan **solo en ese navegador** (localStorage). Usá **Exportar JSON** para hacer una copia de seguridad o pasarlos a otro dispositivo: podés copiar el JSON o descargarlo como archivo (la descarga no funciona dentro del chat; ahí usá Copiar). Para recuperarlos, usá **Importar archivo** o **Importar pegando JSON**. Al importar se reemplazan los datos locales actuales; la app pide confirmación antes de hacerlo.
+Las notas, los estados y las mediciones que cargues se guardan **solo en ese navegador** (localStorage). Usá **Exportar JSON** para hacer una copia de seguridad o pasarlos a otro dispositivo: podés copiar el JSON o descargarlo como archivo (la descarga no funciona dentro del chat; ahí usá Copiar). Para recuperarlos, usá **Importar archivo** o **Importar pegando JSON**. La app valida todo el archivo antes de tocar nada: versión, estructura, tipos, identificadores, estados y cada medición (fecha, g, mm, configuración y campos). Si algo no es compatible, muestra los problemas y no cambia tus datos. Si el archivo es válido, te pide confirmación y reemplaza los datos locales actuales.
+
+Las notas se guardan al escribir, al salir del campo, al cambiar de vista y al cerrar u ocultar la página. La exportación incluye lo último que escribiste.
+
+Al registrar una medición indicá overgrips, correa y protector. El comparador usa esos datos para avisar cuándo se mezclan configuraciones distintas.
 
 Cada copia de la app guarda sus propios datos: la vista previa del chat, el archivo abierto en el celular y el abierto en la computadora no comparten notas. Para pasar notas de una a otra, exportalas e importalas.
 
@@ -62,4 +66,5 @@ node tests/check-data.js
 ## Pruebas
 
 - `node tests/check-data.js` controla la integridad de los datos y las reglas de rigor. Por ejemplo, que haya 41 marcas, que cada dato tenga clase de evidencia y que ningún ensayo figure como realizado.
-- `node tests/e2e.js [carpeta-capturas]` (con `KORVE_FILE=dist/korve-explorador.html` prueba la versión de un solo archivo) prueba con Playwright la navegación del mapa, los filtros, el comparador, las fuentes, los estados vacíos, la exportación e importación y la vista móvil de 390 px.
+- `node tests/robustness.js` prueba casos específicos: 31 archivos de importación inválidos rechazados sin alterar el estado, notas pendientes al exportar o cambiar de vista, escalas de dureza (W3 y AMP22 comparten Shore C) y mediciones locales en las advertencias del comparador.
+- `node tests/e2e.js [carpeta-capturas]` (con `KORVE_FILE=` y la ruta completa de `dist/korve-explorador.html` o `dist/artifact.html` prueba esas versiones; vale también para `robustness.js`) prueba con Playwright la navegación del mapa, los filtros, el comparador, las fuentes, los estados vacíos, la exportación e importación y la vista móvil de 390 px.

@@ -60,6 +60,7 @@
     mount: function (sub) {
       var panel = document.getElementById("panel");
       var map = new window.KMap.MapView(document.getElementById("map"), function (path) {
+        K.flushPending();
         panel.innerHTML = V.mapPanel(path);
         var hl = path.aspect && panel.querySelector("#aspect-" + path.aspect);
         if (path.item) panel.scrollTop = 0;
@@ -271,16 +272,18 @@
   ];
   function cmpItem(id) {
     var r = K.refById[id];
-    if (r) return { id: id, name: r.name, isSample: false, season: r.season, mass: r.mass, balance: r.balance, face: r.face, core: r.core, hardness: r.hardness, finish: r.finish, other: r.other, config: r.config, friction: r.friction, pending: r.pending, use: r.use, url: r.url, brand: K.brandById[r.brandId].name };
+    if (r) return { id: id, name: r.name, isSample: false, season: r.season, mass: r.mass, balance: r.balance, face: r.face, core: r.core, hardness: r.hardness, finish: r.finish, other: r.other, config: r.config, configSpecs: r.configSpecs || null, friction: r.friction, pending: r.pending, use: r.use, url: r.url, brand: K.brandById[r.brandId].name, local: [] };
     var s = K.sampleById[id];
-    if (s) { var c = s.compare; return { id: id, name: "KORVE " + s.name, isSample: true, season: null, mass: c.mass, balance: c.balance, face: c.face, core: c.core, hardness: c.hardness, finish: c.finish, other: c.other, config: c.config, friction: c.friction, pending: c.pending, use: s.role + " — " + s.roleStatus, factory: s.factory, local: (K.state().measurements[id] || []) }; }
+    if (s) { var c = s.compare; return { id: id, name: "KORVE " + s.name, isSample: true, season: null, mass: c.mass, balance: c.balance, face: c.face, core: c.core, hardness: c.hardness, finish: c.finish, other: c.other, config: c.config, configSpecs: c.configSpecs, friction: c.friction, pending: c.pending, use: s.role + " — " + s.roleStatus, factory: s.factory, local: (K.state().measurements[id] || []) }; }
     return null;
   }
   function cell(it, k) {
     if (k === "origin") return it.isSample ? K.ev("KP", "muestra " + it.factory) + '<div class="small muted">Objetivo, declaración de proveedor y medición interna se muestran por separado.</div>' : K.ev("D") + '<div class="small muted">Ficha comercial de ' + esc(it.brand) + "; no es medición de nuestras unidades.</div>";
     if (k === "season") return it.isSample ? '<span class="miss">No aplica (muestra)</span>' : (it.season ? esc(it.season) + ' <span class="small muted">(nombre comercial)</span>' : K.missing("NP"));
     if (k === "hardness") return K.value(it.hardness || { missing: "NP", note: "Sin dureza con escala en la ficha." });
-    if (k === "config") return esc(it.config);
+    if (k === "config") return esc(it.config) + '<ul class="clean small">' + configEntries(it).map(function (e) {
+      return "<li><b>" + esc(e.who.replace(it.name + " · ", "")) + ":</b> " + esc(K.configSummary(e)) + (e.text ? " — " + esc(e.text) : "") + "</li>";
+    }).join("") + "</ul>";
     if (k === "pending") return it.pending && it.pending.length ? it.pending.map(function (p) { return '<span class="chip">' + esc(p) + "</span>"; }).join("") : '<span class="muted">—</span>';
     if (k === "use") return esc(it.use) + " " + K.ev("A");
     if (k === "source") return it.isSample ? esc(DATA.internalSource) : K.link(it.url, "Ficha oficial") + '<div class="small muted">Consultada ' + esc(DATA.meta.cutoff) + "</div>";
@@ -289,26 +292,74 @@
       html += it.local.map(function (m) {
         var v = k === "mass" ? m.mass : m.balance;
         if (!v) return "";
-        return '<div class="val"><span class="num">' + esc(v) + " " + (k === "mass" ? "g" : "mm") + "</span> " + K.ev("KM", "registro local") + '<span class="note">' + esc(m.date) + " · " + esc(m.config) + "</span></div>";
+        return '<div class="val"><span class="num">' + esc(v) + " " + (k === "mass" ? "g" : "mm") + "</span> " + K.ev("KM", "registro local") + '<span class="note">' + esc(m.date) + " · " + esc(K.configSummary(m)) + " · " + esc(m.config) + "</span></div>";
       }).join("");
     }
     return html;
   }
+  /* Configuraciones de medición de un ítem: las de los datos + cada registro local. */
+  function configEntries(it) {
+    var out = [];
+    var specs = it.configSpecs || [{ label: "ficha", overgrips: null, strap: null, protector: null }];
+    specs.forEach(function (c) { out.push({ who: it.name + " · " + c.label, overgrips: c.overgrips, strap: c.strap, protector: c.protector, local: false }); });
+    (it.local || []).forEach(function (m) {
+      out.push({ who: it.name + " · registro local " + m.date, overgrips: m.overgrips == null ? null : m.overgrips, strap: m.strap == null ? null : m.strap, protector: m.protector == null ? null : m.protector, local: true, text: m.config, sample: it.name });
+    });
+    return out;
+  }
+  var CFG_FIELDS = [
+    { k: "overgrips", label: "Overgrips", fmt: function (v) { return v + (v === 1 ? " overgrip" : " overgrips"); } },
+    { k: "strap", label: "Correa", fmt: function (v) { return v ? "con correa" : "sin correa"; } },
+    { k: "protector", label: "Protector", fmt: function (v) { return v ? "con protector" : "sin protector"; } }
+  ];
   function warnings(items) {
     var w = [];
-    if (items.length < 2) return w;
-    w.push("Las fichas no especifican simultáneamente grip, overgrip, protector, correa, incertidumbre ni tamaño de muestra: no permiten comparar diferencias pequeñas con rigor.");
+    if (!items.length) return w;
+    var multi = items.length > 1;
+    if (multi) w.push("Las fichas no especifican simultáneamente grip, overgrip, protector, correa, incertidumbre ni tamaño de muestra: no permiten comparar diferencias pequeñas con rigor.");
+
+    /* Clases de evidencia de masa, incluidas las mediciones locales. */
     var evs = {};
-    items.forEach(function (it) { [].concat(it.mass || []).forEach(function (v) { if (v && v.ev) evs[v.ev] = 1; }); });
-    if (Object.keys(evs).length > 1) w.push("Se mezclan clases de evidencia en masa (" + Object.keys(evs).map(function (e) { return DATA.evidence[e].label; }).join(", ") + "): un objetivo o una declaración no es una medición.");
-    if (items.some(function (it) { return /overgrip/i.test(it.config) && /dos overgrips/i.test(it.config); })) w.push("Hay mediciones internas con dos overgrips: no compararlas con pesos de catálogo sin overgrip.");
-    if (items.some(function (it) { return /sin correa/i.test(it.config); })) w.push("Gamma Sterling declara peso sin correa: habría que sumar accesorios para comparar.");
+    items.forEach(function (it) {
+      [].concat(it.mass || []).forEach(function (v) { if (v && v.ev) evs[v.ev] = 1; });
+      if ((it.local || []).some(function (m) { return m.mass; })) evs.KM = 1;
+    });
+    if (multi && Object.keys(evs).length > 1) w.push("Se mezclan clases de evidencia en masa (" + Object.keys(evs).map(function (e) { return DATA.evidence[e].label; }).join(", ") + "): un objetivo o una declaración no es una medición.");
+
+    /* Configuraciones: datos + registros locales, campo por campo. */
+    var entries = [].concat.apply([], items.map(configEntries));
+    CFG_FIELDS.forEach(function (f) {
+      var known = entries.filter(function (e) { return e[f.k] !== null; });
+      var vals = {}; known.forEach(function (e) { vals[String(e[f.k])] = 1; });
+      if (Object.keys(vals).length > 1) {
+        w.push(f.label + " distintos entre los valores mostrados: " + known.map(function (e) { return e.who + " = " + f.fmt(e[f.k]); }).join("; ") + ". No compares masa ni balance entre configuraciones distintas.");
+      }
+      var unknownLocal = entries.filter(function (e) { return e.local && e[f.k] === null; });
+      if (known.length && unknownLocal.length) w.push(f.label + ": sin dato en " + unknownLocal.map(function (e) { return e.who; }).join(", ") + ". Completalo para poder comparar esa medición.");
+    });
+    /* Registros locales de una misma muestra con textos de configuración distintos. */
+    items.forEach(function (it) {
+      var texts = {}; (it.local || []).forEach(function (m) { texts[norm(m.config).replace(/\s+/g, " ").trim()] = 1; });
+      if (Object.keys(texts).length > 1) w.push("Los registros locales de " + it.name + " tienen configuraciones distintas: no promediarlos ni compararlos entre sí sin normalizar.");
+    });
+
     var seasons = {}; items.forEach(function (it) { if (it.season) seasons[it.season] = 1; });
     if (Object.keys(seasons).length > 1) w.push("Temporadas distintas (" + Object.keys(seasons).join(", ") + "): no trasladar datos de una temporada a otra.");
-    if (items.filter(function (it) { return it.hardness && !it.hardness.missing; }).length > 1) w.push("Durezas con escalas distintas o no identificadas (Shore C, “5/10” comercial, “Hard/Medium+”): no equipararlas.");
+
+    /* Dureza: se compara la escala declarada de cada ítem. */
+    var hs = items.filter(function (it) { return it.hardness && !it.hardness.missing; });
+    if (hs.length > 1) {
+      var noScale = hs.filter(function (it) { return it.hardness.scale === "sin-escala"; });
+      var byScale = {};
+      hs.forEach(function (it) { if (it.hardness.scale !== "sin-escala") (byScale[it.hardness.scale] = byScale[it.hardness.scale] || []).push(it.name); });
+      var scales = Object.keys(byScale);
+      if (scales.length > 1) w.push("Escalas de dureza distintas (" + scales.map(function (sc) { return DATA.hardnessScales[sc] + ": " + byScale[sc].join(", "); }).join("; ") + "): no equipararlas.");
+      if (noScale.length) w.push("Dureza sin escala identificada en " + noScale.map(function (it) { return it.name; }).join(", ") + ": no se puede equiparar con otras durezas.");
+      if (scales.length === 1 && !noScale.length) w.push("Misma escala de dureza (" + DATA.hardnessScales[scales[0]] + ") en " + byScale[scales[0]].join(" y ") + ": comparable como declaración, no como medición propia.");
+    }
     if (items.some(function (it) { return [].concat(it.balance || []).some(function (b) { return b && b.qual; }); })) w.push("Hay balances cualitativos: no se convierten en milímetros.");
     var faces = items.map(function (it) { return JSON.stringify(it.face || ""); }).join(" ");
-    if (/\d+K/.test(faces) || /T700/.test(faces)) w.push("12K/16K/18K describen haces de filamentos, no calidad: 18K no es mejor que 12K. T700 no equivale a un número K.");
+    if (multi && (/\d+K/.test(faces) || /T700/.test(faces))) w.push("12K/16K/18K describen haces de filamentos, no calidad: 18K no es mejor que 12K. T700 no equivale a un número K.");
     return w;
   }
 
@@ -382,7 +433,7 @@
       "<div><h4>Medición real</h4>" + (s.measured.length ? rows(s.measured) : K.missing("PEND", s.measuredNote)) +
         (local.length ? '<div class="kv"><span class="k">Registros locales</span>' + local.map(function (m, i) {
           return '<div class="val">' + (m.mass ? '<span class="num">' + esc(m.mass) + " g</span>" : "") + (m.balance ? ' <span class="num">' + esc(m.balance) + " mm</span>" : "") + " " + K.ev("KM", "registro local") +
-            '<span class="note">' + esc(m.date) + " · " + esc(m.who || "sin responsable") + " · " + esc(m.config) + (m.note ? " · " + esc(m.note) : "") +
+            '<span class="note">' + esc(m.date) + " · " + esc(m.who || "sin responsable") + " · " + esc(K.configSummary(m)) + " · " + esc(m.config) + (m.note ? " · " + esc(m.note) : "") +
             ' <button class="btn small" data-action="del-measure" data-sample="' + esc(s.id) + '" data-idx="' + i + '">Borrar</button></span></div>';
         }).join("") + "</div>" : "") + "</div>" +
       "<div><h4>Opinión de tester</h4>" + (s.tester.length ? s.tester.map(function (t) { return '<div class="kv"><span class="k">' + esc(t.who) + "</span>" + esc(t.text) + " " + K.ev("KT") + (t.note ? '<div class="small muted">' + esc(t.note) + "</div>" : "") + "</div>"; }).join("") : K.missing("PEND", s.testerNote)) +
@@ -393,7 +444,10 @@
       "<details><summary>Registrar medición local</summary>" +
       '<form class="measure-form" data-sample="' + esc(s.id) + '">' +
       '<div class="form-row"><label>Fecha<input type="date" name="date" required></label><label>Masa (g)<input name="mass" inputmode="decimal" placeholder="ej. 364,1"></label><label>Balance (mm)<input name="balance" inputmode="decimal" placeholder="ej. 258"></label><label>Responsable<input name="who"></label></div>' +
-      '<div class="form-row"><label>Configuración (obligatoria)<input name="config" required placeholder="grip, correa, overgrips, protector, film"></label><label>Nota<input name="note" placeholder="lecturas, incertidumbre…"></label></div>' +
+      '<div class="form-row"><label>Overgrips<select name="overgrips"><option value="">Sin dato</option><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label>' +
+      '<label>Correa<select name="strap"><option value="">Sin dato</option><option value="si">Con correa</option><option value="no">Sin correa</option></select></label>' +
+      '<label>Protector<select name="protector"><option value="">Sin dato</option><option value="si">Con protector</option><option value="no">Sin protector</option></select></label></div>' +
+      '<div class="form-row"><label>Configuración (obligatoria)<input name="config" required placeholder="grip, film, accesorios, cómo se apoyó"></label><label>Nota<input name="note" placeholder="lecturas, incertidumbre…"></label></div>' +
       '<button class="btn small primary" type="submit">Guardar medición</button> <span class="small muted">Se guarda como “K · Medición interna” en este navegador.</span></form></details>' +
       K.noteField("sample-" + s.id, "Notas y opiniones locales") +
       '<p><button class="btn small primary" data-action="add-compare" data-id="' + esc(s.id) + '">Agregar al comparador</button></p>' +
@@ -401,7 +455,7 @@
   };
 
   /* ---------- DESARROLLO Y PRUEBAS ---------- */
-  var LOAN_STATUS = [{ id: "pendiente", label: "Pendiente de conseguir" }, { id: "solicitada", label: "Solicitada" }, { id: "conseguida", label: "Conseguida" }, { id: "descartada", label: "Descartada" }];
+  var LOAN_STATUS = K.loanStatusOptions;
   function statusSelect(id, opts) {
     var cur = K.getStatus(id);
     return '<select data-status="' + esc(id) + '" aria-label="Estado">' + opts.map(function (o) { return '<option value="' + o.id + '"' + (cur === o.id ? " selected" : "") + ">" + esc(o.label) + "</option>"; }).join("") + "</select>" +

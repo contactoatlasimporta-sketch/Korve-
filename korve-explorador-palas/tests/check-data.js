@@ -52,6 +52,17 @@ D.branches.forEach((b) => {
   b.sample.sampleIds.forEach((id) => ok(D.samples.some((s) => s.id === id), b.id + ": muestra inexistente " + id));
   D.aspects.forEach((a) => ok(b[a.id] && b[a.id].summary, b.id + ": falta aspecto " + a.id));
 });
+// Durezas con escala explícita y configuraciones estructuradas válidas.
+function checkHard(h, where) { if (h && !h.missing) ok(D.hardnessScales[h.scale], where + ": dureza sin escala válida"); }
+function checkSpecs(specs, where) {
+  (specs || []).forEach((c) => {
+    ok(c.label, where + ": configuración sin etiqueta");
+    ok(c.overgrips === null || [0, 1, 2, 3].includes(c.overgrips), where + ": overgrips inválido");
+    ["strap", "protector"].forEach((k) => ok(c[k] === null || typeof c[k] === "boolean", where + ": " + k + " inválido"));
+  });
+}
+D.references.forEach((r) => { checkHard(r.hardness, r.name); checkSpecs(r.configSpecs, r.name); });
+D.samples.forEach((s) => { checkHard(s.compare.hardness, s.name); ok(Array.isArray(s.compare.configSpecs) && s.compare.configSpecs.length, s.name + ": faltan configuraciones estructuradas"); checkSpecs(s.compare.configSpecs, s.name); });
 ok(/^https:\/\//.test(D.frictionData.sourceUrl), "Falta enlace de Padel University");
 ok(!/\bTomi\b/.test(JSON.stringify(D)), "Usar el nombre Tomás Sánchez, no Tomi");
 // Ningún texto declara ganador ni "mejor".

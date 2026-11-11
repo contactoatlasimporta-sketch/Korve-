@@ -18,6 +18,7 @@
   }
 
   function render(keepScroll) {
+    K.flushPending();
     var r = parse();
     var y = window.scrollY;
     if (cleanup) { try { cleanup(); } catch (e) {} cleanup = null; }
@@ -68,8 +69,16 @@
     dialog("<p>" + K.esc(msg) + '</p><div class="dialog-actions"><button class="btn" data-close data-autofocus>Cancelar</button><button class="btn primary" data-ok>' + K.esc(okLabel) + "</button></div>",
       function (d, close) { d.querySelector("[data-ok]").addEventListener("click", function () { close(); onYes(); }); });
   };
+  /* Primero valida; solo si el archivo es compatible pide confirmación y reemplaza. */
   K.confirmImport = function (text) {
-    K.ask("Importar reemplaza las notas, estados y mediciones locales actuales. ¿Continuar?", "Importar", function () {
+    var res = K.validateImportText(text);
+    if (!res.ok) {
+      dialog('<h2>No se importó nada</h2><p class="small">El archivo no es compatible. Tus datos actuales no cambiaron.</p><ul class="clean small" id="import-errors">' +
+        res.errors.slice(0, 8).map(function (x) { return "<li>" + K.esc(x) + "</li>"; }).join("") + (res.errors.length > 8 ? "<li>y " + (res.errors.length - 8) + " problemas más</li>" : "") +
+        '</ul><div class="dialog-actions"><button class="btn primary" data-close data-autofocus>Entendido</button></div>', function () {});
+      return;
+    }
+    K.ask("El archivo es válido (" + res.summary + "). Importar reemplaza las notas, estados y mediciones locales actuales. ¿Continuar?", "Importar", function () {
       K.importText(text, function (err) {
         if (err) toast("No se pudo importar: " + err.message); else { render(true); toast("Datos importados."); }
       });
@@ -145,33 +154,40 @@
     }
   });
 
-  var timers = {};
-  document.addEventListener("input", function (e) {
-    var t = e.target;
+  /* Notas: guardado diferido + guardado inmediato al salir del campo, cambiar de vista u ocultar la página. */
+  function queueNote(t) {
     if (t.matches("textarea[data-note]")) {
-      var id = t.getAttribute("data-note");
-      clearTimeout(timers[id]); timers[id] = setTimeout(function () { K.setNote(id, t.value.trim() ? t.value : ""); }, 300);
+      var id = t.getAttribute("data-note"), v1 = t.value;
+      K.queueSave("note:" + id, function () { K.setNote(id, v1.trim() ? v1 : ""); });
     } else if (t.matches("textarea[data-fnote]")) {
-      var key = t.getAttribute("data-fnote");
-      clearTimeout(timers[key]); timers[key] = setTimeout(function () {
-        var s = K.state(); if (t.value.trim()) s.factoryNotes[key] = t.value; else delete s.factoryNotes[key]; K.save();
-      }, 300);
+      var key = t.getAttribute("data-fnote"), v2 = t.value;
+      K.queueSave("fnote:" + key, function () { var s = K.state(); if (v2.trim()) s.factoryNotes[key] = v2; else delete s.factoryNotes[key]; K.save(); });
     }
-  });
+  }
+  document.addEventListener("input", function (e) { queueNote(e.target); });
+  document.addEventListener("focusout", function (e) { if (e.target.matches && e.target.matches("textarea[data-note],textarea[data-fnote]")) K.flushPending(); });
+  window.addEventListener("pagehide", function () { K.flushPending(); });
+  window.addEventListener("beforeunload", function () { K.flushPending(); });
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") K.flushPending(); });
 
   document.addEventListener("submit", function (e) {
     var f = e.target;
     if (!f.matches(".measure-form")) return;
     e.preventDefault();
     var fd = new FormData(f), sid = f.getAttribute("data-sample");
-    var rec = { date: fd.get("date"), mass: String(fd.get("mass") || "").trim(), balance: String(fd.get("balance") || "").trim(), who: String(fd.get("who") || "").trim(), config: String(fd.get("config") || "").trim(), note: String(fd.get("note") || "").trim() };
-    var num = /^\d{2,4}([.,]\d{1,2})?$/;
+    function tri(v) { return v === "si" ? true : v === "no" ? false : null; }
+    var og = String(fd.get("overgrips") || "");
+    var rec = { date: String(fd.get("date") || ""), mass: String(fd.get("mass") || "").trim(), balance: String(fd.get("balance") || "").trim(), who: String(fd.get("who") || "").trim(), config: String(fd.get("config") || "").trim(), note: String(fd.get("note") || "").trim(),
+      overgrips: og === "" ? null : +og, strap: tri(fd.get("strap")), protector: tri(fd.get("protector")) };
     if (!rec.mass && !rec.balance) { toast("Ingresá al menos masa (g) o balance (mm)."); return; }
-    if ((rec.mass && !num.test(rec.mass)) || (rec.balance && !num.test(rec.balance))) { toast("Usá números en g y mm, por ejemplo 364,1."); return; }
+    if ((rec.mass && !K.NUM_RE.test(rec.mass)) || (rec.balance && !K.NUM_RE.test(rec.balance))) { toast("Usá números en g y mm, por ejemplo 364,1."); return; }
     if (!rec.config) { toast("La configuración de medición es obligatoria."); return; }
+    var errs = K.measurementErrors(rec);
+    if (errs.length) { toast("Medición no válida: " + errs[0] + "."); return; }
     var s = K.state(); (s.measurements[sid] = s.measurements[sid] || []).push(rec); K.save();
     render(true); toast("Medición guardada localmente.");
   });
 
+  K.load(); /* carga y valida los datos locales antes de dibujar cualquier vista */
   render(false);
 })();
