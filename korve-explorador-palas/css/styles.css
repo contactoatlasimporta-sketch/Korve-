@@ -52,7 +52,8 @@ input:hover, select:hover, textarea:hover { border-color: #9ea59f; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--focus); outline-offset: 0; border-color: var(--focus); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.num, .val .num, .prio, .window .num { font-variant-numeric: tabular-nums; }
+/* Cifras tabulares solo donde se alinean números (en Inter también ensanchan el guion de textos como "medio-alta"). */
+.prio, .window .num { font-variant-numeric: tabular-nums; }
 
 /* ---------- Encabezado ---------- */
 .top { background: var(--night); color: var(--night-text); position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; }

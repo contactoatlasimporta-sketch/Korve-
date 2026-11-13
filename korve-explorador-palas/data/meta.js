@@ -110,3 +110,7 @@ window.KORVE_DATA.recommendedDecisions = [
   "Cerrar objetivos numéricos de inercia, rigidez y respuesta después de medir las bases, no a partir de publicidad.",
   "Elegir una sola fábrica únicamente cuando sus resultados y capacidad de repetición justifiquen los tres modelos."
 ];
+
+/* Actualización de fuentes internas; no cambia el corte de investigación del mercado. */
+window.KORVE_DATA.meta.cutoffNote += " Actualización interna de William incorporada el 13/11/2026 a partir de capturas aportadas por Gonzalo; no es una nueva revisión del mercado.";
+window.KORVE_DATA.inconsistencies.push("William / KS-01: el rango 19–22 fue llamado dureza y después densidad, sin unidad ni escala. Los objetivos de peso y balance no equivalen a garantía conjunta de producción; ±10 continúa ambiguo. Separar unidades fuera de especificación en cajas no significa excluirlas del envío.");

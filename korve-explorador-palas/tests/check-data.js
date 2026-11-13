@@ -65,6 +65,22 @@ D.references.forEach((r) => { checkHard(r.hardness, r.name); checkSpecs(r.config
 D.samples.forEach((s) => { checkHard(s.compare.hardness, s.name); ok(Array.isArray(s.compare.configSpecs) && s.compare.configSpecs.length, s.name + ": faltan configuraciones estructuradas"); checkSpecs(s.compare.configSpecs, s.name); });
 ok(/^https:\/\//.test(D.frictionData.sourceUrl), "Falta enlace de Padel University");
 ok(!/\bTomi\b/.test(JSON.stringify(D)), "Usar el nombre Tomás Sánchez, no Tomi");
+// Actualización de William (13/11/2026): lecturas del proveedor separadas de las mediciones locales.
+const mc = D.samples.find((x) => x.id === "mc005"), ks = D.samples.find((x) => x.id === "ks01");
+[[mc, "364,1"], [ks, "366,6"]].forEach(([smp, v]) => {
+  const m = smp.measured.find((x) => x.label === "Masa");
+  ok(m && m.v === v && m.ev === "KM" && /Tomás/.test(m.who), smp.name + ": se conserva la medición local de Tomás (" + v + " g, KM)");
+  ok(smp.measured.some((x) => x.label === "Balance" && x.missing === "BLANK"), smp.name + ": el balance local de Tomás sigue en blanco");
+  ok(smp.compare.mass.some((x) => x.v === v && x.ev === "KM"), smp.name + ": el comparador conserva la medición local de Tomás");
+  [...smp.declared, ...smp.compare.mass, ...smp.compare.balance].forEach((x) => {
+    if (/William/.test(x.label || "") || /informada por William/.test(x.note || "")) ok(x.ev === "KP", smp.name + ": una lectura de William debe ser declaración de proveedor (KP), no " + x.ev);
+  });
+});
+ok(ks.compare.hardness.scale === "sin-escala" && /19–22/.test(ks.compare.hardness.v), "KS-01: 19–22 sin escala asignada");
+JSON.stringify(D).split(/(?<=[.;"])/).filter((t) => /19–22/.test(t)).forEach((t) =>
+  ok(!/\b(Shore|kg\/m|g\/cm)/.test(t) || /no (tratar|comparable)|No comparable|no tratar/i.test(t), "19–22 no debe asociarse a Shore ni a una unidad de densidad: " + t));
+ok(mc.warnings.concat(ks.warnings).some((w) => /no están garantizados simultáneamente/.test(w)), "Sin garantía acordada de peso y balance simultáneos");
+ok(D.factories.find((f) => f.id === "william").toValidate.some((t) => /fuera de especificación/.test(t)), "Fábrica William: política de unidades fuera de especificación pendiente");
 // Ningún texto declara ganador ni "mejor".
 const all = JSON.stringify(D);
 ok(!/ganador:/i.test(all), "No debe haber ganador declarado");
