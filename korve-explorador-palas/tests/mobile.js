@@ -12,7 +12,7 @@ const UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/6
 const SIZES = [{ w: 375, h: 667 }, { w: 390, h: 844 }, { w: 430, h: 932 }];
 const FONTS = [{ id: "sistema", css: "" }, { id: "helvetica", css: ':root{--font:"FreeSans","Helvetica Neue",Helvetica,Arial,sans-serif !important}' }];
 const MAP_STATES = ["mapa", "mapa--POWER", "mapa--HYBRID--refs", "mapa--CONTROL--develop", "mapa--CONTROL--refs--hd-gravity-pro-2027"];
-const VIEWS = ["mercado", "comparador", "muestras--mc005", "desarrollo--dev-eva", "desarrollo", "fabrica", "fuentes"];
+const VIEWS = ["inicio", "pala--mc005", "mercado", "comparador", "muestras--mc005", "desarrollo--dev-eva", "desarrollo", "fabrica", "fuentes"];
 
 /* Geometría del mapa medida en el navegador. */
 function mapGeometry() {
@@ -123,7 +123,7 @@ function pageGeometry() {
       await page.goto(URL + "#" + v); await page.reload(); await page.waitForTimeout(250);
       const pg = await page.evaluate(pageGeometry);
       assert.deepStrictEqual(pg, [], tag + " " + v + ": " + pg.join(" | "));
-      if (v.includes("--")) {
+      if (v.startsWith("muestras--") || v.startsWith("desarrollo--")) {
         const id = v.startsWith("muestras") ? "sample-mc005" : "dev-dev-eva";
         const top = await page.evaluate((id) => document.getElementById(id).getBoundingClientRect().top, id);
         const hb = await page.evaluate(() => document.querySelector(".top").getBoundingClientRect().bottom);

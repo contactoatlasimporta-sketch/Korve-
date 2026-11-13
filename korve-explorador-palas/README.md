@@ -25,6 +25,15 @@ Usá `dist/korve-explorador.html`: es la app completa en un solo archivo. Descom
 
 Para regenerarlo después de editar los datos o el diseño: `node tools/build-single.js`. El logo y las fuentes quedan incrustados en el archivo, que no depende de ninguna otra ruta. Ese comando también genera `dist/artifact.html`, la variante que se publica como vista previa en el chat de Claude.
 
+## Entender KORVE (portada y ficha de MC-005)
+
+La app abre en una **portada** pensada para quien no conoce el detalle técnico: qué queremos crear, qué buscamos con POWER, HYBRID y CONTROL (presentados como hipótesis de desarrollo), qué papel evaluamos para cada muestra, y qué sabemos, qué falta y cuál es el próximo paso. La **ficha de MC-005** (`#pala--mc005`) es la referencia de diseño para las fichas de pala: separa lo que pide el proveedor, lo que informó William y lo que medimos nosotros, explica el balance y el armado de la pala con diagramas paso a paso, y deja la ficha técnica completa en «Profundizar».
+
+- Los textos en lenguaje cotidiano están en `data/guide.js`, separados de la investigación y con la fuente de cada afirmación. Las cifras se leen de `data/korve.js`.
+- Los esquemas (silueta de pala, corte del núcleo) son ilustrativos y lo dicen en pantalla; no hay fotografías de las muestras en el proyecto. El largo y el espesor del esquema de MC-005 están a escala de lo declarado por William; la forma y el ancho no.
+- Los términos subrayados con puntos (balance, dureza, 12K…) se explican al tocarlos. Escape o tocar afuera cierra la explicación.
+- Todo funciona con teclado y pantalla táctil, y con «reducir movimiento» activado las animaciones se desactivan sin ocultar contenido.
+
 ## Identidad visual
 
 - **Logo:** `assets/korve-logo.png`, recortado del archivo original sin redibujar (solo se quitó el margen vacío; proporción 6,24 : 1). Tiene letras blancas, por eso va sobre negro: en el encabezado y en el nodo central del mapa.
@@ -78,6 +87,7 @@ node tests/check-data.js
 - `node tests/check-data.js` controla la integridad de los datos y las reglas de rigor. Por ejemplo, que haya 41 marcas, que cada dato tenga clase de evidencia y que ningún ensayo figure como realizado.
 - `node tests/robustness.js` prueba casos específicos: 31 archivos de importación inválidos rechazados sin alterar el estado, notas pendientes al exportar o cambiar de vista, escalas de dureza (W3 y AMP22 comparten Shore C) y mediciones locales en las advertencias del comparador.
 - `node tests/mobile.js [carpeta-capturas]` revisa celulares de 375, 390 y 430 px en vertical, con la fuente del sistema y con una de métricas tipo Helvetica (como iOS). Comprueba que el texto quede dentro de cada nodo del mapa, que no haya nodos superpuestos, letras de menos de 10,5 px, controles tapados, destinos ocultos bajo el encabezado, campos de menos de 16 px (Safari hace zoom al tocarlos) ni contenido que ensanche la página.
+- `node tests/experience.js` prueba la portada y la ficha de MC-005: recorrido, selector de perfiles con teclado y toque, diagramas paso a paso, explicaciones de términos, desplegables, separación de las tres fuentes de cifras de MC-005, movimiento reducido, estabilidad de diseño y legibilidad a 375, 390 y 430 px.
 - `node tests/william.js` verifica la actualización de William en Muestras, Comparador, Fábrica y Fuentes, en escritorio y a 375 px: lecturas del proveedor separadas de las mediciones de Tomás, 19–22 sin escala y límites de control de calidad.
 - `node tests/e2e.js [carpeta-capturas]` (con `KORVE_FILE=` y la ruta completa de `dist/korve-explorador.html` o `dist/artifact.html` prueba esas versiones; vale también para `robustness.js`) prueba con Playwright la navegación del mapa, los filtros, el comparador, las fuentes, los estados vacíos, la exportación e importación y la vista móvil de 390 px.
 

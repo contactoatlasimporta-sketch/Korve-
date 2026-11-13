@@ -2,7 +2,7 @@
 const fs = require("fs"), path = require("path"), vm = require("vm");
 const root = path.join(__dirname, "..");
 const ctx = { window: {} }; vm.createContext(ctx);
-["meta", "brands", "references", "korve", "branches"].forEach((f) =>
+["meta", "brands", "references", "korve", "branches", "guide"].forEach((f) =>
   vm.runInContext(fs.readFileSync(path.join(root, "data", f + ".js"), "utf8"), ctx));
 const D = ctx.window.KORVE_DATA;
 const errors = [];
@@ -81,6 +81,20 @@ JSON.stringify(D).split(/(?<=[.;"])/).filter((t) => /19–22/.test(t)).forEach((
   ok(!/\b(Shore|kg\/m|g\/cm)/.test(t) || /no (tratar|comparable)|No comparable|no tratar/i.test(t), "19–22 no debe asociarse a Shore ni a una unidad de densidad: " + t));
 ok(mc.warnings.concat(ks.warnings).some((w) => /no están garantizados simultáneamente/.test(w)), "Sin garantía acordada de peso y balance simultáneos");
 ok(D.factories.find((f) => f.id === "william").toValidate.some((t) => /fuera de especificación/.test(t)), "Fábrica William: política de unidades fuera de especificación pendiente");
+// Capa de lectura simple: todo lo que cita existe en los datos.
+const G = D.guide;
+ok(G, "Falta data/guide.js");
+G.voices.forEach((v) => ok(D.evidence[v.ev], "Voz con clase de evidencia inexistente: " + v.ev));
+Object.keys(G.profiles).forEach((k) => ok(D.branches.some((b) => b.id === k), "Perfil inexistente en guide: " + k));
+D.branches.forEach((b) => ok(G.profiles[b.id], "Falta texto simple del perfil " + b.id));
+Object.keys(G.samplesPlain).forEach((k) => ok(D.samples.some((s) => s.id === k), "Muestra inexistente en guide: " + k));
+D.samples.forEach((s) => ok(G.samplesPlain[s.id], "Falta texto simple de la muestra " + s.name));
+ok(D.stages.some((s) => s.id === G.next.stageId), "El próximo paso apunta a una etapa inexistente");
+[...G.known, ...G.missing, ...G.mc005.nextSteps].forEach((k) => ok(k.src, "Afirmación sin fuente en guide: " + (k.text || k.title)));
+// La ficha de MC-005 lee estas filas por su nombre: si cambian, hay que actualizar la vista.
+["Cara", "Núcleo", "Marco", "Relleno", "Acabado", "Dimensiones", "Masa objetivo del proveedor", "Balance objetivo del proveedor", "Masa de la muestra informada por William", "Balance de la muestra informado por William", "Control de producción", "Ensayos y densidad"]
+  .forEach((l) => ok(mc.declared.some((d) => d.label === l), "MC-005: falta la fila declarada «" + l + "» que usa la ficha"));
+ok(mc.compare.configSpecs.length >= 3, "MC-005: la ficha usa tres configuraciones (proveedor, Tomás, William)");
 // Ningún texto declara ganador ni "mejor".
 const all = JSON.stringify(D);
 ok(!/ganador:/i.test(all), "No debe haber ganador declarado");

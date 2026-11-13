@@ -3,7 +3,11 @@
   var DATA = window.KORVE_DATA, K = window.K, V = window.KViews;
   var app = document.getElementById("app");
   var cleanup = null, current = null;
-  var VIEWS = ["mapa", "mercado", "comparador", "muestras", "desarrollo", "fabrica", "fuentes"];
+  var VIEWS = ["inicio", "pala", "mapa", "mercado", "comparador", "muestras", "desarrollo", "fabrica", "fuentes"];
+  /* La ficha de pala se ubica dentro de "Muestras" en la navegación. */
+  var NAV_OF = { pala: "muestras" };
+  var TITLES = { inicio: "Inicio", pala: "Ficha de pala" };
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)");
 
   document.getElementById("cutoff").innerHTML = '<span class="long">Corte de la investigación: </span><span class="short">Corte </span>' + K.esc(DATA.meta.cutoff) + '<span class="long"> · Propuestas, no especificaciones aprobadas</span>';
 
@@ -17,9 +21,9 @@
 
   function parse() {
     /* Rutas: #vista o #vista--sub--sub (también acepta "/" de versiones anteriores). */
-    var h = decodeURIComponent((location.hash || "#mapa").slice(1)), m = h.match(/--|\//);
+    var h = decodeURIComponent((location.hash || "#inicio").slice(1)), m = h.match(/--|\//);
     var view = m ? h.slice(0, m.index) : h, sub = m ? h.slice(m.index + m[0].length) : "";
-    if (VIEWS.indexOf(view) < 0) view = "mapa";
+    if (VIEWS.indexOf(view) < 0) { view = "inicio"; sub = ""; }
     return { view: view, sub: sub };
   }
 
@@ -29,18 +33,25 @@
     var y = window.scrollY;
     if (cleanup) { try { cleanup(); } catch (e) {} cleanup = null; }
     var v = V[r.view];
+    app.setAttribute("data-view", r.view);
     app.innerHTML = v.html(r.sub);
+    /* Entrada breve al cambiar de vista: el contenido es legible desde el primer cuadro (no parte de opacidad 0). */
+    if (!keepScroll && r.view !== current && !(reduceMotion && reduceMotion.matches)) {
+      app.classList.remove("enter"); void app.offsetWidth; app.classList.add("enter");
+    }
     if (v.mount) cleanup = v.mount(r.sub) || null;
     labelTables(app);
+    var navView = NAV_OF[r.view] || r.view;
     document.querySelectorAll("nav.tabs a").forEach(function (a) {
-      if (a.getAttribute("data-view") === r.view) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+      if (a.getAttribute("data-view") === navView) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
     });
     var act = document.querySelector('nav.tabs a[aria-current="page"]'), ul = document.querySelector("nav.tabs ul");
     if (act && ul) ul.scrollLeft = act.parentNode.offsetLeft - (ul.clientWidth - act.offsetWidth) / 2;
-    document.title = "KORVE · " + document.querySelector('nav.tabs a[data-view="' + r.view + '"]').textContent;
+    document.title = "KORVE · " + (TITLES[r.view] || document.querySelector('nav.tabs a[data-view="' + r.view + '"]').textContent);
     if (keepScroll) window.scrollTo(0, y);
     else if (r.view !== current) { window.scrollTo(0, 0); }
     current = r.view;
+    document.getElementById("footer").hidden = false;
   }
 
   /* Tablas con encabezado: cada celda recibe el nombre de su columna, para mostrarlas apiladas en celulares. */
