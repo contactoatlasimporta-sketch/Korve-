@@ -357,6 +357,7 @@ details.smooth.on-dark a { color: #fff; }
 .bal-mc .wil { stroke: #fff; stroke-width: 2; stroke-dasharray: 3 3; }
 .bal-mc .wil-t { text-anchor: end; fill: var(--xp-muted); }
 .bal-mc .wil-c { fill: var(--xp-muted); }
+.bal-mc .ours { fill: var(--xp-ink); stroke: var(--accent); stroke-width: 2.5; }
 .bal-art g { transition: opacity .4s var(--xp-ease), transform .5s var(--xp-ease); }
 .bal-dim, .bal-shift, .bal-mc { opacity: .1; }
 .bal-fulcrum { transform-box: fill-box; transform-origin: center bottom; }

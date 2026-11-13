@@ -85,8 +85,8 @@ const URL = require("./target");
   const cols = page.locator(".num-col");
   assert.strictEqual(await cols.count(), 3);
   const [ct, cw, co] = [await cols.nth(0).textContent(), await cols.nth(1).textContent(), await cols.nth(2).textContent()];
-  assert.ok(ct.includes("360 ±5") && ct.includes("255 ±7") && ct.includes("Lo declara el proveedor") && ct.includes("no garantía"), "objetivo del proveedor");
-  assert.ok(cw.includes("357") && cw.includes("250") && cw.includes("Lo declara el proveedor") && cw.includes("sin protocolo"), "lectura de William como declaración");
+  assert.ok(ct.includes("360 ±5") && ct.includes("255 ±7") && ct.includes("Lo declara el proveedor") && ct.includes("no tolerancia contractual garantizada") && ct.includes("Configuración de referencia") && !ct.includes("Con qué se pesó"), "objetivo del proveedor (nota y rótulo desde los datos; un objetivo no se pesa)");
+  assert.ok(cw.includes("357") && cw.includes("250") && cw.includes("Lo declara el proveedor") && cw.includes("no aportados") && cw.includes("Film de embalaje") && cw.includes("Condiciones informadas"), "lectura de William como declaración, con sus condiciones conocidas y pendientes");
   assert.ok(co.includes("364,1") && co.includes("Lo medimos nosotros") && co.includes("Sin medir") && co.includes("2 overgrips"), "medición propia con balance sin medir");
   assert.ok(!/357|250 mm|360 ±5/.test(co), "la medición propia no mezcla cifras de otras fuentes");
   assert.strictEqual(await cols.nth(1).locator(".voice-KM").count(), 0, "la lectura de William no lleva la etiqueta de medición propia");
@@ -107,6 +107,29 @@ const URL = require("./target");
   assert.ok((await page.locator("#st-core").textContent()).includes("Proporciones ilustrativas"), "el corte aclara que es ilustrativo");
   assert.ok((await page.locator(".pala-art figcaption").textContent()).includes("no es una foto de MC-005"), "el esquema de la pala aclara que no es una foto");
   step("Diagramas: pasos con anterior/siguiente, selección directa, lectura del paso y aclaración de esquemas");
+
+  /* El diagrama y el texto del balance siguen a los datos de MC-005 (no hay cifras escritas a mano). */
+  const svgOf = () => page.evaluate(() => { const s = [...document.querySelectorAll("#st-balance svg")].find((x) => getComputedStyle(x).display !== "none"); const band = s.querySelector(".band"), wil = s.querySelector(".wil");
+    return { text: s.textContent, band: band ? [+band.getAttribute("x"), +band.getAttribute("width")] : null, wil: wil ? +wil.getAttribute("x1") : null, vb: s.viewBox.baseVal.width }; });
+  const orig = await svgOf();
+  assert.ok(orig.text.includes("255 ±7 mm") && orig.text.includes("250 mm") && orig.text.includes("nuestra medición: pendiente"), "valores actuales de la ficha en el dibujo");
+  assert.ok(!/más rápida|más inercia/.test(orig.text), "el dibujo no asocia balance con rapidez o inercia");
+  await page.evaluate(() => {
+    const s = window.K.sampleById.mc005, row = (l) => s.declared.find((d) => d.label === l);
+    row("Balance objetivo del proveedor").v = "262 ±5 mm"; row("Balance de la muestra informado por William").v = "248 mm"; row("Dimensiones").v = "460 mm de largo; 38 mm de espesor";
+    window.KApp.rerender();
+  });
+  const chg = await svgOf();
+  assert.ok(chg.text.includes("262 ±5 mm") && chg.text.includes("248 mm") && !chg.text.includes("255 ±7"), "el dibujo toma los valores nuevos");
+  const k = (x) => 40 + x / 460 * 560; /* misma escala que el dibujo ancho */
+  assert.ok(Math.abs(chg.band[0] - k(257)) < 0.5 && Math.abs(chg.band[1] - (k(267) - k(257))) < 0.5 && Math.abs(chg.wil - k(248)) < 0.5, "las marcas se ubican a escala de los datos nuevos");
+  assert.ok((await page.locator("#st-balance").textContent()).includes("El proveedor pide 262 ±5 mm y William informó 248 mm"), "el texto del paso también");
+  assert.ok((await page.locator("#st-balance .art-note").textContent()).includes("460 mm"), "la nota de escala usa el largo declarado");
+  await page.evaluate(() => { const s = window.K.sampleById.mc005; s.declared = s.declared.filter((d) => d.label !== "Balance de la muestra informado por William"); window.KApp.rerender(); });
+  const sinW = await svgOf();
+  assert.ok(sinW.wil === null && !/William informó/.test(sinW.text), "sin dato de William, no se dibuja su marca ni su etiqueta");
+  await page.goto(URL + "#inicio"); await page.reload(); await page.goto(URL + "#pala--mc005");
+  step("Balance ligado a los datos: valores, escala y texto cambian con la ficha; sin dato no hay marca");
 
   /* Tester: resúmenes, no citas */
   const q = await page.locator(".q-t").allTextContents();

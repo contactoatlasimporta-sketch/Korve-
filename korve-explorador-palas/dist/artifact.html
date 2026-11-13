@@ -749,6 +749,7 @@ details.smooth.on-dark a { color: #fff; }
 .bal-mc .wil { stroke: #fff; stroke-width: 2; stroke-dasharray: 3 3; }
 .bal-mc .wil-t { text-anchor: end; fill: var(--xp-muted); }
 .bal-mc .wil-c { fill: var(--xp-muted); }
+.bal-mc .ours { fill: var(--xp-ink); stroke: var(--accent); stroke-width: 2.5; }
 .bal-art g { transition: opacity .4s var(--xp-ease), transform .5s var(--xp-ease); }
 .bal-dim, .bal-shift, .bal-mc { opacity: .1; }
 .bal-fulcrum { transform-box: fill-box; transform-origin: center bottom; }
@@ -2911,7 +2912,7 @@ window.KORVE_DATA.guide = {
 
   /* Qué rol se evalúa para cada muestra, en palabras simples. */
   samplesPlain: {
-    w3: "La base natural para POWER por el peso y balance que le pedimos a NEX. Todavía no se probó en cancha.",
+    w3: "La base natural para POWER por el peso y balance que le pedimos a NEX. Todavía no tenemos una evaluación de cancha registrada.",
     amp22: "Candidata a CONTROL por el peso y balance que le pedimos a NEX: más liviana y con el balance más bajo que W3. Falta comprobar que sea estable al bloquear.",
     mc005: "Nuestra vara para HYBRID: en uso convenció por firmeza, estabilidad, salida suficiente y capacidad de atacar.",
     ks01: "Rol todavía abierto. No la asignamos a CONTROL solo para completar la línea."
@@ -2947,10 +2948,10 @@ window.KORVE_DATA.guide = {
 
   /* Glosario: definiciones generales y breves, con el criterio del informe donde aplica. */
   glossary: {
-    balance: { term: "Balance", text: "Dónde está el punto de equilibrio de la pala, medido en milímetros desde el tapón del mango. Más milímetros significa más peso hacia la cabeza: el golpe lleva más inercia, pero cuesta más mover la pala." },
+    balance: { term: "Balance", text: "Indica dónde está el centro de masa de la pala, medido en milímetros desde el tapón del mango: más milímetros, más cerca de la cabeza. Cuánto cuesta moverla no depende solo de eso: también influyen la masa total y cómo se reparte a lo largo de la pala." },
     salida: { term: "Salida de bola", text: "Qué tan fácil sale despedida la pelota con poco esfuerzo. Ayuda a defender desde el fondo, pero demasiada puede hacer que un bloqueo se vaya largo." },
     estabilidad: { term: "Estabilidad", text: "Cuánto resiste la pala a girarse o vibrar cuando la pelota pega lejos del centro." },
-    dureza: { term: "Dureza", text: "Qué tan firme se siente el núcleo o la cara. Cada marca usa su propia escala (Shore C, del 1 al 10, palabras), así que no se pueden comparar entre sí." },
+    dureza: { term: "Dureza", text: "Qué tan firme es el núcleo o la cara. A veces se informa con una escala identificada, como Shore C, que se mide con un durómetro; otras veces con palabras comerciales como «medio» o «duro», que no tienen escala y no se comparan entre marcas. Incluso con la misma escala, dos valores solo se comparan si se midieron en condiciones comparables." },
     nucleo: { term: "Núcleo multicapa", text: "El relleno interior de la pala armado en capas. «H/S/H» significa duro, blando, duro: dos capas firmes y una más blanda en el medio." },
     k12: { term: "12K, 18K", text: "Miles de filamentos por cada hilo de carbono. Describe cómo es el tejido, no su calidad: 18K no es mejor que 12K." },
     t700: { term: "T700", text: "Nombre de un tipo de fibra de carbono. No es un número K ni una escala de calidad." },
@@ -2965,7 +2966,7 @@ window.KORVE_DATA.guide = {
     caveat: "Es una referencia por uso, no una ficha de laboratorio, y la preferencia viene de una sola persona.",
     src: "Informe, secciones 7 y 8",
     numbersTitle: "Tres pares de números que no son lo mismo",
-    numbersLead: "Para MC-005 circulan tres juegos de cifras. Cada uno se tomó de otra forma y con otros accesorios, así que no se restan ni se promedian.",
+    numbersLead: "Para MC-005 circulan tres juegos de cifras que no son lo mismo: uno es el objetivo que pide el proveedor, otro es una lectura de la muestra informada por William y otro es una medición local nuestra. De cada uno conocemos algunas condiciones y otras siguen pendientes, así que no se restan ni se promedian.",
     nextTitle: "Próxima prueba propuesta",
     nextSteps: [
       { title: "Ficha normalizada", text: "Medir MC-005 sin overgrips, con tres lecturas de peso y balance, igual que las demás muestras.", src: "Plan, Etapa A" },
@@ -2978,8 +2979,9 @@ window.KORVE_DATA.guide = {
   balanceSteps: [
     { title: "La pala se apoya en un solo punto", text: "Si la apoyás de costado sobre un filo, hay un único punto donde queda en equilibrio." },
     { title: "Se mide desde el tapón", text: "El balance es la distancia, en milímetros, entre el tapón del mango y ese punto." },
-    { title: "Más milímetros, más peso arriba", text: "Un balance alto pone más masa hacia la cabeza: más inercia en el golpe y más esfuerzo para moverla. Un balance bajo la hace más rápida de manejar. Aun así, el balance solo no lo explica todo: por eso el plan también propone medir inercia." },
-    { title: "El caso de MC-005", text: "El proveedor pide 255 ±7 mm y William informó 250 mm en la muestra. Nuestro propio balance todavía no se midió." }
+    { title: "Indica dónde está el centro de masa", text: "Un balance más alto significa que el centro de masa está más cerca de la cabeza; uno más bajo, más cerca del mango. Cuánto cuesta mover la pala depende además de su masa total y de cómo se reparte: dos palas con el mismo balance pueden sentirse distintas. Por eso el plan propone medir también la inercia." },
+    /* Las cifras de este paso se completan desde korve.js ({objetivo}, {william}, {nuestro}). */
+    { title: "El caso de MC-005", text: "El proveedor pide {objetivo} y William informó {william} en la muestra. {nuestro}" }
   ],
 
   /* Diagrama del núcleo: pasos. Las proporciones del dibujo son ilustrativas. */
@@ -4707,35 +4709,62 @@ window.KORVE_DATA.guide = {
     return '<ul class="cfg">' + out.map(function (x) { return '<li class="' + (/sin dato/.test(x) ? "unk" : "") + '">' + esc(x) + "</li>"; }).join("") + "</ul>";
   }
 
-  /* Diagrama de balance: largo a escala del dato declarado (455 mm); silueta ilustrativa.
+  /* Datos de balance de una muestra, leídos de korve.js. Nada se escribe a mano: si un dato no está, no se dibuja. */
+  function num(t) { return t == null ? null : parseFloat(String(t).replace(",", ".")); }
+  function balanceData(s) {
+    var d = dimsOf(decl(s, "Dimensiones")), bT = decl(s, "Balance objetivo del proveedor"), bW = decl(s, "Balance de la muestra informado por William");
+    var mT = bT && bT.v.match(/(\d+(?:[.,]\d+)?)\s*±\s*(\d+(?:[.,]\d+)?)\s*mm/), mW = bW && bW.v.match(/(\d+(?:[.,]\d+)?)\s*mm/);
+    var bM = meas(s, "Balance"), local = (K.state().measurements[s.id] || []).filter(function (m) { return m.balance; });
+    var ours = bM && !bM.missing ? { v: num(bM.v), txt: bM.v + " mm", how: bM.config || "" } : local.length ? { v: num(local[local.length - 1].balance), txt: local[local.length - 1].balance + " mm", how: "registro local " + local[local.length - 1].date } : null;
+    return { len: d ? num(d.len) : null, lenTxt: d ? d.len : "",
+      tgt: mT ? num(mT[1]) : null, tol: mT ? num(mT[2]) : null, tgtTxt: bT ? bT.v : "",
+      wil: mW ? num(mW[1]) : null, wilTxt: bW ? bW.v : "", ours: ours };
+  }
+  function fillSteps(steps, bd) {
+    var rep = { objetivo: bd.tgtTxt || "un objetivo que no figura en la ficha", william: bd.wilTxt || "un valor que no figura en la ficha",
+      nuestro: bd.ours ? "Nuestra medición registrada: " + bd.ours.txt + (bd.ours.how ? " (" + bd.ours.how + ")" : "") + "." : "Nuestro propio balance todavía no se midió." };
+    return steps.map(function (st) { return { title: st.title, text: st.text.replace(/\{(\w+)\}/g, function (m, k) { return rep[k] != null ? rep[k] : m; }) }; });
+  }
+  /* Diagrama de balance. El largo va a escala del dato declarado; la silueta es ilustrativa.
    * Dos variantes: ancha (escritorio) y compacta (celular), para que el texto no quede diminuto al escalar. */
-  function balanceArt(compact) {
-    var L = 455, tgt = 255, tol = 7, wil = 250;
+  function balanceArt(compact, bd) {
+    var L = bd.len || 100, scaled = !!bd.len; /* sin largo declarado: proporciones relativas, sin marcas a escala */
     var vw = compact ? 320 : 640, x0 = compact ? 26 : 40, W = compact ? 272 : 560, y = compact ? 74 : 96;
     var px = function (mm) { return x0 + mm / L * W; };
+    /* Punto de apoyo de los pasos 1 a 3: el objetivo declarado; si no hay, una posición ilustrativa. */
+    var fx = px(bd.tgt != null ? bd.tgt : bd.wil != null ? bd.wil : L * 0.56);
     var hw = compact ? 7 : 9, ht = compact ? 46 : 64;
     var racket = '<g class="bal-racket"><rect x="' + x0 + '" y="' + (y - hw) + '" width="' + (W * 0.36) + '" height="' + (2 * hw) + '" rx="' + (hw - 2) + '"/>' +
       '<path d="M' + (x0 + W * 0.33) + " " + (y - hw - 5) + "L" + (x0 + W * 0.42) + " " + (y - ht * .46) + "C" + (x0 + W * 0.56) + " " + (y - ht * 1.08) + " " + (x0 + W * 0.98) + " " + (y - ht) + " " + (x0 + W) + " " + y +
       "C" + (x0 + W * 0.98) + " " + (y + ht) + " " + (x0 + W * 0.56) + " " + (y + ht * 1.08) + " " + (x0 + W * 0.42) + " " + (y + ht * .46) + "L" + (x0 + W * 0.33) + " " + (y + hw + 5) + 'Z"/>' +
       '<rect class="cap" x="' + (x0 - 5) + '" y="' + (y - hw - 3) + '" width="7" height="' + (2 * hw + 6) + '" rx="2"/></g>';
     var fy = y + ht * .47 + 2;
-    var fulcrum = '<g class="bal-fulcrum"><path d="M' + px(tgt) + " " + fy + "l-14 23h28z" + '"/><line x1="' + (px(tgt) - 50) + '" y1="' + (fy + 23) + '" x2="' + (px(tgt) + 50) + '" y2="' + (fy + 23) + '"/></g>';
+    var fulcrum = '<g class="bal-fulcrum"><path d="M' + fx + " " + fy + "l-14 23h28z" + '"/><line x1="' + (fx - 50) + '" y1="' + (fy + 23) + '" x2="' + (fx + 50) + '" y2="' + (fy + 23) + '"/></g>';
     var dy = y - ht - 14;
-    var dim = '<g class="bal-dim"><line x1="' + x0 + '" y1="' + dy + '" x2="' + px(tgt) + '" y2="' + dy + '"/><line x1="' + x0 + '" y1="' + (dy - 7) + '" x2="' + x0 + '" y2="' + (dy + 7) + '"/><line x1="' + px(tgt) + '" y1="' + (dy - 7) + '" x2="' + px(tgt) + '" y2="' + (dy + 7) + '"/>' +
-      (compact ? '<text class="st" x="' + x0 + '" y="' + (dy - 12) + '">balance: desde el tapón, en mm</text>' : '<text x="' + ((x0 + px(tgt)) / 2) + '" y="' + (dy - 12) + '">balance: distancia desde el tapón (mm)</text>') +
+    var dim = '<g class="bal-dim"><line x1="' + x0 + '" y1="' + dy + '" x2="' + fx + '" y2="' + dy + '"/><line x1="' + x0 + '" y1="' + (dy - 7) + '" x2="' + x0 + '" y2="' + (dy + 7) + '"/><line x1="' + fx + '" y1="' + (dy - 7) + '" x2="' + fx + '" y2="' + (dy + 7) + '"/>' +
+      (compact ? '<text class="st" x="' + x0 + '" y="' + (dy - 12) + '">balance: desde el tapón, en mm</text>' : '<text x="' + ((x0 + fx) / 2) + '" y="' + (dy - 12) + '">balance: distancia desde el tapón (mm)</text>') +
       '<text class="lab" x="' + (compact ? x0 - 4 : x0 - 8) + '" y="' + (y + hw + 20) + '">tapón</text></g>';
-    var sy = fy + 34;
-    var shift = '<g class="bal-shift"><circle cx="' + px(180) + '" cy="' + (fy + 12) + '" r="5"/><circle cx="' + px(330) + '" cy="' + (fy + 12) + '" r="5"/>' +
-      '<path d="M' + (px(180) + 12) + " " + (fy + 12) + "H" + (px(330) - 12) + '"/>' +
-      (compact ? '<text x="' + px(180) + '" y="' + (sy + 6) + '">más rápida</text><text x="' + px(330) + '" y="' + (sy + 6) + '">más inercia</text>'
-               : '<text x="' + px(180) + '" y="' + (sy + 6) + '">más bajo · más rápida</text><text x="' + px(330) + '" y="' + (sy + 6) + '">más alto · más inercia</text>') + "</g>";
-    var my = sy + (compact ? 22 : 26);
-    var mc = '<g class="bal-mc"><rect class="band" x="' + px(tgt - tol) + '" y="' + my + '" width="' + (px(tgt + tol) - px(tgt - tol)) + '" height="12" rx="3"/>' +
-      '<line class="wil" x1="' + px(wil) + '" y1="' + (my - 5) + '" x2="' + px(wil) + '" y2="' + (my + 17) + '"/>' +
-      (compact ? '<text class="st" x="' + x0 + '" y="' + (my + 34) + '">objetivo del proveedor: 255 ±7 mm</text><text class="st wil-c" x="' + x0 + '" y="' + (my + 52) + '">línea punteada: William informó 250 mm</text>'
-               : '<text class="st" x="' + (px(tgt + tol) + 10) + '" y="' + (my + 10) + '">objetivo del proveedor: 255 ±7 mm</text><text class="wil-t" x="' + (px(wil) - 10) + '" y="' + (my + 32) + '">William informó 250 mm</text>') + "</g>";
-    var vh = my + (compact ? 62 : 44);
-    return '<svg class="bal-art ' + (compact ? "art-compact" : "art-wide") + '" viewBox="0 0 ' + vw + " " + vh + '" role="img" aria-label="Diagrama de balance: la pala apoyada en un punto de equilibrio medido desde el tapón">' + racket + fulcrum + dim + shift + mc + "</svg>";
+    /* Paso 3: solo indica hacia dónde se corre el centro de masa (posiciones ilustrativas, no datos). */
+    var sy = fy + 34, a1 = px(L * 0.36), a2 = px(L * 0.76);
+    var shift = '<g class="bal-shift"><circle cx="' + a1 + '" cy="' + (fy + 12) + '" r="5"/><circle cx="' + a2 + '" cy="' + (fy + 12) + '" r="5"/>' +
+      '<path d="M' + (a1 + 12) + " " + (fy + 12) + "H" + (a2 - 12) + '"/>' +
+      (compact ? '<text x="' + a1 + '" y="' + (sy + 6) + '">hacia el mango</text><text x="' + a2 + '" y="' + (sy + 6) + '">hacia la cabeza</text>'
+               : '<text x="' + a1 + '" y="' + (sy + 6) + '">balance más bajo: hacia el mango</text><text x="' + a2 + '" y="' + (sy + 24) + '">más alto: hacia la cabeza</text>') + "</g>";
+    /* Paso 4: marcas de MC-005 desde los datos; cada una solo si existe. */
+    var my = sy + (compact ? 22 : 44), mc = '<g class="bal-mc">', lines = [];
+    if (bd.tgt != null && bd.tol != null && scaled) mc += '<rect class="band" x="' + px(bd.tgt - bd.tol) + '" y="' + my + '" width="' + (px(bd.tgt + bd.tol) - px(bd.tgt - bd.tol)) + '" height="12" rx="3"/>';
+    if (bd.tgtTxt) lines.push(["st", "banda: objetivo del proveedor, " + bd.tgtTxt]);
+    if (bd.wil != null && scaled) mc += '<line class="wil" x1="' + px(bd.wil) + '" y1="' + (my - 5) + '" x2="' + px(bd.wil) + '" y2="' + (my + 17) + '"/>';
+    if (bd.wilTxt) lines.push(["st wil-c", "línea punteada: William informó " + bd.wilTxt]);
+    if (bd.ours && bd.ours.v != null && scaled) mc += '<circle class="ours" cx="' + px(bd.ours.v) + '" cy="' + (my + 6) + '" r="6"/>';
+    lines.push(["st", bd.ours ? "punto: nuestra medición, " + bd.ours.txt : "nuestra medición: pendiente"]);
+    lines.forEach(function (l, i) { mc += '<text class="' + l[0] + '" x="' + x0 + '" y="' + (my + 34 + i * 18) + '">' + esc(l[1]) + "</text>"; });
+    mc += "</g>";
+    var vh = my + 34 + lines.length * 18;
+    return '<svg class="bal-art ' + (compact ? "art-compact" : "art-wide") + '" viewBox="0 0 ' + vw + " " + vh + '" role="img" aria-label="Diagrama de balance: la pala apoyada en su punto de equilibrio, medido desde el tapón">' + racket + fulcrum + dim + shift + mc + "</svg>";
+  }
+  function balanceNote(bd) {
+    return bd.len ? "Largo a escala de lo declarado (" + bd.lenTxt + "). La silueta es ilustrativa; las marcas del último paso usan los valores de la ficha de MC-005." : "Esquema ilustrativo: el largo no figura en la ficha, por eso las marcas no se dibujan a escala.";
   }
   /* Corte del núcleo: capas declaradas; espesores NO publicados, por eso las bandas son parejas. */
   function coreArt(compact) {
@@ -4756,16 +4785,24 @@ window.KORVE_DATA.guide = {
     var mW = decl(s, "Masa de la muestra informada por William"), bW = decl(s, "Balance de la muestra informado por William");
     var mM = meas(s, "Masa"), bM = meas(s, "Balance");
     var specs = s.compare.configSpecs, local = K.state().measurements[s.id] || [];
-    function col(cls, kicker, ev, mv, bv, cfg, note) {
+    function col(cls, kicker, ev, mv, bv, cfgT, cfg, note) {
       return '<article class="num-col ' + cls + '"><p class="nc-k">' + esc(kicker) + "</p>" + voice(ev) +
         '<dl><div><dt>Peso</dt><dd>' + mv + "</dd></div><div><dt>" + term("balance") + " <span>desde el tapón</span></dt><dd>" + bv + "</dd></div></dl>" +
-        '<p class="nc-cfg-t">Con qué se pesó</p>' + cfg + '<p class="nc-note">' + esc(note) + "</p></article>";
+        '<p class="nc-cfg-t">' + esc(cfgT) + "</p>" + cfg + '<p class="nc-note">' + esc(note) + "</p></article>";
     }
+    /* Frases de las notas de korve.js: así las tarjetas no repiten cifras ni condiciones escritas a mano. */
+    function sentences(t) { return String(t || "").match(/[^.]+\.?/g) || []; }
+    function pick(t, re) { return sentences(t).filter(function (x) { return re.test(x); }).map(function (x) { return x.trim(); }).join(" "); }
     var missingBal = '<span class="big pending"><span class="big-n">Sin medir</span></span>';
+    /* Una fila ausente se muestra como ausente; no rompe la vista ni se completa con otro valor. */
+    var absent = '<span class="big pending"><span class="big-n">No figura en la ficha</span></span>';
+    function val(r, u) { return r && !r.missing && r.v ? big(r.v, u || r.u) : absent; }
+    function note(r) { return r && r.note ? r.note : ""; }
+    var nW = note(mW) || note(bW);
     return '<div class="numbers">' +
-      col("nc-target", "Lo que pide el proveedor", "KP", big(mT.v), big(bT.v), chips(specs[0]), "Objetivo de fabricación, no garantía por unidad. Se refiere a la pala sin overgrip.") +
-      col("nc-william", "Lo que informó William", "KP", big(mW.v), big(bW.v), chips(specs[2]) + '<p class="cfg-x">Film de embalaje (≈1 g): no se sabe si estaba incluido.</p>', "Lectura de la muestra sin protocolo documentado: no se conoce el método, la resolución ni cuántas veces se midió.") +
-      col("nc-ours", "Lo que medimos nosotros", "KM", big(mM.v, mM.u), bM && bM.missing ? missingBal : big(bM.v, bM.u), chips(specs[1]), "Medición de " + mM.who + ". Los dos overgrips suman peso: este número no se compara con los otros dos.") +
+      col("nc-target", "Lo que pide el proveedor", "KP", val(mT), val(bT), "Configuración de referencia", chips(specs[0] || {}), note(mT) || note(bT)) +
+      col("nc-william", "Lo que informó William", "KP", val(mW), val(bW), "Condiciones informadas", chips(specs[2] || {}) + (pick(nW, /film/i) ? '<p class="cfg-x">' + esc(pick(nW, /film/i)) + "</p>" : ""), pick(nW, /método|protocolo|registro/i) || nW) +
+      col("nc-ours", "Lo que medimos nosotros", "KM", val(mM), bM && bM.missing ? missingBal : val(bM), "Con qué se pesó", chips(specs[1] || {}), (mM && mM.who ? "Medición de " + mM.who + ". " : "") + (mM && mM.note || "")) +
       "</div>" +
       (local.length ? '<div class="local-reg"><p class="mini-h">Registros cargados en este navegador ' + voice("KM", "registro local") + "</p><ul>" + local.map(function (m) {
         return "<li><b>" + esc(m.mass ? m.mass + " g" : "") + (m.mass && m.balance ? " · " : "") + esc(m.balance ? m.balance + " mm" : "") + "</b> " + esc(m.date) + " · " + esc(K.configSummary(m)) + " · " + esc(m.config) + "</li>";
@@ -4786,6 +4823,7 @@ window.KORVE_DATA.guide = {
       if (!s || s.id !== "mc005") {
         return '<div class="xp"><section class="xp-sec"><div class="xp-in"><p class="xp-kicker">Ficha de pala</p><h1 class="xp-h2">' + esc(s ? s.name : "Pala") + ': ficha en preparación</h1><p class="xp-lead">Por ahora la nueva ficha está disponible para MC-005, como referencia de diseño. Los datos de esta muestra siguen completos en “Nuestras muestras”.</p><p><a class="cta" href="#muestras' + (s ? "--" + s.id : "") + '">Ver los datos ' + arrow() + '</a> <a class="cta ghost dark-text" href="#pala--mc005">Abrir la ficha de MC-005</a></p></div></section></div>';
       }
+      var bd = balanceData(s);
       var x = G.mc005, b = K.branchById.HYBRID, dims = decl(s, "Dimensiones"), qc = decl(s, "Control de producción"), lab = decl(s, "Ensayos y densidad");
       var hero = '<section class="xp-hero pala-hero" aria-labelledby="pala-t"><div class="hero-court" aria-hidden="true"></div><div class="xp-in pala-grid">' +
         '<div class="pala-copy"><nav class="crumbs-x" aria-label="Ubicación"><a href="#inicio">Inicio</a><span>/</span><a href="#inicio--s-muestras">Muestras</a><span>/</span><span aria-current="page">' + esc(s.name) + "</span></nav>" +
@@ -4804,7 +4842,7 @@ window.KORVE_DATA.guide = {
 
       var numeros = section("p-numeros", "01", "Peso y balance", esc(x.numbersTitle),
         '<p class="xp-lead">' + esc(x.numbersLead) + "</p>" + numbersBlock(s) +
-        stepper("st-balance", "Qué es el balance, en cuatro pasos", G.balanceSteps, balanceArt(false) + balanceArt(true), "Largo a escala de lo declarado (455 mm). La silueta es ilustrativa; las marcas del último paso usan los valores declarados.") + src(x.src + "; actualización de William, 13/11/2026"));
+        stepper("st-balance", "Qué es el balance, en cuatro pasos", fillSteps(G.balanceSteps, bd), balanceArt(false, bd) + balanceArt(true, bd), balanceNote(bd)) + src(x.src + "; actualización de William, 13/11/2026"));
 
       var prov = section("p-proveedor", "02", "Lo que declaró el proveedor", "Cómo está armada, según William.",
         '<p class="xp-lead">' + voice("KP") + " Todo este bloque lo informó la fábrica. Lo registramos tal cual, con las dudas que quedaron abiertas.</p>" +

@@ -49,7 +49,7 @@ window.KORVE_DATA.guide = {
 
   /* Qué rol se evalúa para cada muestra, en palabras simples. */
   samplesPlain: {
-    w3: "La base natural para POWER por el peso y balance que le pedimos a NEX. Todavía no se probó en cancha.",
+    w3: "La base natural para POWER por el peso y balance que le pedimos a NEX. Todavía no tenemos una evaluación de cancha registrada.",
     amp22: "Candidata a CONTROL por el peso y balance que le pedimos a NEX: más liviana y con el balance más bajo que W3. Falta comprobar que sea estable al bloquear.",
     mc005: "Nuestra vara para HYBRID: en uso convenció por firmeza, estabilidad, salida suficiente y capacidad de atacar.",
     ks01: "Rol todavía abierto. No la asignamos a CONTROL solo para completar la línea."
@@ -85,10 +85,10 @@ window.KORVE_DATA.guide = {
 
   /* Glosario: definiciones generales y breves, con el criterio del informe donde aplica. */
   glossary: {
-    balance: { term: "Balance", text: "Dónde está el punto de equilibrio de la pala, medido en milímetros desde el tapón del mango. Más milímetros significa más peso hacia la cabeza: el golpe lleva más inercia, pero cuesta más mover la pala." },
+    balance: { term: "Balance", text: "Indica dónde está el centro de masa de la pala, medido en milímetros desde el tapón del mango: más milímetros, más cerca de la cabeza. Cuánto cuesta moverla no depende solo de eso: también influyen la masa total y cómo se reparte a lo largo de la pala." },
     salida: { term: "Salida de bola", text: "Qué tan fácil sale despedida la pelota con poco esfuerzo. Ayuda a defender desde el fondo, pero demasiada puede hacer que un bloqueo se vaya largo." },
     estabilidad: { term: "Estabilidad", text: "Cuánto resiste la pala a girarse o vibrar cuando la pelota pega lejos del centro." },
-    dureza: { term: "Dureza", text: "Qué tan firme se siente el núcleo o la cara. Cada marca usa su propia escala (Shore C, del 1 al 10, palabras), así que no se pueden comparar entre sí." },
+    dureza: { term: "Dureza", text: "Qué tan firme es el núcleo o la cara. A veces se informa con una escala identificada, como Shore C, que se mide con un durómetro; otras veces con palabras comerciales como «medio» o «duro», que no tienen escala y no se comparan entre marcas. Incluso con la misma escala, dos valores solo se comparan si se midieron en condiciones comparables." },
     nucleo: { term: "Núcleo multicapa", text: "El relleno interior de la pala armado en capas. «H/S/H» significa duro, blando, duro: dos capas firmes y una más blanda en el medio." },
     k12: { term: "12K, 18K", text: "Miles de filamentos por cada hilo de carbono. Describe cómo es el tejido, no su calidad: 18K no es mejor que 12K." },
     t700: { term: "T700", text: "Nombre de un tipo de fibra de carbono. No es un número K ni una escala de calidad." },
@@ -103,7 +103,7 @@ window.KORVE_DATA.guide = {
     caveat: "Es una referencia por uso, no una ficha de laboratorio, y la preferencia viene de una sola persona.",
     src: "Informe, secciones 7 y 8",
     numbersTitle: "Tres pares de números que no son lo mismo",
-    numbersLead: "Para MC-005 circulan tres juegos de cifras. Cada uno se tomó de otra forma y con otros accesorios, así que no se restan ni se promedian.",
+    numbersLead: "Para MC-005 circulan tres juegos de cifras que no son lo mismo: uno es el objetivo que pide el proveedor, otro es una lectura de la muestra informada por William y otro es una medición local nuestra. De cada uno conocemos algunas condiciones y otras siguen pendientes, así que no se restan ni se promedian.",
     nextTitle: "Próxima prueba propuesta",
     nextSteps: [
       { title: "Ficha normalizada", text: "Medir MC-005 sin overgrips, con tres lecturas de peso y balance, igual que las demás muestras.", src: "Plan, Etapa A" },
@@ -116,8 +116,9 @@ window.KORVE_DATA.guide = {
   balanceSteps: [
     { title: "La pala se apoya en un solo punto", text: "Si la apoyás de costado sobre un filo, hay un único punto donde queda en equilibrio." },
     { title: "Se mide desde el tapón", text: "El balance es la distancia, en milímetros, entre el tapón del mango y ese punto." },
-    { title: "Más milímetros, más peso arriba", text: "Un balance alto pone más masa hacia la cabeza: más inercia en el golpe y más esfuerzo para moverla. Un balance bajo la hace más rápida de manejar. Aun así, el balance solo no lo explica todo: por eso el plan también propone medir inercia." },
-    { title: "El caso de MC-005", text: "El proveedor pide 255 ±7 mm y William informó 250 mm en la muestra. Nuestro propio balance todavía no se midió." }
+    { title: "Indica dónde está el centro de masa", text: "Un balance más alto significa que el centro de masa está más cerca de la cabeza; uno más bajo, más cerca del mango. Cuánto cuesta mover la pala depende además de su masa total y de cómo se reparte: dos palas con el mismo balance pueden sentirse distintas. Por eso el plan propone medir también la inercia." },
+    /* Las cifras de este paso se completan desde korve.js ({objetivo}, {william}, {nuestro}). */
+    { title: "El caso de MC-005", text: "El proveedor pide {objetivo} y William informó {william} en la muestra. {nuestro}" }
   ],
 
   /* Diagrama del núcleo: pasos. Las proporciones del dibujo son ilustrativas. */

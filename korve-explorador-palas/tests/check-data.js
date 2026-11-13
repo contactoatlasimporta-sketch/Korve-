@@ -95,6 +95,17 @@ ok(D.stages.some((s) => s.id === G.next.stageId), "El próximo paso apunta a una
 ["Cara", "Núcleo", "Marco", "Relleno", "Acabado", "Dimensiones", "Masa objetivo del proveedor", "Balance objetivo del proveedor", "Masa de la muestra informada por William", "Balance de la muestra informado por William", "Control de producción", "Ensayos y densidad"]
   .forEach((l) => ok(mc.declared.some((d) => d.label === l), "MC-005: falta la fila declarada «" + l + "» que usa la ficha"));
 ok(mc.compare.configSpecs.length >= 3, "MC-005: la ficha usa tres configuraciones (proveedor, Tomás, William)");
+// Criterios de redacción revisados (13/11/2026).
+const gl = G.glossary, bs = G.balanceSteps.map((x) => x.title + " " + x.text).join(" ");
+ok(/centro de masa/.test(gl.balance.text) && /masa total/.test(gl.balance.text) && /reparte|distribu/.test(gl.balance.text), "Balance: centro de masa, masa total y distribución");
+ok(!/(más|mayor) (balance|milímetros)[^.]*(más inercia|más rápid|más lent)/i.test(gl.balance.text + " " + bs) && !/balance (bajo|más bajo)[^.]*(rápid)/i.test(gl.balance.text + " " + bs), "Balance: no equiparar balance con inercia o rapidez");
+ok(!/propia escala/.test(gl.dureza.text) && /Shore C/.test(gl.dureza.text) && /comerciales/.test(gl.dureza.text) && /condiciones comparables/.test(gl.dureza.text), "Dureza: escala identificada vs. denominaciones comerciales, y condiciones comparables");
+ok(/evaluación de cancha registrada/.test(G.samplesPlain.w3) && !/no se probó/.test(G.samplesPlain.w3), "W3: falta de registro, no ausencia de uso");
+ok(!/se tom(ó|aron)/.test(G.mc005.numbersLead) && /objetivo/.test(G.mc005.numbersLead) && /lectura/.test(G.mc005.numbersLead) && /medición local/.test(G.mc005.numbersLead), "MC-005: objetivo, lectura y medición local diferenciados");
+ok(/\{objetivo\}/.test(bs) && /\{william\}/.test(bs) && /\{nuestro\}/.test(bs), "El paso de MC-005 toma sus cifras de los datos");
+// La vista no debe tener cifras de MC-005 escritas a mano (deben salir de korve.js).
+const xjs = fs.readFileSync(path.join(root, "js", "experience.js"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+ok(!/\b(357|364,1|366,6|360 ±|255|250 mm|455)\b|≈1 g/.test(xjs), "experience.js contiene cifras de MC-005 escritas a mano");
 // Ningún texto declara ganador ni "mejor".
 const all = JSON.stringify(D);
 ok(!/ganador:/i.test(all), "No debe haber ganador declarado");
