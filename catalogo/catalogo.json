@@ -1,0 +1,23 @@
+{
+  "negocio": {
+    "nombre": "TU MARCA",
+    "subtitulo": "Catálogo de productos",
+    "temporada": "Noviembre 2026",
+    "logo": "",
+    "whatsapp": "+54 9 11 0000-0000",
+    "instagram": "@tumarca",
+    "web": "",
+    "colorPrincipal": "#14110f",
+    "colorAcento": "#c8a45a",
+    "moneda": "$",
+    "nota": "Precios sujetos a cambio sin previo aviso. Consultá stock por WhatsApp."
+  },
+  "productos": [
+    { "categoria": "Relojes clásicos", "codigo": "RC-001", "nombre": "Modelo Aurora", "descripcion": "Caja acero 40 mm · Malla cuero · Resistente al agua 50 m", "precio": 85000, "foto": "fotos/ejemplo-1.svg" },
+    { "categoria": "Relojes clásicos", "codigo": "RC-002", "nombre": "Modelo Boreal", "descripcion": "Caja acero 38 mm · Malla metálica · Cristal mineral", "precio": 92000, "foto": "fotos/ejemplo-2.svg" },
+    { "categoria": "Relojes clásicos", "codigo": "RC-003", "nombre": "Modelo Cenit", "descripcion": "Caja dorada 41 mm · Malla cuero marrón", "precio": 99000, "foto": "fotos/ejemplo-3.svg", "etiqueta": "Nuevo" },
+    { "categoria": "Relojes deportivos", "codigo": "RD-001", "nombre": "Modelo Delta", "descripcion": "Cronógrafo 44 mm · Malla silicona · 100 m", "precio": 110000, "foto": "fotos/ejemplo-4.svg" },
+    { "categoria": "Relojes deportivos", "codigo": "RD-002", "nombre": "Modelo Eclipse", "descripcion": "Bisel giratorio 42 mm · Malla acero", "precio": 125000, "precioAnterior": 140000, "foto": "fotos/ejemplo-5.svg", "etiqueta": "Oferta" },
+    { "categoria": "Relojes deportivos", "codigo": "RD-003", "nombre": "Modelo Fénix", "descripcion": "Digital-analógico 45 mm · Luz LED", "precio": 78000, "foto": "fotos/ejemplo-6.svg", "agotado": true }
+  ]
+}
